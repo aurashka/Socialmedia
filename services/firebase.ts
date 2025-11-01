@@ -30,7 +30,7 @@ import {
   onAuthStateChanged,
   type User as FirebaseUser
 } from 'firebase/auth';
-import type { Post, Story, User, Comment, Notification, Message } from '../types';
+import type { Post, Story, User, Comment, Notification, Message, Conversation } from '../types';
 import { findMentions } from '../utils/textUtils';
 
 const firebaseConfig = {
@@ -197,8 +197,37 @@ export const banUser = (userId: string) => {
     return update(ref(db, `users/${userId}`), { isBanned: true });
 };
 
+export const unbanUser = (userId: string) => {
+    return update(ref(db, `users/${userId}`), { isBanned: null });
+};
+
+
 export const setUserBadge = (userId: string, badgeUrl: string | null) => {
     return update(ref(db, `users/${userId}`), { badgeUrl });
+};
+
+export const fetchUserConversations = async (userId: string): Promise<Conversation[]> => {
+    const conversationsRef = ref(db, 'conversations');
+    const userConvsQuery = query(conversationsRef, orderByChild(`participants/${userId}`), equalTo(true));
+    const snapshot = await get(userConvsQuery);
+    if (snapshot.exists()) {
+        const convsData = snapshot.val();
+        return Object.values(convsData) as Conversation[];
+    }
+    return [];
+};
+
+export const deleteUserConversations = async (userId: string): Promise<void> => {
+    const userConversations = await fetchUserConversations(userId);
+    if (userConversations.length === 0) return;
+
+    const updates: Record<string, null> = {};
+    userConversations.forEach(convo => {
+        updates[`/conversations/${convo.id}`] = null;
+        updates[`/messages/${convo.id}`] = null;
+    });
+
+    await update(ref(db), updates);
 };
 
 

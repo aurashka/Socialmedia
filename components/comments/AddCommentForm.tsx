@@ -33,7 +33,7 @@ const AddCommentForm: React.FC<AddCommentFormProps> = ({ currentUser, postId, po
       }
     } catch (error) {
       console.error('Failed to add comment:', error);
-      alert('Could not post comment. Please try again.');
+      alert(`Could not post comment. Please try again. Error: ${(error as Error).message}`);
     } finally {
       setIsSubmitting(false);
     }

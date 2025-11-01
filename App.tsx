@@ -24,6 +24,8 @@ import CommentSheet from './components/comments/CommentSheet';
 import MessagesPage from './components/messages/MessagesPage';
 import NotificationsPage from './components/notifications/NotificationsPage';
 import PostPage from './components/PostPage';
+import AdminUserDetail from './components/admin/AdminUserDetail';
+
 
 type Route = 
   | { name: 'home' }
@@ -32,34 +34,38 @@ type Route =
   | { name: 'explore' }
   | { name: 'search'; query?: string }
   | { name: 'admin' }
+  | { name: 'admin-user'; id: string }
   | { name: 'settings' }
   | { name: 'messages'; id?: string }
   | { name: 'notifications' }
   | { name: 'post'; id: string };
 
 const parseHash = (): Route => {
-    const hash = window.location.hash.substring(2);
-    const [path, param] = hash.split('/');
+    const hash = window.location.hash.substring(2); // remove #/
+    const parts = hash.split('/');
 
-    switch (path) {
+    switch (parts[0]) {
         case 'profile':
-            return { name: 'profile', id: param };
+            return { name: 'profile', id: parts[1] };
         case 'friends':
             return { name: 'friends' };
         case 'explore':
             return { name: 'explore' };
         case 'search':
-            return { name: 'search', query: param ? decodeURIComponent(param) : undefined };
+            return { name: 'search', query: parts[1] ? decodeURIComponent(parts[1]) : undefined };
         case 'admin':
+            if (parts[1] === 'user' && parts[2]) {
+                return { name: 'admin-user', id: parts[2] };
+            }
             return { name: 'admin' };
         case 'settings':
             return { name: 'settings' };
         case 'messages':
-            return { name: 'messages', id: param };
+            return { name: 'messages', id: parts[1] };
         case 'notifications':
             return { name: 'notifications' };
         case 'post':
-            return { name: 'post', id: param };
+            return { name: 'post', id: parts[1] };
         default:
             return { name: 'home' };
     }
@@ -227,7 +233,12 @@ const App: React.FC = () => {
     if (mediaFiles.length > 0) {
       try {
         const uploadPromises = mediaFiles.map(file => uploadMedia(file));
-        uploadedMedia = await Promise.all(uploadPromises);
+        const allUploadedMedia = await Promise.all(uploadPromises);
+        // FIX: The result from uploadMedia can include 'audio' type which is not supported by Posts. Filter the results to ensure type compatibility.
+        uploadedMedia = allUploadedMedia.filter(
+            (media): media is { url: string; type: 'image' | 'video' } =>
+                media.type === 'image' || media.type === 'video'
+        );
       } catch (error) {
         console.error("Failed to upload media:", error);
         alert("Error uploading media. Please try again.");
@@ -383,7 +394,12 @@ const App: React.FC = () => {
               if (currentUser.role !== 'admin') {
                   return <div className="p-8 text-center text-primary dark:text-gray-100"><h1 className="text-2xl font-bold">Access Denied</h1><p>You do not have permission to view this page.</p></div>
               }
-              return <AdminPage users={users} />;
+              return <AdminPage users={users} onlineStatuses={onlineStatuses} />;
+          case 'admin-user':
+                if (currentUser.role !== 'admin') {
+                    return <div className="p-8 text-center text-primary dark:text-gray-100"><h1 className="text-2xl font-bold">Access Denied</h1><p>You do not have permission to view this page.</p></div>
+                }
+                return <AdminUserDetail userId={route.id} users={users} posts={posts} />;
           case 'settings':
               return <SettingsPage />;
           default:
@@ -405,10 +421,11 @@ const App: React.FC = () => {
 
   const isExplorePage = route.name === 'explore';
   const isMessagesPage = route.name === 'messages';
+  const isAdminPage = route.name === 'admin' || route.name === 'admin-user';
 
   return (
     <ThemeProvider>
-      <div className="bg-background dark:bg-[#121212] min-h-screen pb-20 md:pb-0 text-primary dark:text-gray-100">
+      <div className={`bg-background dark:bg-[#121212] min-h-screen ${isAdminPage ? '' : 'pb-20 md:pb-0'} text-primary dark:text-gray-100`}>
         <Header 
           currentUser={currentUser} 
           friendRequestCount={Object.keys(friendRequests).length}
@@ -419,10 +436,10 @@ const App: React.FC = () => {
           channels={channels}
           notifications={notifications}
         />
-        <main className={`pt-14 ${isMessagesPage ? 'h-screen' : ''}`}>
+        <main className={`pt-14 ${isMessagesPage ? 'h-screen' : ''} ${isAdminPage ? 'h-[calc(100vh-56px)] overflow-y-auto' : ''}`}>
           {renderContent()}
         </main>
-        {!isMessagesPage && <BottomNav onPostClick={() => setIsPostModalOpen(true)} currentUser={currentUser}/>}
+        {!isMessagesPage && !isAdminPage && <BottomNav onPostClick={() => setIsPostModalOpen(true)} currentUser={currentUser}/>}
         {isPostModalOpen && (
           <PostModal
             currentUser={currentUser}
