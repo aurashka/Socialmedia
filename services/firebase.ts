@@ -126,8 +126,17 @@ export const banUser = (userId: string) => {
 export const createPost = async (postData: Omit<Post, 'id' | 'likes' | 'comments' | 'timestamp'>) => {
     const postsRef = ref(db, 'posts');
     const newPostRef = push(postsRef);
+
+    // Firebase RTDB doesn't allow `undefined` values in `set`.
+    const cleanPostData = Object.entries(postData).reduce((acc, [key, value]) => {
+        if (value !== undefined) {
+            (acc as any)[key] = value;
+        }
+        return acc;
+    }, {} as Omit<Post, 'id' | 'likes' | 'comments' | 'timestamp'>);
+
     await set(newPostRef, {
-        ...postData,
+        ...cleanPostData,
         id: newPostRef.key,
         likes: 0,
         comments: 0,

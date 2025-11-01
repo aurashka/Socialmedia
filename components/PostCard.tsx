@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import type { User, Post } from '../types';
-import { DotsHorizontalIcon, ThumbUpIcon, ChatAltIcon, ShareIcon, PencilIcon, TrashIcon } from './Icons';
+import { DotsHorizontalIcon, ThumbUpIcon, ChatAltIcon, ShareIcon, PencilIcon, TrashIcon, ChevronLeftIcon, ChevronRightIcon } from './Icons';
 import { parseContent } from '../utils/textUtils';
 import ImageLightbox from './ImageLightbox';
 import { updatePost, deletePost } from '../services/firebase';
@@ -17,6 +17,7 @@ const PostCard: React.FC<PostCardProps> = ({ post, user, currentUser }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editedContent, setEditedContent] = useState(post.content);
   const [isSaving, setIsSaving] = useState(false);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
   
   const menuRef = useRef<HTMLDivElement>(null);
   const isOwner = currentUser?.id === post.userId;
@@ -71,6 +72,16 @@ const PostCard: React.FC<PostCardProps> = ({ post, user, currentUser }) => {
         }
     }
   };
+  
+  const handlePrevImage = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setCurrentImageIndex(prev => (prev === 0 ? post.mediaUrls!.length - 1 : prev - 1));
+  };
+
+  const handleNextImage = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setCurrentImageIndex(prev => (prev === post.mediaUrls!.length - 1 ? 0 : prev + 1));
+  };
 
   if (!user) {
     return (
@@ -98,76 +109,57 @@ const PostCard: React.FC<PostCardProps> = ({ post, user, currentUser }) => {
   };
   
   const renderMedia = () => {
-    if (post.mediaType === 'video') {
-      return (
-         <div className="relative aspect-video cursor-pointer" onClick={() => alert('Video player not implemented yet!')}>
-             <img src={post.mediaUrls?.[0]} alt="Post media" className="w-full h-full object-cover" />
-             <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-40">
-                <div className="w-16 h-16 bg-white bg-opacity-50 rounded-full flex items-center justify-center text-white hover:bg-opacity-75 transition-opacity">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 ml-1" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
-                    </svg>
-                </div>
-             </div>
-         </div>
-      )
-    }
-
     if (!post.mediaUrls || post.mediaUrls.length === 0) return null;
 
     const images = post.mediaUrls;
-    const gridClasses = [
-        "", // 0 images
-        "grid-cols-1", // 1 image
-        "grid-cols-2", // 2 images
-        "grid-cols-2", // 3 images
-        "grid-cols-2", // 4 images
-        "grid-cols-2" // 5 images
-    ];
+    
+    if (images.length === 1) {
+        return (
+            <div className="bg-black flex justify-center items-center">
+                <img src={images[0]} alt="Post media" className="max-h-[70vh] w-auto object-contain cursor-pointer" onClick={() => setLightboxImage(images[0])}/>
+            </div>
+        )
+    }
 
     return (
-        <div className={`grid ${gridClasses[images.length]} gap-1`}>
-            {images.map((url, index) => {
-                let spanClass = "";
-                if (images.length === 3 && index === 0) spanClass = "row-span-2";
-                if (images.length === 5 && index < 2) spanClass = "col-span-1";
-                if (images.length === 5 && index >= 2) spanClass = "col-span-2";
-
-                return (
-                    <div key={index} className={`relative cursor-pointer ${spanClass}`} onClick={() => setLightboxImage(url)}>
-                         <img src={url} alt={`Post media ${index + 1}`} className="w-full h-full object-cover" />
-                    </div>
-                )
-            })}
+        <div className="relative group bg-black">
+            <div className="relative aspect-square overflow-hidden flex justify-center items-center">
+                 <img src={images[currentImageIndex]} alt={`Post media ${currentImageIndex + 1}`} className="max-h-full max-w-full object-contain transition-transform duration-300" />
+            </div>
+            
+            <button onClick={handlePrevImage} className="absolute top-1/2 left-2 -translate-y-1/2 bg-black bg-opacity-40 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                <ChevronLeftIcon className="w-6 h-6" />
+            </button>
+            <button onClick={handleNextImage} className="absolute top-1/2 right-2 -translate-y-1/2 bg-black bg-opacity-40 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                <ChevronRightIcon className="w-6 h-6" />
+            </button>
+            
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex space-x-1.5">
+                {images.map((_, index) => (
+                    <div key={index} className={`w-1.5 h-1.5 rounded-full ${index === currentImageIndex ? 'bg-primary' : 'bg-gray-400'}`}></div>
+                ))}
+            </div>
         </div>
     );
   };
 
   return (
     <>
-    <div className="bg-card rounded-lg shadow-sm">
+    <div className="bg-card rounded-lg shadow-sm border border-divider">
       {/* Post Header */}
-      <div className="p-4 flex justify-between items-start">
+      <div className="p-3 flex justify-between items-center">
         <div className="flex items-center space-x-3">
           <a href={`#/profile/${user.id}`}>
             <img src={user.avatarUrl} alt={user.name} className="w-10 h-10 rounded-full" />
           </a>
           <div>
-            <a href={`#/profile/${user.id}`} className="font-bold hover:underline">{user.name}</a>
-            <div className="flex items-center space-x-2 text-xs text-text-secondary">
-              <span>{timeAgo(post.timestamp)}</span>
-              {post.tag && (
-                <>
-                  <span>·</span>
-                  <span className="bg-blue-100 text-primary font-semibold px-2 py-0.5 rounded-full">{post.tag}</span>
-                </>
-              )}
-            </div>
+            <a href={`#/profile/${user.id}`} className="font-bold hover:underline text-sm">{user.name}</a>
+             {post.tag && <p className="text-xs text-text-secondary">{post.tag}</p>}
           </div>
         </div>
         {isOwner && (
           <div className="relative" ref={menuRef}>
-            <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="text-text-secondary hover:text-text-primary p-1 rounded-full hover:bg-gray-100">
+            <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="text-text-secondary hover:text-text-primary p-1">
               <DotsHorizontalIcon className="w-5 h-5" />
             </button>
             {isMenuOpen && (
@@ -186,50 +178,59 @@ const PostCard: React.FC<PostCardProps> = ({ post, user, currentUser }) => {
         )}
       </div>
 
-      {/* Post Content */}
-      {isEditing ? (
-        <div className="px-4 pb-2">
-            <textarea
-                value={editedContent}
-                onChange={(e) => setEditedContent(e.target.value)}
-                className="w-full p-2 border rounded-md resize-y bg-background focus:outline-none focus:ring-2 focus:ring-primary"
-                rows={4}
-                autoFocus
-            />
-            <div className="flex justify-end space-x-2 mt-2">
-                <button onClick={handleCancelEdit} className="px-4 py-1.5 bg-gray-200 text-text-primary font-semibold rounded-md hover:bg-gray-300 text-sm">Cancel</button>
-                <button onClick={handleUpdatePost} disabled={isSaving} className="px-4 py-1.5 bg-primary text-white font-semibold rounded-md hover:bg-blue-700 disabled:bg-blue-300 text-sm">
-                    {isSaving ? 'Saving...' : 'Save'}
-                </button>
-            </div>
-        </div>
-      ) : (
-        <p className="px-4 pb-2 whitespace-pre-wrap text-text-primary">{parseContent(post.content)}</p>
-      )}
-
-
       {/* Post Media */}
-      <div className="bg-gray-100 max-h-[600px] overflow-hidden">
-        {renderMedia()}
-      </div>
+      {renderMedia()}
+      
+      {/* Post Actions */}
+       <div className="p-2 flex justify-between items-center">
+          <div className="flex space-x-1">
+              <ActionButton Icon={ThumbUpIcon} />
+              <ActionButton Icon={ChatAltIcon} />
+              <ActionButton Icon={ShareIcon} />
+          </div>
+       </div>
 
       {/* Post Stats */}
-      <div className="px-4 py-2 flex justify-between items-center text-sm text-text-secondary">
-        <div className="flex items-center space-x-1">
-          <span className="bg-primary p-1 rounded-full">
-            <ThumbUpIcon className="w-3 h-3 text-white" />
-          </span>
-          <span>{post.likes}</span>
-        </div>
-        <span>{post.comments} comments</span>
+      <div className="px-4 pb-1 text-sm">
+        <span className="font-semibold text-text-primary">{post.likes} likes</span>
       </div>
 
-      {/* Post Actions */}
-      <div className="border-t mx-4 flex justify-around">
-        <ActionButton Icon={ThumbUpIcon} text="Like" />
-        <ActionButton Icon={ChatAltIcon} text="Comment" />
-        <ActionButton Icon={ShareIcon} text="Share" />
+      {/* Post Content */}
+      <div className="px-4 pb-2">
+        {isEditing ? (
+          <div>
+              <textarea
+                  value={editedContent}
+                  onChange={(e) => setEditedContent(e.target.value)}
+                  className="w-full p-2 border rounded-md resize-y bg-background focus:outline-none focus:ring-2 focus:ring-primary text-sm"
+                  rows={3}
+                  autoFocus
+              />
+              <div className="flex justify-end space-x-2 mt-2">
+                  <button onClick={handleCancelEdit} className="px-3 py-1 bg-gray-200 text-text-primary font-semibold rounded-md hover:bg-gray-300 text-xs">Cancel</button>
+                  <button onClick={handleUpdatePost} disabled={isSaving} className="px-3 py-1 bg-primary text-white font-semibold rounded-md hover:bg-blue-700 disabled:bg-blue-300 text-xs">
+                      {isSaving ? 'Saving...' : 'Save'}
+                  </button>
+              </div>
+          </div>
+        ) : (
+          post.content && (
+            <p className="whitespace-pre-wrap text-text-primary text-sm">
+              <a href={`#/profile/${user.id}`} className="font-bold hover:underline mr-1.5">{user.handle}</a>
+              {parseContent(post.content)}
+            </p>
+          )
+        )}
       </div>
+
+      {/* Comments and Timestamp */}
+      {post.comments > 0 && (
+        <a href="#" className="px-4 pb-2 text-sm text-text-secondary cursor-pointer hover:underline">
+          View all {post.comments} comments
+        </a>
+      )}
+      <p className="px-4 pb-3 text-xs text-text-secondary uppercase">{timeAgo(post.timestamp)}</p>
+
     </div>
     {lightboxImage && <ImageLightbox imageUrl={lightboxImage} onClose={() => setLightboxImage(null)} />}
     </>
@@ -238,13 +239,11 @@ const PostCard: React.FC<PostCardProps> = ({ post, user, currentUser }) => {
 
 interface ActionButtonProps {
     Icon: React.ElementType;
-    text: string;
 }
 
-const ActionButton: React.FC<ActionButtonProps> = ({ Icon, text }) => (
-    <button className="flex-1 flex justify-center items-center space-x-2 py-2 text-text-secondary font-semibold hover:bg-gray-100 rounded-md transition-colors duration-200">
-        <Icon className="w-5 h-5" />
-        <span>{text}</span>
+const ActionButton: React.FC<ActionButtonProps> = ({ Icon }) => (
+    <button className="flex justify-center items-center p-2 text-text-secondary hover:text-text-primary rounded-md transition-colors duration-200">
+        <Icon className="w-6 h-6" />
     </button>
 )
 

@@ -119,7 +119,7 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({ profileUser, currentUser,
         )}
       </div>
       <div className="p-4 pt-0">
-        <div className="flex flex-col sm:flex-row items-center sm:items-end -mt-16 sm:space-x-4">
+        <div className="flex flex-col sm:flex-row items-center sm:items-end -mt-16 sm:space-x-4 relative">
           <div className="w-32 h-32 md:w-40 md:h-40 rounded-full border-4 border-card bg-gray-300 overflow-hidden flex-shrink-0">
              <img
                 src={profileUser.avatarUrl}
