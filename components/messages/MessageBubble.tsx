@@ -66,6 +66,22 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message, currentUser, sen
                         </div>
                     ) : (
                         <>
+                            {message.postLink && (
+                                <a href={`#/post/${message.postLink.postId}`} className="block my-1">
+                                    <div className={`p-2 rounded-lg ${isSentByCurrentUser ? 'bg-blue-400/50' : 'bg-gray-300/60 dark:bg-gray-600/60'}`}>
+                                        <div className="flex items-center gap-2 mb-2">
+                                            <img src={message.postLink.authorAvatar} alt={message.postLink.authorName} className="w-6 h-6 rounded-full" />
+                                            <span className="font-semibold text-xs">{message.postLink.authorName}</span>
+                                        </div>
+                                        {message.postLink.imageUrl && (
+                                            <img src={message.postLink.imageUrl} alt="Post preview" className="rounded-md max-h-40 w-full object-cover my-1" />
+                                        )}
+                                        <p className="text-xs opacity-80 mt-1 italic">
+                                            {message.postLink.textSnippet}
+                                        </p>
+                                    </div>
+                                </a>
+                            )}
                             {message.text && <p className="text-sm whitespace-pre-wrap break-words">{message.text}</p>}
                             {message.mediaUrl && message.mediaType === 'image' && (
                                 <img src={message.mediaUrl} alt="sent media" className="rounded-lg max-w-xs max-h-64 my-1" />

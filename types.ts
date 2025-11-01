@@ -114,4 +114,11 @@ export interface Message {
     mediaType?: 'image' | 'audio' | 'video';
   };
   isDeleted?: boolean;
+  postLink?: {
+    postId: string;
+    textSnippet: string;
+    imageUrl?: string;
+    authorName: string;
+    authorAvatar: string;
+  };
 }

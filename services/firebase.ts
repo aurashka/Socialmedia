@@ -482,7 +482,8 @@ export const getOrCreateConversation = async (currentUserId: string, otherUserId
     }
 };
 
-export const sendMessage = async (conversationId: string, senderId: string, messageData: { text?: string; mediaUrl?: string; mediaType?: 'image' | 'audio' | 'video', replyTo?: Message['replyTo'] }) => {
+// FIX: Add 'postLink' to the messageData type to allow sharing posts.
+export const sendMessage = async (conversationId: string, senderId: string, messageData: { text?: string; mediaUrl?: string; mediaType?: 'image' | 'audio' | 'video', replyTo?: Message['replyTo'], postLink?: Message['postLink'] }) => {
     const messagesRef = ref(db, `messages/${conversationId}`);
     const newMessageRef = push(messagesRef);
     

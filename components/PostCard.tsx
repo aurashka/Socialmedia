@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import type { User, Post, Comment as CommentType } from '../types';
-import { DotsHorizontalIcon, HeartIcon, HeartIconFilled, ChatIcon, ShareIcon, TrashIcon, ChevronLeftIcon, ChevronRightIcon, PencilIcon, BookmarkIcon, BookmarkIconFilled, GlobeIcon, UsersIcon, LockClosedIcon } from './Icons';
+import { DotsHorizontalIcon, HeartIcon, HeartIconFilled, ChatAltIcon, ShareIcon, TrashIcon, ChevronLeftIcon, ChevronRightIcon, PencilIcon, BookmarkIcon, BookmarkIconFilled, GlobeIcon, UsersIcon, LockClosedIcon } from './Icons';
 import { parseContent } from '../utils/textUtils';
 import { updatePost, deletePost, toggleReaction, toggleBookmark } from '../services/firebase';
 import AddCommentForm from './comments/AddCommentForm';
 import PostCardShimmer from './shimmers/PostCardShimmer';
 import { db } from '../services/firebase';
 import { ref, query, orderByChild, limitToLast, onValue } from 'firebase/database';
+import ShareModal from './sharing/ShareModal';
 
 
 interface PostCardProps {
@@ -26,6 +27,7 @@ const PostCard: React.FC<PostCardProps> = ({ post, user, currentUser, users, onO
   const [isLiked, setIsLiked] = useState(false);
   const [animateLike, setAnimateLike] = useState(false);
   const [latestComment, setLatestComment] = useState<CommentType | null>(null);
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   
   const menuRef = useRef<HTMLDivElement>(null);
   const isOwner = currentUser?.id === post.userId;
@@ -144,25 +146,9 @@ const PostCard: React.FC<PostCardProps> = ({ post, user, currentUser, users, onO
     setCurrentMediaIndex(prev => (prev === post.media!.length - 1 ? 0 : prev + 1));
   };
   
-  const handleShare = async () => {
-    const postUrl = `${window.location.origin}${window.location.pathname}#/post/${post.id}`;
-    if (navigator.share) {
-        try {
-            await navigator.share({
-                title: `Post by ${user?.name}`,
-                text: post.content,
-                url: postUrl,
-            });
-        } catch (error) {
-            console.error('Error sharing post:', error);
-        }
-    } else {
-        navigator.clipboard.writeText(postUrl).then(() => {
-            alert('Post link copied to clipboard!');
-        }, () => {
-            alert('Could not copy link.');
-        });
-    }
+  const handleShare = () => {
+    if (!user) return;
+    setIsShareModalOpen(true);
   };
   
   const timeAgo = (timestamp: number): string => {
@@ -194,6 +180,7 @@ const PostCard: React.FC<PostCardProps> = ({ post, user, currentUser, users, onO
   const currentMedia = post.media?.[currentMediaIndex];
 
   return (
+    <>
     <div className="bg-surface dark:bg-[#1E1E1E] md:border-y border-divider dark:border-gray-700">
       {/* Post Header */}
       <div className="p-3 flex justify-between items-center">
@@ -272,7 +259,7 @@ const PostCard: React.FC<PostCardProps> = ({ post, user, currentUser, users, onO
                 <HeartIconFilled className={`w-7 h-7 text-red-500 transition-transform ${animateLike ? 'animate-heart-pop' : ''} ${!isLiked && 'hidden'}`} />
                 <HeartIcon className={`w-7 h-7 ${isLiked && 'hidden'}`} />
             </button>
-            <button onClick={() => onOpenCommentSheet(post.id)}><ChatIcon className="w-7 h-7"/></button>
+            <button onClick={() => onOpenCommentSheet(post.id)}><ChatAltIcon className="w-7 h-7"/></button>
             <button onClick={handleShare}><ShareIcon className="w-7 h-7"/></button>
           </div>
           <button onClick={handleToggleBookmark}>
@@ -330,6 +317,16 @@ const PostCard: React.FC<PostCardProps> = ({ post, user, currentUser, users, onO
             .animate-heart-pop-large { animation: heart-pop-large 0.6s ease-in-out; }
         `}</style>
     </div>
+    {isShareModalOpen && (
+      <ShareModal
+        post={post}
+        postUser={user}
+        currentUser={currentUser}
+        users={users}
+        onClose={() => setIsShareModalOpen(false)}
+      />
+    )}
+    </>
   );
 };
 
