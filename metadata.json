@@ -1,0 +1,5 @@
+{
+  "name": "ConnectSphere",
+  "description": "A modern, responsive social media application designed with a user interface inspired by Facebook, built with React, TypeScript, and Tailwind CSS. It features a real-time feed, stories, and user interactions, all powered by Firebase.",
+  "requestFramePermissions": []
+}
