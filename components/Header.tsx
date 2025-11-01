@@ -1,23 +1,30 @@
 import React, { useState, useEffect, useRef } from 'react';
-import type { User, Community, Channel } from '../types';
+import type { User, Community, Channel, Notification, Post } from '../types';
 import { SearchIcon, MessageIcon, HeartIcon } from './Icons';
 import { auth } from '../services/firebase';
 import { signOut } from 'firebase/auth';
 import SearchOverlay from './search/SearchOverlay';
+import NotificationDropdown from './notifications/NotificationDropdown';
 
 interface HeaderProps {
   currentUser: User;
   friendRequestCount: number;
   users: Record<string, User>;
+  posts: Post[];
   friendRequests: Record<string, any>;
   communities: Record<string, Community>;
   channels: Record<string, Channel>;
+  notifications: Notification[];
 }
 
-const Header: React.FC<HeaderProps> = ({ currentUser, friendRequestCount, users, friendRequests, communities, channels }) => {
+const Header: React.FC<HeaderProps> = ({ currentUser, users, posts, friendRequests, communities, channels, notifications }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const notificationRef = useRef<HTMLDivElement>(null);
+  
+  const unreadCount = notifications.filter(n => !n.read).length;
 
   const handleSignOut = async () => {
     try {
@@ -29,8 +36,12 @@ const Header: React.FC<HeaderProps> = ({ currentUser, friendRequestCount, users,
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+      const target = event.target as Node;
+      if (menuRef.current && !menuRef.current.contains(target)) {
         setIsMenuOpen(false);
+      }
+      if (notificationRef.current && !notificationRef.current.contains(target)) {
+        setIsNotificationsOpen(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -62,9 +73,25 @@ const Header: React.FC<HeaderProps> = ({ currentUser, friendRequestCount, users,
               <a href="#">
                 <MessageIcon className="w-6 h-6 text-primary dark:text-gray-100"/>
               </a>
-              <a href="#">
-                <HeartIcon className="w-6 h-6 text-primary dark:text-gray-100"/>
-              </a>
+              <div className="relative" ref={notificationRef}>
+                  <button onClick={() => setIsNotificationsOpen(prev => !prev)} className="relative">
+                    <HeartIcon className="w-6 h-6 text-primary dark:text-gray-100"/>
+                    {unreadCount > 0 && (
+                        <span className="absolute -top-1 -right-1.5 bg-red-500 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
+                            {unreadCount}
+                        </span>
+                    )}
+                  </button>
+                  {isNotificationsOpen && (
+                      <NotificationDropdown 
+                          currentUser={currentUser}
+                          notifications={notifications}
+                          users={users}
+                          posts={posts}
+                          onClose={() => setIsNotificationsOpen(false)}
+                      />
+                  )}
+              </div>
             <div className="relative" ref={menuRef}>
               <img
                 src={currentUser.avatarUrl}

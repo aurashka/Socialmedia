@@ -46,7 +46,7 @@ export interface Notification {
   id: string;
   recipientId: string;
   senderId: string;
-  type: 'like' | 'comment' | 'reply' | 'mention' | 'friend_request';
+  type: 'like' | 'comment' | 'reply' | 'mention' | 'friend_request' | 'friend_accept';
   postId?: string;
   commentId?: string;
   read: boolean;

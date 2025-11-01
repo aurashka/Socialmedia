@@ -162,7 +162,7 @@ const PostViewer: React.FC<PostViewerProps> = ({ post: initialPost, user, curren
           
           {/* Actions & Stats */}
           <div className="p-4 border-t border-divider dark:border-gray-700 flex-shrink-0">
-             <AddCommentForm postId={post.id} currentUser={currentUser} onCommentAdded={() => onOpenCommentSheet(post.id)}/>
+             <AddCommentForm postId={post.id} postOwnerId={post.userId} currentUser={currentUser} allUsers={users} onCommentAdded={() => onOpenCommentSheet(post.id)}/>
           </div>
         </div>
       </div>

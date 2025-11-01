@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { onValue, ref, query, limitToLast, orderByChild } from 'firebase/database';
 import { db, onAuthChange, createPost } from './services/firebase';
-import type { User, Post, Story, Community, Channel } from './types';
+import type { User, Post, Story, Community, Channel, Notification } from './types';
 import type { User as FirebaseUser } from 'firebase/auth';
 import Header from './components/Header';
 import MainContent from './components/MainContent';
@@ -62,6 +62,7 @@ const App: React.FC = () => {
   const [communities, setCommunities] = useState<Record<string, Community>>({});
   const [channels, setChannels] = useState<Record<string, Channel>>({});
   const [friendRequests, setFriendRequests] = useState<Record<string, any>>({});
+  const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
   const [initialPostLoad, setInitialPostLoad] = useState(true);
   const [route, setRoute] = useState<Route>({ name: 'home' });
@@ -171,6 +172,17 @@ const App: React.FC = () => {
     const requestsUnsub = onValue(requestsRef, (snapshot) => {
         setFriendRequests(snapshot.val() || {});
     });
+
+    const notifsRef = ref(db, `notifications/${currentUser.id}`);
+    const notifsQuery = query(notifsRef, orderByChild('timestamp'), limitToLast(30));
+    const notifsUnsub = onValue(notifsQuery, (snapshot) => {
+        if (snapshot.exists()) {
+            const notifsData = snapshot.val();
+            setNotifications(Object.values(notifsData).sort((a: any, b: any) => b.timestamp - a.timestamp) as Notification[]);
+        } else {
+            setNotifications([]);
+        }
+    });
     
     return () => {
       usersUnsub();
@@ -179,6 +191,7 @@ const App: React.FC = () => {
       requestsUnsub();
       communitiesUnsub();
       channelsUnsub();
+      notifsUnsub();
     }
   }, [currentUser?.id]);
 
@@ -206,7 +219,7 @@ const App: React.FC = () => {
     };
 
     try {
-      await createPost(newPost);
+      await createPost(newPost, users);
     } catch (error) {
       console.error("Failed to create post:", error);
       alert("Error creating post. Please try again.");
@@ -350,9 +363,11 @@ const App: React.FC = () => {
           currentUser={currentUser} 
           friendRequestCount={Object.keys(friendRequests).length}
           users={users}
+          posts={posts}
           friendRequests={friendRequests}
           communities={communities}
           channels={channels}
+          notifications={notifications}
         />
         <main className="pt-14">
           {renderContent()}

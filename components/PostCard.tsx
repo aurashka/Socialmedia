@@ -59,7 +59,7 @@ const PostCard: React.FC<PostCardProps> = ({ post, user, currentUser, users, onO
       setTimeout(() => setAnimateLike(false), 600);
     }
     try {
-        await toggleReaction(post.id, currentUser.id, reactionType);
+        await toggleReaction(post, currentUser.id, reactionType);
     } catch (error) {
         console.error("Failed to react:", error);
     }
@@ -250,7 +250,7 @@ const PostCard: React.FC<PostCardProps> = ({ post, user, currentUser, users, onO
         </div>
       ) : (
        <div className="border-t border-divider dark:border-gray-700 px-3 py-2">
-            <AddCommentForm postId={post.id} currentUser={currentUser} onCommentAdded={() => onOpenCommentSheet(post.id)} />
+            <AddCommentForm postId={post.id} postOwnerId={post.userId} currentUser={currentUser} allUsers={users} onCommentAdded={() => onOpenCommentSheet(post.id)} />
        </div>
       )}
        <style>{`

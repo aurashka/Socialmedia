@@ -34,3 +34,27 @@ export const parseContent = (text: string, users: Record<string, User>): React.R
     return <React.Fragment key={index}>{part}</React.Fragment>;
   });
 };
+
+export const findMentions = (text: string, users: Record<string, User>): string[] => {
+    if (!text) return [];
+    const mentions = text.match(/@([a-z0-9_]+)/gi);
+    if (!mentions) return [];
+
+    const usersByHandle = Object.values(users).reduce((acc, user) => {
+        if (user.handle) {
+            acc[user.handle.toLowerCase()] = user;
+        }
+        return acc;
+    }, {} as Record<string, User>);
+    
+    const mentionedUserIds = new Set<string>();
+    mentions.forEach(mention => {
+        const handle = mention.substring(1).toLowerCase();
+        const user = usersByHandle[handle];
+        if (user) {
+            mentionedUserIds.add(user.id);
+        }
+    });
+
+    return Array.from(mentionedUserIds);
+}

@@ -5,11 +5,13 @@ import { addComment } from '../../services/firebase';
 interface AddCommentFormProps {
   currentUser: User;
   postId: string;
+  postOwnerId: string;
+  allUsers: Record<string, User>;
   parentCommentId?: string;
   onCommentAdded?: () => void;
 }
 
-const AddCommentForm: React.FC<AddCommentFormProps> = ({ currentUser, postId, parentCommentId, onCommentAdded }) => {
+const AddCommentForm: React.FC<AddCommentFormProps> = ({ currentUser, postId, postOwnerId, allUsers, parentCommentId, onCommentAdded }) => {
   const [content, setContent] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -24,7 +26,7 @@ const AddCommentForm: React.FC<AddCommentFormProps> = ({ currentUser, postId, pa
         userId: currentUser.id,
         content: content.trim(),
         parentCommentId,
-      });
+      }, postOwnerId, allUsers);
       setContent('');
       if (onCommentAdded) {
         onCommentAdded();

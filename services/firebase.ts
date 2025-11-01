@@ -24,6 +24,7 @@ import {
   type User as FirebaseUser
 } from 'firebase/auth';
 import type { Post, Story, User, Comment, Notification } from '../types';
+import { findMentions } from '../utils/textUtils';
 
 const firebaseConfig = {
   apiKey: "AIzaSyAPPZgVrZF9SEaS42xx8RcsnM2i8EpenUQ",
@@ -38,6 +39,31 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 export const db = getDatabase(app);
 export const auth = getAuth(app);
+
+// --- Notification Functions ---
+const createNotification = async (notificationData: Omit<Notification, 'id' | 'timestamp' | 'read'>) => {
+    // Avoid self-notification
+    if (notificationData.senderId === notificationData.recipientId) return;
+
+    const notificationsRef = ref(db, `notifications/${notificationData.recipientId}`);
+    const newNotifRef = push(notificationsRef);
+    const newNotification: Notification = {
+        ...notificationData,
+        id: newNotifRef.key!,
+        timestamp: Date.now(),
+        read: false
+    };
+    await set(newNotifRef, newNotification);
+};
+
+export const markNotificationsAsRead = async (userId: string, notificationIds: string[]) => {
+    if (notificationIds.length === 0) return;
+    const updates: Record<string, boolean> = {};
+    notificationIds.forEach(id => {
+        updates[`/notifications/${userId}/${id}/read`] = true;
+    });
+    await update(ref(db), updates);
+};
 
 // --- User & Auth Functions ---
 
@@ -77,6 +103,11 @@ export const isHandleUnique = async (handle: string, currentUserId?: string): Pr
 // --- Friend Request and Management Functions ---
 export const sendFriendRequest = (fromId: string, toId: string) => {
     const requestRef = ref(db, `friendRequests/${toId}/${fromId}`);
+    createNotification({
+        recipientId: toId,
+        senderId: fromId,
+        type: 'friend_request'
+    });
     return set(requestRef, { timestamp: Date.now() });
 };
 
@@ -94,6 +125,11 @@ export const handleFriendRequest = async (currentUserId: string, senderId: strin
         updates[`users/${currentUserId}/friends/${senderId}`] = true;
         updates[`users/${senderId}/friends/${currentUserId}`] = true;
         await update(ref(db), updates);
+        await createNotification({
+            recipientId: senderId,
+            senderId: currentUserId,
+            type: 'friend_accept'
+        });
     }
 };
 
@@ -130,7 +166,7 @@ export const setUserBadge = (userId: string, badgeUrl: string | null) => {
 
 
 // --- Post & Story Functions ---
-export const createPost = async (postData: Omit<Post, 'id' | 'commentCount' | 'timestamp'>) => {
+export const createPost = async (postData: Omit<Post, 'id' | 'commentCount' | 'timestamp'>, allUsers: Record<string, User>) => {
     const postsRef = ref(db, 'posts');
     const newPostRef = push(postsRef);
 
@@ -141,16 +177,28 @@ export const createPost = async (postData: Omit<Post, 'id' | 'commentCount' | 't
         return acc;
     }, {} as Omit<Post, 'id' | 'commentCount' | 'timestamp'>);
 
+    const newPostId = newPostRef.key!;
     await set(newPostRef, {
         ...cleanPostData,
-        id: newPostRef.key,
+        id: newPostId,
         commentCount: 0,
         timestamp: Date.now(),
     });
+    
+    // Notify mentioned users
+    const mentionedUserIds = findMentions(postData.content, allUsers);
+    mentionedUserIds.forEach(userId => {
+        createNotification({
+            recipientId: userId,
+            senderId: postData.userId,
+            type: 'mention',
+            postId: newPostId
+        });
+    });
 };
 
-export const toggleReaction = async (postId: string, userId: string, reactionType: string) => {
-    const postReactionsRef = ref(db, `posts/${postId}/reactions`);
+export const toggleReaction = async (post: Post, userId: string, reactionType: string) => {
+    const postReactionsRef = ref(db, `posts/${post.id}/reactions`);
     
     await runTransaction(postReactionsRef, (currentData) => {
         const reactions = currentData || {};
@@ -172,6 +220,14 @@ export const toggleReaction = async (postId: string, userId: string, reactionTyp
                 reactions[reactionType] = {};
             }
             reactions[reactionType][userId] = true;
+             if (reactionType === 'like') {
+                createNotification({
+                    recipientId: post.userId,
+                    senderId: userId,
+                    type: 'like',
+                    postId: post.id
+                });
+            }
         }
 
         return reactions;
@@ -215,7 +271,7 @@ export const createStory = async (storyData: Omit<Story, 'id' | 'timestamp'>) =>
 };
 
 // --- Comment Functions ---
-export const addComment = async (commentData: Omit<Comment, 'id' | 'timestamp'>) => {
+export const addComment = async (commentData: Omit<Comment, 'id' | 'timestamp'>, postOwnerId: string, allUsers: Record<string, User>) => {
     const commentsRef = ref(db, 'comments');
     const newCommentRef = push(commentsRef);
     
@@ -233,7 +289,29 @@ export const addComment = async (commentData: Omit<Comment, 'id' | 'timestamp'>)
     if (commentData.parentCommentId) {
         const parentCommentReplyCountRef = ref(db, `comments/${commentData.parentCommentId}/replyCount`);
         await runTransaction(parentCommentReplyCountRef, (currentCount) => (currentCount || 0) + 1);
+        // TODO: Notify parent comment owner
+    } else {
+        // This is a top-level comment, notify post owner
+        createNotification({
+            recipientId: postOwnerId,
+            senderId: commentData.userId,
+            type: 'comment',
+            postId: commentData.postId,
+            commentId: newComment.id
+        });
     }
+
+    // Notify mentioned users
+    const mentionedUserIds = findMentions(newComment.content, allUsers);
+    mentionedUserIds.forEach(userId => {
+        createNotification({
+            recipientId: userId,
+            senderId: newComment.userId,
+            type: 'mention',
+            postId: newComment.postId,
+            commentId: newComment.id
+        });
+    });
 };
 
 export const deleteComment = async (comment: Comment) => {
