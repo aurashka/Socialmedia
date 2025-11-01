@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { onValue, ref } from 'firebase/database';
 import { db, onAuthChange } from './services/firebase';
-import type { User, Post, Story } from './types';
+import type { User, Post, Story, Community, Channel } from './types';
 import type { User as FirebaseUser } from 'firebase/auth';
 import Header from './components/Header';
 import SidebarLeft from './components/SidebarLeft';
@@ -11,7 +11,7 @@ import CompleteProfile from './components/auth/CompleteProfile';
 import LoadingSpinner from './components/LoadingSpinner';
 import ProfilePage from './components/profile/ProfilePage';
 import FriendsPage from './components/friends/FriendsPage';
-import SearchOverlay from './components/search/SearchOverlay';
+import SearchPage from './components/search/SearchPage';
 import { signOut } from 'firebase/auth';
 import { auth } from './services/firebase';
 import BottomNav from './components/BottomNav';
@@ -19,7 +19,8 @@ import BottomNav from './components/BottomNav';
 type Route = 
   | { name: 'home' }
   | { name: 'profile'; id?: string }
-  | { name: 'friends' };
+  | { name: 'friends' }
+  | { name: 'search'; query?: string };
 
 const parseHash = (): Route => {
     const hash = window.location.hash.substring(2);
@@ -30,6 +31,8 @@ const parseHash = (): Route => {
             return { name: 'profile', id: param };
         case 'friends':
             return { name: 'friends' };
+        case 'search':
+            return { name: 'search', query: param ? decodeURIComponent(param) : undefined };
         default:
             return { name: 'home' };
     }
@@ -41,10 +44,11 @@ const App: React.FC = () => {
   const [users, setUsers] = useState<Record<string, User>>({});
   const [posts, setPosts] = useState<Post[]>([]);
   const [stories, setStories] = useState<Story[]>([]);
+  const [communities, setCommunities] = useState<Record<string, Community>>({});
+  const [channels, setChannels] = useState<Record<string, Channel>>({});
   const [friendRequests, setFriendRequests] = useState<Record<string, any>>({});
   const [loading, setLoading] = useState(true);
   const [route, setRoute] = useState<Route>(parseHash());
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   useEffect(() => {
     const handleHashChange = () => setRoute(parseHash());
@@ -110,6 +114,16 @@ const App: React.FC = () => {
       const storiesData = snapshot.val() || {};
       setStories(Object.values(storiesData) as Story[]);
     });
+    
+    const communitiesRef = ref(db, 'communities/');
+    const communitiesUnsub = onValue(communitiesRef, (snapshot) => {
+      setCommunities(snapshot.val() || {});
+    });
+    
+    const channelsRef = ref(db, 'channels/');
+    const channelsUnsub = onValue(channelsRef, (snapshot) => {
+      setChannels(snapshot.val() || {});
+    });
 
     const requestsRef = ref(db, `friendRequests/${currentUser.id}`);
     const requestsUnsub = onValue(requestsRef, (snapshot) => {
@@ -121,6 +135,8 @@ const App: React.FC = () => {
       postsUnsub();
       storiesUnsub();
       requestsUnsub();
+      communitiesUnsub();
+      channelsUnsub();
     }
   }, [currentUser]);
   
@@ -169,6 +185,14 @@ const App: React.FC = () => {
                         users={users}
                         friendRequests={friendRequests}
                      />
+          case 'search':
+              return <SearchPage
+                        query={route.query || ''}
+                        currentUser={currentUser}
+                        users={users}
+                        communities={communities}
+                        channels={channels}
+                     />
           default:
               return <div>Page not found</div>
       }
@@ -191,7 +215,6 @@ const App: React.FC = () => {
       <Header 
         currentUser={currentUser} 
         friendRequestCount={Object.keys(friendRequests).length} 
-        onSearchClick={() => setIsSearchOpen(true)} 
       />
       <main className="flex pt-14 max-w-7xl mx-auto">
         <SidebarLeft currentUser={currentUser} />
@@ -199,14 +222,7 @@ const App: React.FC = () => {
           {renderContent()}
         </div>
       </main>
-      <BottomNav onPostClick={() => { /* Logic to open post modal */ }} />
-      {isSearchOpen && (
-        <SearchOverlay 
-          users={users} 
-          currentUser={currentUser} 
-          onClose={() => setIsSearchOpen(false)} 
-        />
-      )}
+      <BottomNav onPostClick={() => { /* Logic to open post modal */ }} currentUser={currentUser}/>
     </div>
   );
 };

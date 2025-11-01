@@ -12,6 +12,7 @@ export interface User {
   friends?: Record<string, boolean>; // Record of friend user IDs
   isBanned?: boolean;
   blocked?: Record<string, boolean>; // Record of blocked user IDs
+  isVerified?: boolean;
 }
 
 export interface Post {
@@ -31,4 +32,27 @@ export interface Story {
   userId: string;
   imageUrl: string;
   timestamp: number; // Added timestamp for sorting stories
+}
+
+export interface Community {
+  id: string;
+  name: string;
+  description: string;
+  coverPhotoUrl: string;
+  avatarUrl: string;
+  creatorId: string;
+  members: Record<string, 'admin' | 'member'>;
+  isPublic: boolean;
+  timestamp: number;
+}
+
+export interface Channel {
+  id: string;
+  name: string;
+  description: string;
+  avatarUrl: string;
+  creatorId: string;
+  subscribers: Record<string, boolean>;
+  isVerified?: boolean;
+  timestamp: number;
 }

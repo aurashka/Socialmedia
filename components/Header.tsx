@@ -7,11 +7,11 @@ import { signOut } from 'firebase/auth';
 interface HeaderProps {
   currentUser: User;
   friendRequestCount: number;
-  onSearchClick: () => void;
 }
 
-const Header: React.FC<HeaderProps> = ({ currentUser, friendRequestCount, onSearchClick }) => {
+const Header: React.FC<HeaderProps> = ({ currentUser, friendRequestCount }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const menuRef = useRef<HTMLDivElement>(null);
 
   const handleSignOut = async () => {
@@ -19,6 +19,13 @@ const Header: React.FC<HeaderProps> = ({ currentUser, friendRequestCount, onSear
       await signOut(auth);
     } catch (error) {
       console.error("Error signing out: ", error);
+    }
+  };
+
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      window.location.hash = `#/search/${encodeURIComponent(searchQuery.trim())}`;
     }
   };
 
@@ -44,17 +51,18 @@ const Header: React.FC<HeaderProps> = ({ currentUser, friendRequestCount, onSear
         </a>
         
         {/* Center Section - Desktop Search */}
-        <div className="relative hidden md:flex items-center">
+        <form onSubmit={handleSearchSubmit} className="relative hidden md:flex items-center">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
               <SearchIcon className="h-5 w-5 text-secondary" />
             </div>
             <input 
               type="text" 
               placeholder="Search" 
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
               className="bg-background rounded-md py-1.5 pl-10 pr-4 w-64 text-primary focus:outline-none"
-              onFocus={onSearchClick}
             />
-        </div>
+        </form>
 
         {/* Right Section */}
         <div className="flex items-center space-x-4">
