@@ -1,13 +1,8 @@
 import React, { useState } from 'react';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { auth, updateUserProfile } from '../../services/firebase';
-import { MailIcon, LockClosedIcon } from '../Icons';
 
-interface RegisterProps {
-  onSwitchToLogin: () => void;
-}
-
-const Register: React.FC<RegisterProps> = ({ onSwitchToLogin }) => {
+const Register: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [phone, setPhone] = useState('');
@@ -45,64 +40,59 @@ const Register: React.FC<RegisterProps> = ({ onSwitchToLogin }) => {
   };
 
   return (
-    <div>
-      <h2 className="text-3xl mb-2 font-bold text-text-primary text-center">Create your Account</h2>
-      <p className="mb-6 text-text-secondary text-center">
-        Sign up to start connecting with friends.
+    <div className="flex flex-col items-center">
+      <h1 className="text-4xl font-serif text-text-primary mb-4">ConnectSphere</h1>
+      <p className="text-md font-semibold text-text-secondary text-center mb-4">
+        Sign up to see photos and videos from your friends.
       </p>
-      {error && <p className="mb-4 text-red-500 bg-red-100 p-3 rounded-md text-sm">{error}</p>}
-      <form onSubmit={handleRegister}>
-        <div className="relative mb-4">
-             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <MailIcon className="h-5 w-5 text-gray-400" />
-            </div>
-          <input
-            type="email"
-            placeholder="Email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="w-full p-3 pl-10 border rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-primary"
-            required
-          />
-        </div>
-        <div className="relative mb-4">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <LockClosedIcon className="h-5 w-5 text-gray-400" />
-            </div>
-          <input
-            type="password"
-            placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="w-full p-3 pl-10 border rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-primary"
-            required
-          />
-        </div>
-        <div className="mb-4">
-          <input
-            type="tel"
-            placeholder="Phone Number (Optional)"
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            className="w-full p-3 border rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-primary"
-          />
-        </div>
+
+      <div className="flex items-center my-2 w-full">
+        <div className="flex-grow border-t border-divider"></div>
+        <span className="flex-shrink mx-4 text-xs font-semibold text-text-secondary uppercase">OR</span>
+        <div className="flex-grow border-t border-divider"></div>
+      </div>
+
+      <form onSubmit={handleRegister} className="w-full space-y-2 mt-2">
+        <input
+          type="email"
+          aria-label="Email address"
+          placeholder="Email address"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          className="w-full px-3 py-2 border rounded-md bg-gray-50 text-text-secondary focus:outline-none focus:border-gray-400 text-sm"
+          required
+        />
+        <input
+          type="tel"
+          aria-label="Phone Number"
+          placeholder="Phone Number (Optional)"
+          value={phone}
+          onChange={(e) => setPhone(e.target.value)}
+          className="w-full px-3 py-2 border rounded-md bg-gray-50 text-text-secondary focus:outline-none focus:border-gray-400 text-sm"
+        />
+        <input
+          type="password"
+          aria-label="Password"
+          placeholder="Password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          className="w-full px-3 py-2 border rounded-md bg-gray-50 text-text-secondary focus:outline-none focus:border-gray-400 text-sm"
+          required
+        />
+
+        <p className="text-xs text-text-secondary text-center py-2">
+            By signing up, you agree to our <a href="#" className="font-semibold text-text-secondary hover:underline">Terms</a> & <a href="#" className="font-semibold text-text-secondary hover:underline">Privacy Policy</a>.
+        </p>
+
         <button
           type="submit"
-          disabled={loading}
-          className="w-full bg-secondary text-white p-3 rounded-md font-bold hover:bg-green-600 disabled:bg-green-300 transition-colors"
+          disabled={loading || !email || !password}
+          className="w-full bg-primary text-white p-2 rounded-lg font-semibold hover:bg-blue-700 disabled:opacity-50 transition-colors text-sm"
         >
-          {loading ? 'Creating Account...' : 'Sign Up'}
+          {loading ? 'Signing Up...' : 'Sign Up'}
         </button>
       </form>
-      <div className="mt-6 text-center">
-        <p className="text-text-secondary">
-          Already have an account?{' '}
-          <button onClick={onSwitchToLogin} className="text-primary font-bold hover:underline">
-            Log in
-          </button>
-        </p>
-      </div>
+      {error && <p className="mt-4 text-red-500 text-center text-sm">{error}</p>}
     </div>
   );
 };
