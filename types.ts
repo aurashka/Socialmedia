@@ -25,6 +25,7 @@ export interface Post {
   likes: number;
   comments: number;
   tag?: string;
+  isPublic?: boolean;
 }
 
 export interface Story {

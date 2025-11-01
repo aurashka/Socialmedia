@@ -1,13 +1,13 @@
-import React, { useState, useEffect } from 'react';
-import type { User, Post } from '../../types';
+import React, { useState, useEffect, useMemo } from 'react';
+import type { User, Post, Story } from '../../types';
 import ProfileHeader from './ProfileHeader';
 import PostCard from '../PostCard';
-import CreatePost from '../CreatePost';
 import PostModal from '../PostModal';
 import { onValue, ref } from 'firebase/database';
 import { db, createPost, unblockUser } from '../../services/firebase';
 import { uploadImage } from '../../services/imageUpload';
-import { GridIcon } from '../Icons';
+import { GridIcon, MenuIcon } from '../Icons';
+import StoryViewer from '../StoryViewer';
 
 interface ProfilePageProps {
   currentUser: User;
@@ -15,18 +15,19 @@ interface ProfilePageProps {
   users: Record<string, User>;
   posts: Post[];
   friendRequests: Record<string, any>;
+  stories: Story[];
 }
 
-const ProfilePage: React.FC<ProfilePageProps> = ({ currentUser, profileUserId, users, posts, friendRequests }) => {
+const ProfilePage: React.FC<ProfilePageProps> = ({ currentUser, profileUserId, users, posts, friendRequests, stories }) => {
   const targetUserId = profileUserId || currentUser.id;
   const [isPostModalOpen, setIsPostModalOpen] = useState(false);
   const [isFriendRequestSent, setIsFriendRequestSent] = useState(false);
-  const [activeTab, setActiveTab] = useState('posts');
+  const [activeTab, setActiveTab] = useState<'grid' | 'list'>('grid');
+  const [viewingStories, setViewingStories] = useState(false);
 
   useEffect(() => {
     if (!users[targetUserId] || !currentUser || targetUserId === currentUser.id) return;
     
-    // Check if the current user has sent a request to the profile user
     const sentRequestRef = ref(db, `friendRequests/${targetUserId}/${currentUser.id}`);
     const unsubscribe = onValue(sentRequestRef, (snapshot) => {
         setIsFriendRequestSent(snapshot.exists());
@@ -59,7 +60,20 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ currentUser, profileUserId, u
   }
   
   const isCurrentUser = targetUserId === currentUser.id;
-  const userPosts = posts.filter(post => post.userId === targetUserId);
+  
+  const userPosts = useMemo(() => {
+    return posts
+      .filter(post => post.userId === targetUserId)
+      .filter(post => {
+        if (isCurrentUser) return true; // Current user sees all their own posts
+        return post.isPublic !== false; // Others only see public posts
+      });
+  }, [posts, targetUserId, isCurrentUser]);
+  
+  const profileUserStories = useMemo(() => {
+    return stories.filter(story => story.userId === targetUserId).sort((a,b) => b.timestamp - a.timestamp);
+  }, [stories, targetUserId]);
+
   const isFriendRequestReceived = friendRequests && friendRequests[profileUser.id];
   
   const handleCreatePost = async (content: string, imageFiles: File[]) => {
@@ -90,8 +104,16 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ currentUser, profileUserId, u
   };
   
   const renderContent = () => {
+    if (userPosts.length === 0) {
+        return (
+          <div className="bg-surface rounded-lg p-8 text-center text-secondary mt-1">
+              <p>{isCurrentUser ? "You haven't" : `${profileUser.name} hasn't`} posted anything yet.</p>
+          </div>
+        )
+    }
+
     switch(activeTab) {
-      case 'posts':
+      case 'grid':
         return (
           <div className="grid grid-cols-3 gap-1">
             {userPosts.map(post => (
@@ -103,12 +125,16 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ currentUser, profileUserId, u
             ))}
           </div>
         );
+      case 'list':
+          return (
+            <div className="space-y-4 max-w-xl mx-auto py-4">
+              {userPosts.map(post => (
+                  <PostCard key={post.id} post={post} user={users[post.userId]} currentUser={currentUser} />
+              ))}
+            </div>
+          )
       default:
-        return (
-          <div className="bg-surface rounded-lg p-8 text-center text-secondary">
-            <p>Content not available.</p>
-          </div>
-        )
+        return null;
     }
   }
 
@@ -121,20 +147,17 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ currentUser, profileUserId, u
         isFriendRequestSent={isFriendRequestSent}
         isFriendRequestReceived={!!isFriendRequestReceived}
         postCount={userPosts.length}
+        stories={profileUserStories}
+        onViewStories={() => setViewingStories(true)}
       />
       
       <div className="border-t border-b border-divider flex justify-center">
-        <TabButton Icon={GridIcon} active={activeTab === 'posts'} onClick={() => setActiveTab('posts')} />
+        <TabButton Icon={GridIcon} label="Grid" active={activeTab === 'grid'} onClick={() => setActiveTab('grid')} />
+        <TabButton Icon={MenuIcon} label="Feed" active={activeTab === 'list'} onClick={() => setActiveTab('list')} />
       </div>
 
       <div className="pt-1">
-          {userPosts.length > 0 ? (
-              renderContent()
-          ) : (
-              <div className="bg-surface rounded-lg p-8 text-center text-secondary">
-                  <p>{isCurrentUser ? "You haven't" : `${profileUser.name} hasn't`} posted anything yet.</p>
-              </div>
-          )}
+          {renderContent()}
       </div>
 
       {isPostModalOpen && (
@@ -144,13 +167,21 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ currentUser, profileUserId, u
           onSubmit={handleCreatePost}
         />
       )}
+      {viewingStories && profileUserStories.length > 0 && (
+          <StoryViewer 
+            user={profileUser}
+            stories={profileUserStories}
+            onClose={() => setViewingStories(false)}
+          />
+      )}
     </div>
   );
 };
 
-const TabButton: React.FC<{Icon: React.ElementType, active: boolean, onClick: () => void}> = ({ Icon, active, onClick }) => (
-    <button onClick={onClick} className={`py-3 px-6 -mb-px border-b-2 ${active ? 'border-primary' : 'border-transparent'}`}>
-        <Icon className={`w-6 h-6 ${active ? 'text-primary' : 'text-secondary'}`} />
+const TabButton: React.FC<{Icon: React.ElementType, label: string, active: boolean, onClick: () => void}> = ({ Icon, label, active, onClick }) => (
+    <button onClick={onClick} className={`flex items-center space-x-2 py-3 px-6 -mb-px border-b-2 ${active ? 'border-primary text-primary' : 'border-transparent text-secondary hover:bg-gray-100'}`}>
+        <Icon className={`w-6 h-6`} />
+        <span className="font-semibold uppercase text-xs hidden sm:inline">{label}</span>
     </button>
 )
 

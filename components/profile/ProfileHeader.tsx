@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import type { User } from '../../types';
+import type { User, Story } from '../../types';
 import { sendFriendRequest, cancelFriendRequest, removeFriend, handleFriendRequest, banUser, blockUser, unblockUser } from '../../services/firebase';
 import { DotsHorizontalIcon } from '../Icons';
 
@@ -10,9 +10,11 @@ interface ProfileHeaderProps {
   isFriendRequestSent: boolean;
   isFriendRequestReceived: boolean;
   postCount: number;
+  stories: Story[];
+  onViewStories: () => void;
 }
 
-const ProfileHeader: React.FC<ProfileHeaderProps> = ({ profileUser, currentUser, users, isFriendRequestSent, isFriendRequestReceived, postCount }) => {
+const ProfileHeader: React.FC<ProfileHeaderProps> = ({ profileUser, currentUser, users, isFriendRequestSent, isFriendRequestReceived, postCount, stories, onViewStories }) => {
   const [loading, setLoading] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -20,6 +22,7 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({ profileUser, currentUser,
   const isCurrentUser = profileUser.id === currentUser.id;
   const isFriend = currentUser.friends && currentUser.friends[profileUser.id];
   const isBlocked = currentUser.blocked && currentUser.blocked[profileUser.id];
+  const hasStories = stories.length > 0;
 
   const followerCount = useMemo(() => {
     // This is a mock value. A real implementation would need a different DB structure.
@@ -150,12 +153,22 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({ profileUser, currentUser,
       </div>
       <div className="p-4 pt-0">
         <div className="flex flex-col items-center -mt-16 relative">
-          <div className="w-32 h-32 rounded-full border-4 border-surface bg-gray-300 overflow-hidden flex-shrink-0">
-             <img
-                src={profileUser.avatarUrl}
-                alt={profileUser.name}
-                className="w-full h-full object-cover"
-             />
+          <div className="relative">
+             <button 
+                className="w-32 h-32 rounded-full border-4 border-surface bg-gray-300 overflow-hidden flex-shrink-0 group disabled:cursor-default"
+                onClick={onViewStories}
+                disabled={!hasStories}
+                aria-label={hasStories ? "View stories" : `${profileUser.name}'s profile picture`}
+             >
+                <img
+                    src={profileUser.avatarUrl}
+                    alt={profileUser.name}
+                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                />
+             </button>
+             {hasStories && (
+                <div className="absolute inset-0 rounded-full ring-2 ring-offset-2 ring-pink-500 ring-offset-surface pointer-events-none"></div>
+             )}
           </div>
           <div className="text-center mt-4">
             <h2 className="text-2xl font-bold">{profileUser.name}</h2>

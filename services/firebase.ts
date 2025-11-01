@@ -141,12 +141,18 @@ export const createPost = async (postData: Omit<Post, 'id' | 'likes' | 'comments
         likes: 0,
         comments: 0,
         timestamp: Date.now(),
+        isPublic: true,
     });
 };
 
 export const updatePost = async (postId: string, newContent: string) => {
     const postRef = ref(db, `posts/${postId}`);
     return update(postRef, { content: newContent });
+};
+
+export const updatePostPrivacy = async (postId: string, isPublic: boolean) => {
+    const postRef = ref(db, `posts/${postId}`);
+    return update(postRef, { isPublic });
 };
 
 export const deletePost = async (postId: string) => {

@@ -182,6 +182,7 @@ const App: React.FC = () => {
                         users={users} // Pass all users to find profile, even if blocked
                         posts={filteredPosts}
                         friendRequests={friendRequests}
+                        stories={filteredStories}
                      />
           case 'friends':
               return <FriendsPage

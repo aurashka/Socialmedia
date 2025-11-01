@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import type { User, Post } from '../types';
-import { DotsHorizontalIcon, HeartIcon, ChatIcon, MessageIcon, TrashIcon, ChevronLeftIcon, ChevronRightIcon, PencilIcon } from './Icons';
+import { DotsHorizontalIcon, HeartIcon, ChatIcon, MessageIcon, TrashIcon, ChevronLeftIcon, ChevronRightIcon, PencilIcon, LockClosedIcon } from './Icons';
 import { parseContent } from '../utils/textUtils';
 import ImageLightbox from './ImageLightbox';
-import { updatePost, deletePost } from '../services/firebase';
+import { updatePost, deletePost, updatePostPrivacy } from '../services/firebase';
 
 interface PostCardProps {
   post: Post;
@@ -70,6 +70,16 @@ const PostCard: React.FC<PostCardProps> = ({ post, user, currentUser }) => {
             console.error("Failed to delete post:", error);
             alert("Could not delete post. Please try again.");
         }
+    }
+  };
+
+  const handleTogglePrivacy = async () => {
+    setIsMenuOpen(false);
+    try {
+        await updatePostPrivacy(post.id, !(post.isPublic ?? true));
+    } catch (error) {
+        console.error("Failed to update post privacy:", error);
+        alert("Could not update post privacy. Please try again.");
     }
   };
   
@@ -148,7 +158,14 @@ const PostCard: React.FC<PostCardProps> = ({ post, user, currentUser }) => {
             <img src={user.avatarUrl} alt={user.name} className="w-10 h-10 rounded-full" />
           </a>
           <div>
-            <a href={`#/profile/${user.id}`} className="font-bold hover:underline text-sm">{user.name}</a>
+            <div className="flex items-center space-x-1.5">
+                <a href={`#/profile/${user.id}`} className="font-bold hover:underline text-sm">{user.name}</a>
+                {isOwner && (post.isPublic === false) && (
+                    <div title="This post is private">
+                        <LockClosedIcon className="w-3 h-3 text-secondary" />
+                    </div>
+                )}
+            </div>
              <p className="text-xs text-secondary">{timeAgo(post.timestamp)}</p>
           </div>
         </div>
@@ -164,6 +181,10 @@ const PostCard: React.FC<PostCardProps> = ({ post, user, currentUser }) => {
                     <button onClick={handleEdit} className="w-full text-left flex items-center space-x-2 px-4 py-2 text-sm text-primary hover:bg-gray-100">
                         <PencilIcon className="w-4 h-4" />
                         <span>Edit Post</span>
+                    </button>
+                     <button onClick={handleTogglePrivacy} className="w-full text-left flex items-center space-x-2 px-4 py-2 text-sm text-primary hover:bg-gray-100">
+                        <LockClosedIcon className="w-4 h-4" />
+                        <span>Make {(post.isPublic ?? true) ? 'Private' : 'Public'}</span>
                     </button>
                     <button onClick={handleDeletePost} className="w-full text-left flex items-center space-x-2 px-4 py-2 text-sm text-red-500 hover:bg-gray-100">
                         <TrashIcon className="w-4 h-4" />
