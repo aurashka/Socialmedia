@@ -4,10 +4,14 @@ import type { User } from '../types';
 
 interface BottomNavProps {
     onPostClick: () => void;
-    currentUser: User;
+    currentUser: User | null;
 }
 
 const BottomNav: React.FC<BottomNavProps> = ({ onPostClick, currentUser }) => {
+  if (!currentUser) {
+    return null;
+  }
+
   return (
     <nav className="md:hidden fixed bottom-4 left-1/2 -translate-x-1/2 bg-surface/80 dark:bg-[#212121]/80 backdrop-blur-sm shadow-xl h-16 z-50 flex items-center justify-around rounded-full border border-divider dark:border-gray-700 w-[90%] max-w-sm">
       <BottomNavItem Icon={HomeIcon} href="/#" active />

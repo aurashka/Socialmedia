@@ -25,6 +25,8 @@ import MessagesPage from './components/messages/MessagesPage';
 import NotificationsPage from './components/notifications/NotificationsPage';
 import PostPage from './components/PostPage';
 import AdminUserDetail from './components/admin/AdminUserDetail';
+// FIX: Import PostCardShimmer component to resolve reference error.
+import PostCardShimmer from './components/shimmers/PostCardShimmer';
 
 
 type Route = 
@@ -83,7 +85,6 @@ const App: React.FC = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [onlineStatuses, setOnlineStatuses] = useState<Record<string, any>>({});
-  const [loading, setLoading] = useState(true);
   const [initialPostLoad, setInitialPostLoad] = useState(true);
   const [route, setRoute] = useState<Route>({ name: 'home' });
   const [isPostModalOpen, setIsPostModalOpen] = useState(false);
@@ -159,7 +160,6 @@ const App: React.FC = () => {
             signOut(auth);
           } else if (userProfile) {
             setCurrentUser(userProfile);
-            setLoading(false);
           } else {
             setCurrentUser({
               id: user.uid,
@@ -167,7 +167,6 @@ const App: React.FC = () => {
               avatarUrl: `https://i.pravatar.cc/150?u=${user.uid}`,
               role: 'user',
             });
-            setLoading(false);
           }
         }, (error) => {
             console.error("Firebase profile read failed:", error);
@@ -177,7 +176,6 @@ const App: React.FC = () => {
       } else {
         setAuthUser(null);
         setCurrentUser(null);
-        setLoading(false);
       }
     });
 
@@ -368,7 +366,7 @@ const App: React.FC = () => {
   };
 
   const renderContent = () => {
-      if (!currentUser) return null;
+      if (!currentUser) return <div className="space-y-4 max-w-lg mx-auto py-4"><PostCardShimmer /><PostCardShimmer /></div>;
 
       switch(route.name) {
           case 'home':
@@ -458,16 +456,12 @@ const App: React.FC = () => {
       }
   }
 
-  if (loading) {
-    return <LoadingSpinner />;
-  }
-
   if (!authUser) {
     return <Auth />;
   }
   
-  if (!currentUser?.handle || !currentUser?.name) {
-    return <CompleteProfile user={currentUser!} />;
+  if (currentUser && (!currentUser.handle || !currentUser.name)) {
+    return <CompleteProfile user={currentUser} />;
   }
 
   const isExplorePage = route.name === 'explore';

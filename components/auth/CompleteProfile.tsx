@@ -4,7 +4,7 @@ import { isHandleUnique, updateUserProfile } from '../../services/firebase';
 import { useDebounce } from '../../hooks/useDebounce';
 
 interface CompleteProfileProps {
-  user: User;
+  user: User | null;
 }
 
 const CompleteProfile: React.FC<CompleteProfileProps> = ({ user }) => {
@@ -17,18 +17,22 @@ const CompleteProfile: React.FC<CompleteProfileProps> = ({ user }) => {
   const debouncedHandle = useDebounce(handle, 500);
 
   const checkHandle = useCallback(async (h: string) => {
-    if (!h || h.length < 3) {
+    if (!user || !h || h.length < 3) {
       setHandleStatus('idle');
       return;
     }
     setHandleStatus('checking');
     const isUnique = await isHandleUnique(h, user.id);
     setHandleStatus(isUnique ? 'available' : 'taken');
-  }, [user.id]);
+  }, [user]);
 
   useEffect(() => {
     checkHandle(debouncedHandle);
   }, [debouncedHandle, checkHandle]);
+
+  if (!user) {
+    return null;
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

@@ -3,7 +3,7 @@ import type { User, Post } from '../types';
 import { XIcon, GlobeIcon, UsersIcon, LockClosedIcon, ChevronDownIcon, VideoCameraIcon } from './Icons';
 
 interface PostModalProps {
-  currentUser: User;
+  currentUser: User | null;
   onClose: () => void;
   onSubmit: (content: string, mediaFiles: File[], privacy: Post['privacy'], areCommentsDisabled: boolean) => Promise<void>;
 }
@@ -68,6 +68,10 @@ const PostModal: React.FC<PostModalProps> = ({ currentUser, onClose, onSubmit })
     await onSubmit(content, mediaFiles.map(mf => mf.file), privacy, areCommentsDisabled);
     onClose();
   };
+  
+  if (!currentUser) {
+    return null;
+  }
   
   const selectedPrivacy = privacyOptions.find(opt => opt.value === privacy)!;
 

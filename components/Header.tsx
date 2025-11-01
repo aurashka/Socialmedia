@@ -6,7 +6,7 @@ import { signOut } from 'firebase/auth';
 import SearchOverlay from './search/SearchOverlay';
 
 interface HeaderProps {
-  currentUser: User;
+  currentUser: User | null;
   friendRequestCount: number;
   users: Record<string, User>;
   posts: Post[];
@@ -44,6 +44,17 @@ const Header: React.FC<HeaderProps> = ({ currentUser, users, posts, friendReques
     };
   }, []);
 
+  if (!currentUser) {
+    return (
+      <header className="fixed top-0 left-0 right-0 bg-surface dark:bg-[#1E1E1E] border-b border-divider dark:border-gray-700 h-14 z-50">
+        <div className="flex items-center justify-between px-4 h-full max-w-5xl mx-auto">
+          <a href="/#" className="text-3xl text-primary dark:text-gray-100" style={{fontFamily: "'Cookie', cursive"}}>
+            ConnectSphere
+          </a>
+        </div>
+      </header>
+    );
+  }
 
   return (
     <>
