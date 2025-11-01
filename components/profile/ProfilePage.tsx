@@ -101,9 +101,12 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ currentUser, profileUserId, u
       return (
         <div className="grid grid-cols-3 gap-1">
           {userPosts.map(post => (
-            post.mediaUrls && post.mediaUrls.length > 0 ? (
-              <div key={post.id} className="aspect-square bg-gray-200 dark:bg-[#262626] cursor-pointer" onClick={() => setSelectedPost(post)}>
-                <img src={post.mediaUrls[0]} alt="post" className="w-full h-full object-cover" />
+            post.media && post.media.length > 0 ? (
+              <div key={post.id} className="aspect-square bg-gray-200 dark:bg-[#262626] cursor-pointer relative" onClick={() => setSelectedPost(post)}>
+                <img src={post.media[0].url} alt="post" className="w-full h-full object-cover" />
+                {post.media[0].type === 'video' && (
+                    <VideoCameraIcon className="absolute top-2 right-2 w-5 h-5 text-white drop-shadow-lg" strokeWidth={2.5} />
+                )}
               </div>
             ) : null
           ))}
@@ -142,9 +145,12 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ currentUser, profileUserId, u
       return (
         <div className="grid grid-cols-3 gap-1">
           {bookmarkedPosts.map(post => (
-            post.mediaUrls && post.mediaUrls.length > 0 ? (
-              <div key={post.id} className="aspect-square bg-gray-200 dark:bg-[#262626] cursor-pointer" onClick={() => setSelectedPost(post)}>
-                <img src={post.mediaUrls[0]} alt="post" className="w-full h-full object-cover" />
+            post.media && post.media.length > 0 ? (
+              <div key={post.id} className="aspect-square bg-gray-200 dark:bg-[#262626] cursor-pointer relative" onClick={() => setSelectedPost(post)}>
+                <img src={post.media[0].url} alt="post" className="w-full h-full object-cover" />
+                 {post.media[0].type === 'video' && (
+                    <VideoCameraIcon className="absolute top-2 right-2 w-5 h-5 text-white drop-shadow-lg" strokeWidth={2.5} />
+                )}
               </div>
             ) : null
           ))}

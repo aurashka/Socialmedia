@@ -30,6 +30,9 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message, currentUser, sen
                 {message.mediaUrl && message.mediaType === 'image' && (
                     <img src={message.mediaUrl} alt="sent media" className="rounded-lg max-w-xs max-h-64 my-1" />
                 )}
+                {message.mediaUrl && message.mediaType === 'video' && (
+                    <video src={message.mediaUrl} controls className="rounded-lg max-w-xs max-h-64 my-1" />
+                )}
                 {message.mediaUrl && message.mediaType === 'audio' && (
                     <AudioPlayer src={message.mediaUrl} />
                 )}

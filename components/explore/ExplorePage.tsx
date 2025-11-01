@@ -25,7 +25,7 @@ const ExplorePage: React.FC<ExplorePageProps> = ({ currentUser, users, posts, fr
             .filter(post => {
                 const privacy = post.privacy || 'public';
                 // Show public posts from other users that have media
-                return privacy === 'public' && post.userId !== currentUser.id && post.mediaUrls && post.mediaUrls.length > 0;
+                return privacy === 'public' && post.userId !== currentUser.id && post.media && post.media.length > 0;
             })
             // Sort randomly to give a sense of discovery
             .sort(() => 0.5 - Math.random());
@@ -86,9 +86,9 @@ const ExplorePage: React.FC<ExplorePageProps> = ({ currentUser, users, posts, fr
                             className="aspect-square bg-divider dark:bg-[#424242] cursor-pointer group relative"
                             onClick={() => setSelectedPost(post)}
                         >
-                            {post.mediaUrls && post.mediaUrls.length > 0 && (
+                            {post.media && post.media.length > 0 && (
                                 <img 
-                                    src={post.mediaUrls[0]} 
+                                    src={post.media[0].url} 
                                     alt="explore post" 
                                     className="w-full h-full object-cover"
                                     loading="lazy"

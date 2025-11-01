@@ -77,8 +77,8 @@ const NotificationItem: React.FC<NotificationItemProps> = ({ notification, users
                 </p>
                 <p className="text-xs text-secondary dark:text-gray-400">{timeAgo(notification.timestamp)}</p>
             </div>
-            {post?.mediaUrls?.[0] && (
-                <img src={post.mediaUrls[0]} alt="post media" className="w-10 h-10 object-cover rounded-md ml-2 flex-shrink-0" />
+            {post?.media?.[0] && (
+                <img src={post.media[0].url} alt="post media" className="w-10 h-10 object-cover rounded-md ml-2 flex-shrink-0" />
             )}
              {!notification.read && (
                 <div className="w-2 h-2 bg-accent rounded-full ml-3 flex-shrink-0"></div>

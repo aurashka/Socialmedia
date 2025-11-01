@@ -23,8 +23,7 @@ export interface Post {
   id: string;
   userId: string;
   content: string;
-  mediaUrls?: string[]; // Changed from mediaUrl to support multiple images
-  mediaType?: 'video'; // Only used for the legacy video post
+  media?: { url: string; type: 'image' | 'video' }[];
   timestamp: number;
   reactions?: Record<string, Record<string, boolean>>; // e.g. { like: { userId1: true } }
   commentCount: number;
@@ -90,7 +89,7 @@ export interface Conversation {
   participants: Record<string, boolean>;
   lastMessage: {
     text?: string;
-    mediaType?: 'image' | 'audio';
+    mediaType?: 'image' | 'audio' | 'video';
     senderId: string;
     timestamp: number;
   };
@@ -104,6 +103,6 @@ export interface Message {
   senderId: string;
   text?: string;
   mediaUrl?: string;
-  mediaType?: 'image' | 'audio';
+  mediaType?: 'image' | 'audio' | 'video';
   timestamp: number;
 }

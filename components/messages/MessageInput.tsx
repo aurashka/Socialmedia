@@ -24,8 +24,10 @@ const MessageInput: React.FC<MessageInputProps> = ({ currentUser, conversation }
     }
     if (audioBlob) {
         // First upload, then send
-        const audioUrl = await uploadMedia(audioBlob as File, 'audio');
-        await sendMessage(conversation.id, currentUser.id, { mediaUrl: audioUrl, mediaType: 'audio' });
+        // FIX: Convert Blob to File, call uploadMedia with one argument, and use the returned URL.
+        const audioFile = new File([audioBlob], "voice-message.webm", { type: audioBlob.type });
+        const uploadedMedia = await uploadMedia(audioFile);
+        await sendMessage(conversation.id, currentUser.id, { mediaUrl: uploadedMedia.url, mediaType: 'audio' });
         setAudioBlob(null);
     }
   };
@@ -37,11 +39,21 @@ const MessageInput: React.FC<MessageInputProps> = ({ currentUser, conversation }
     }
   };
   
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleMediaUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
         const file = e.target.files[0];
-        const mediaUrl = await uploadMedia(file, 'image');
-        await sendMessage(conversation.id, currentUser.id, { mediaUrl, mediaType: 'image' });
+        try {
+            const { url, type } = await uploadMedia(file);
+            // FIX: Ensure mediaType is one of 'image', 'video', or 'audio'. The sendMessage function now accepts 'video'.
+            await sendMessage(conversation.id, currentUser.id, { mediaUrl: url, mediaType: type });
+        } catch (error) {
+            console.error("Failed to upload and send media:", error);
+            alert("Could not send media file.");
+        } finally {
+            if (fileInputRef.current) {
+                fileInputRef.current.value = "";
+            }
+        }
     }
   }
 
@@ -86,7 +98,7 @@ const MessageInput: React.FC<MessageInputProps> = ({ currentUser, conversation }
 
   return (
     <div className="flex items-end gap-2">
-      <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageUpload} />
+      <input type="file" ref={fileInputRef} className="hidden" accept="image/*,video/*" onChange={handleMediaUpload} />
       <button onClick={() => fileInputRef.current?.click()} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full">
         <PlusIcon className="w-6 h-6 text-accent"/>
       </button>

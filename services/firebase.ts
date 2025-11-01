@@ -440,7 +440,8 @@ export const getOrCreateConversation = async (currentUserId: string, otherUserId
     }
 };
 
-export const sendMessage = async (conversationId: string, senderId: string, messageData: { text?: string; mediaUrl?: string; mediaType?: 'image' | 'audio' }) => {
+// FIX: Add 'video' to the mediaType to allow sending videos.
+export const sendMessage = async (conversationId: string, senderId: string, messageData: { text?: string; mediaUrl?: string; mediaType?: 'image' | 'audio' | 'video' }) => {
     const messagesRef = ref(db, `messages/${conversationId}`);
     const newMessageRef = push(messagesRef);
     

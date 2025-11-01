@@ -21,10 +21,12 @@ const StoryCard: React.FC<StoryCardProps> = ({ story, user, isAddStory, currentU
       const file = e.target.files[0];
       setIsUploading(true);
       try {
-        const imageUrl = await uploadMedia(file, 'image');
+        // FIX: The uploadMedia function returns an object with a URL property and expects only one argument.
+        const uploadedMedia = await uploadMedia(file);
         await createStory({
           userId: currentUser.id,
-          imageUrl,
+          // FIX: Type 'UploadedMedia' is not assignable to type 'string'. Use uploadedMedia.url instead.
+          imageUrl: uploadedMedia.url,
         });
       } catch (error) {
         console.error('Failed to create story:', error);

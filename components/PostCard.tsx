@@ -19,7 +19,7 @@ const PostCard: React.FC<PostCardProps> = ({ post, user, currentUser, users, onO
   const [isEditing, setIsEditing] = useState(false);
   const [editedContent, setEditedContent] = useState(post.content);
   const [isSaving, setIsSaving] = useState(false);
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
   const [isLiked, setIsLiked] = useState(false);
   const [animateLike, setAnimateLike] = useState(false);
   
@@ -103,14 +103,14 @@ const PostCard: React.FC<PostCardProps> = ({ post, user, currentUser, users, onO
     }
   };
   
-  const handlePrevImage = (e: React.MouseEvent) => {
+  const handlePrevMedia = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setCurrentImageIndex(prev => (prev === 0 ? post.mediaUrls!.length - 1 : prev - 1));
+    setCurrentMediaIndex(prev => (prev === 0 ? post.media!.length - 1 : prev - 1));
   };
 
-  const handleNextImage = (e: React.MouseEvent) => {
+  const handleNextMedia = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setCurrentImageIndex(prev => (prev === post.mediaUrls!.length - 1 ? 0 : prev + 1));
+    setCurrentMediaIndex(prev => (prev === post.media!.length - 1 ? 0 : prev + 1));
   };
   
   const handleShare = async () => {
@@ -160,6 +160,8 @@ const PostCard: React.FC<PostCardProps> = ({ post, user, currentUser, users, onO
     return <PostCardShimmer />;
   }
   
+  const currentMedia = post.media?.[currentMediaIndex];
+
   return (
     <div className="bg-surface dark:bg-[#1E1E1E] md:border-y border-divider dark:border-gray-700">
       {/* Post Header */}
@@ -202,25 +204,30 @@ const PostCard: React.FC<PostCardProps> = ({ post, user, currentUser, users, onO
 
       {/* Post Media */}
       <div className="relative group bg-gray-100 dark:bg-black">
-        {post.mediaUrls && post.mediaUrls.length > 0 && (
+        {currentMedia && (
           <div className="relative aspect-square overflow-hidden">
-            <img src={post.mediaUrls[currentImageIndex]} alt={`Post media ${currentImageIndex + 1}`} className="w-full h-full object-contain" onDoubleClick={() => handleReactionClick('like')} />
+            {currentMedia.type === 'image' ? (
+                <img src={currentMedia.url} alt={`Post media ${currentMediaIndex + 1}`} className="w-full h-full object-contain" onDoubleClick={() => handleReactionClick('like')} />
+            ) : (
+                <video src={currentMedia.url} className="w-full h-full object-contain" controls autoPlay muted loop playsInline />
+            )}
+
             {animateLike && (
                  <HeartIconFilled className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-red-500/90 drop-shadow-lg animate-heart-pop-large" style={{ width: '100px', height: '100px' }}/>
             )}
           </div>
         )}
-        {post.mediaUrls && post.mediaUrls.length > 1 && (
+        {post.media && post.media.length > 1 && (
             <>
-                <button onClick={handlePrevImage} className="absolute top-1/2 left-2 -translate-y-1/2 bg-black bg-opacity-40 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                <button onClick={handlePrevMedia} className="absolute top-1/2 left-2 -translate-y-1/2 bg-black bg-opacity-40 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10">
                     <ChevronLeftIcon className="w-5 h-5" />
                 </button>
-                <button onClick={handleNextImage} className="absolute top-1/2 right-2 -translate-y-1/2 bg-black bg-opacity-40 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                <button onClick={handleNextMedia} className="absolute top-1/2 right-2 -translate-y-1/2 bg-black bg-opacity-40 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10">
                     <ChevronRightIcon className="w-5 h-5" />
                 </button>
                 <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex space-x-1.5">
-                    {post.mediaUrls.map((_, index) => (
-                        <div key={index} className={`w-1.5 h-1.5 rounded-full ${index === currentImageIndex ? 'bg-primary dark:bg-white' : 'bg-gray-500'}`}></div>
+                    {post.media.map((_, index) => (
+                        <div key={index} className={`w-1.5 h-1.5 rounded-full ${index === currentMediaIndex ? 'bg-primary dark:bg-white' : 'bg-gray-500'}`}></div>
                     ))}
                 </div>
             </>

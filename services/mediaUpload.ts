@@ -1,26 +1,59 @@
-import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { app, auth } from './firebase'; // To get current user for path
+// NOTE: The Cloudinary configuration assumes an unsigned upload preset named 'connectsphere_preset'
+// has been created in your Cloudinary account for the cloud name 'creadit-loan-5203b'.
+// Admin panel functionality to change these keys can be added in the future.
 
-const storage = getStorage(app);
+const IMGBB_API_KEY = '5fd2a4346ac2e5485a916a5d734d508b';
+const CLOUDINARY_CLOUD_NAME = 'creadit-loan-5203b';
+const CLOUDINARY_UPLOAD_PRESET = 'connectsphere_preset';
 
-export const uploadMedia = async (file: File, type: 'image' | 'audio'): Promise<string> => {
-  const userId = auth.currentUser?.uid;
-  if (!userId) throw new Error("User not authenticated for media upload.");
+interface UploadedMedia {
+    url: string;
+    // FIX: Add 'audio' to support voice messages.
+    type: 'image' | 'video' | 'audio';
+}
 
-  const fileExtension = file.name.split('.').pop();
-  const fileName = `${new Date().getTime()}.${fileExtension}`;
-  const path = type === 'image' 
-    ? `images/${userId}/${fileName}` 
-    : `audio/${userId}/${fileName}`;
-  
-  const mediaRef = ref(storage, path);
+export const uploadMedia = async (file: File): Promise<UploadedMedia> => {
+    const fileType = file.type.split('/')[0];
 
-  try {
-    const snapshot = await uploadBytes(mediaRef, file);
-    const downloadURL = await getDownloadURL(snapshot.ref);
-    return downloadURL;
-  } catch (error) {
-    console.error(`Error uploading ${type}:`, error);
-    throw error;
-  }
+    if (fileType === 'image') {
+        const formData = new FormData();
+        formData.append('image', file);
+
+        const response = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
+            method: 'POST',
+            body: formData,
+        });
+
+        if (!response.ok) {
+            throw new Error('Image upload failed');
+        }
+
+        const data = await response.json();
+        if (data.success) {
+            return { url: data.data.url, type: 'image' };
+        } else {
+            throw new Error(data.error.message || 'Image upload failed on ImgBB');
+        }
+    // FIX: Handle audio uploads using the same Cloudinary endpoint as video.
+    } else if (fileType === 'video' || fileType === 'audio') {
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+
+        const response = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/video/upload`, {
+            method: 'POST',
+            body: formData,
+        });
+        
+        if (!response.ok) {
+            const errorData = await response.json();
+            console.error('Cloudinary error:', errorData);
+            throw new Error(`${fileType} upload failed`);
+        }
+
+        const data = await response.json();
+        return { url: data.secure_url, type: fileType as 'video' | 'audio' };
+    } else {
+        throw new Error('Unsupported file type');
+    }
 };

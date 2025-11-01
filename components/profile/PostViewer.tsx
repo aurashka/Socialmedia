@@ -21,7 +21,7 @@ const PostViewer: React.FC<PostViewerProps> = ({ post: initialPost, user, curren
   const [isEditing, setIsEditing] = useState(false);
   const [editedContent, setEditedContent] = useState(post.content);
   const [isSaving, setIsSaving] = useState(false);
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
   
   const menuRef = useRef<HTMLDivElement>(null);
   const isOwner = currentUser?.id === post.userId;
@@ -77,8 +77,8 @@ const PostViewer: React.FC<PostViewerProps> = ({ post: initialPost, user, curren
     setIsMenuOpen(false);
   };
   
-  const handlePrevImage = (e: React.MouseEvent) => { e.stopPropagation(); setCurrentImageIndex(prev => (prev === 0 ? post.mediaUrls!.length - 1 : prev - 1)); };
-  const handleNextImage = (e: React.MouseEvent) => { e.stopPropagation(); setCurrentImageIndex(prev => (prev === post.mediaUrls!.length - 1 ? 0 : prev + 1)); };
+  const handlePrevMedia = (e: React.MouseEvent) => { e.stopPropagation(); setCurrentMediaIndex(prev => (prev === 0 ? post.media!.length - 1 : prev - 1)); };
+  const handleNextMedia = (e: React.MouseEvent) => { e.stopPropagation(); setCurrentMediaIndex(prev => (prev === post.media!.length - 1 ? 0 : prev + 1)); };
 
   const timeAgo = (timestamp: number): string => {
     const seconds = Math.floor((Date.now() - timestamp) / 1000);
@@ -98,13 +98,18 @@ const PostViewer: React.FC<PostViewerProps> = ({ post: initialPost, user, curren
       <div className="bg-surface dark:bg-gray-900 text-primary dark:text-gray-100 w-full h-full md:max-w-5xl md:h-[90vh] rounded-none md:rounded-lg flex flex-col md:flex-row overflow-hidden" onClick={(e) => e.stopPropagation()}>
         {/* Media Section */}
         <div className="w-full md:w-3/5 bg-black flex items-center justify-center relative group aspect-square md:aspect-auto">
-          {post.mediaUrls && post.mediaUrls.length > 0 ? (
+          {post.media && post.media.length > 0 ? (
             <>
-              <img src={post.mediaUrls[currentImageIndex]} alt="Post media" className="max-h-full max-w-full object-contain" />
-              {post.mediaUrls.length > 1 && (
+              {post.media[currentMediaIndex].type === 'image' ? (
+                <img src={post.media[currentMediaIndex].url} alt="Post media" className="max-h-full max-w-full object-contain" />
+              ) : (
+                <video src={post.media[currentMediaIndex].url} controls className="max-h-full max-w-full object-contain" />
+              )}
+
+              {post.media.length > 1 && (
                 <>
-                  <button onClick={handlePrevImage} className="absolute top-1/2 left-4 -translate-y-1/2 bg-black/40 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"><ChevronLeftIcon className="w-6 h-6" /></button>
-                  <button onClick={handleNextImage} className="absolute top-1/2 right-4 -translate-y-1/2 bg-black/40 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"><ChevronRightIcon className="w-6 h-6" /></button>
+                  <button onClick={handlePrevMedia} className="absolute top-1/2 left-4 -translate-y-1/2 bg-black/40 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"><ChevronLeftIcon className="w-6 h-6" /></button>
+                  <button onClick={handleNextMedia} className="absolute top-1/2 right-4 -translate-y-1/2 bg-black/40 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"><ChevronRightIcon className="w-6 h-6" /></button>
                 </>
               )}
             </>

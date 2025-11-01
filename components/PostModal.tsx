@@ -1,12 +1,11 @@
 import React, { useState, useRef } from 'react';
 import type { User, Post } from '../types';
-import { XIcon, GlobeIcon, UsersIcon, LockClosedIcon, ChevronDownIcon } from './Icons';
-import { uploadMedia } from '../services/mediaUpload';
+import { XIcon, GlobeIcon, UsersIcon, LockClosedIcon, ChevronDownIcon, VideoCameraIcon } from './Icons';
 
 interface PostModalProps {
   currentUser: User;
   onClose: () => void;
-  onSubmit: (content: string, imageFiles: File[], privacy: Post['privacy'], areCommentsDisabled: boolean) => Promise<void>;
+  onSubmit: (content: string, mediaFiles: File[], privacy: Post['privacy'], areCommentsDisabled: boolean) => Promise<void>;
 }
 
 type PrivacyOption = {
@@ -22,10 +21,15 @@ const privacyOptions: PrivacyOption[] = [
     { value: 'private', label: 'Only me', Icon: LockClosedIcon, description: 'Only you can see this post' }
 ];
 
+type MediaFile = {
+    file: File;
+    preview: string;
+    type: 'image' | 'video';
+};
+
 const PostModal: React.FC<PostModalProps> = ({ currentUser, onClose, onSubmit }) => {
   const [content, setContent] = useState('');
-  const [imageFiles, setImageFiles] = useState<File[]>([]);
-  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
+  const [mediaFiles, setMediaFiles] = useState<MediaFile[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [privacy, setPrivacy] = useState<Post['privacy']>('public');
   const [areCommentsDisabled, setAreCommentsDisabled] = useState(false);
@@ -35,20 +39,22 @@ const PostModal: React.FC<PostModalProps> = ({ currentUser, onClose, onSubmit })
   const fileInputRef = useRef<HTMLInputElement>(null);
   const privacyMenuRef = useRef<HTMLDivElement>(null);
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       const files = Array.from(e.target.files);
-      const newFiles = [...imageFiles, ...files].slice(0, 5); // Limit to 5 images
-      setImageFiles(newFiles);
+      // FIX: Explicitly type `file` as File to resolve type inference issue.
+      const newMediaFiles: MediaFile[] = files.map((file: File) => ({
+          file,
+          preview: URL.createObjectURL(file),
+          type: file.type.startsWith('video') ? 'video' : 'image',
+      }));
 
-      const newPreviews = newFiles.map(file => URL.createObjectURL(file));
-      setImagePreviews(newPreviews);
+      setMediaFiles(prev => [...prev, ...newMediaFiles].slice(0, 5));
     }
   };
 
-  const handleRemoveImage = (indexToRemove: number) => {
-    setImageFiles(prev => prev.filter((_, index) => index !== indexToRemove));
-    setImagePreviews(prev => prev.filter((_, index) => index !== indexToRemove));
+  const handleRemoveMedia = (indexToRemove: number) => {
+    setMediaFiles(prev => prev.filter((_, index) => index !== indexToRemove));
     if (fileInputRef.current) {
         fileInputRef.current.value = "";
     }
@@ -56,10 +62,10 @@ const PostModal: React.FC<PostModalProps> = ({ currentUser, onClose, onSubmit })
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!content.trim() && imageFiles.length === 0) return;
+    if (!content.trim() && mediaFiles.length === 0) return;
 
     setIsSubmitting(true);
-    await onSubmit(content, imageFiles, privacy, areCommentsDisabled);
+    await onSubmit(content, mediaFiles.map(mf => mf.file), privacy, areCommentsDisabled);
     onClose();
   };
   
@@ -115,12 +121,16 @@ const PostModal: React.FC<PostModalProps> = ({ currentUser, onClose, onSubmit })
               onChange={(e) => setContent(e.target.value)}
               autoFocus
             />
-            {imagePreviews.length > 0 && (
+            {mediaFiles.length > 0 && (
               <div className="mt-4 grid grid-cols-3 gap-2 border border-divider dark:border-gray-700 rounded-lg p-2">
-                {imagePreviews.map((preview, index) => (
+                {mediaFiles.map((media, index) => (
                   <div key={index} className="relative">
-                    <img src={preview} alt={`Preview ${index}`} className="rounded-lg h-24 w-full object-cover" />
-                    <button type="button" onClick={() => handleRemoveImage(index)} className="absolute top-1 right-1 bg-black bg-opacity-50 text-white p-0.5 rounded-full hover:bg-opacity-75" aria-label="Remove image">
+                    {media.type === 'image' ? (
+                        <img src={media.preview} alt={`Preview ${index}`} className="rounded-lg h-24 w-full object-cover" />
+                    ) : (
+                        <video src={media.preview} className="rounded-lg h-24 w-full object-cover" muted autoPlay loop playsInline />
+                    )}
+                    <button type="button" onClick={() => handleRemoveMedia(index)} className="absolute top-1 right-1 bg-black bg-opacity-50 text-white p-0.5 rounded-full hover:bg-opacity-75" aria-label="Remove media">
                       <XIcon className="w-4 h-4" />
                     </button>
                   </div>
@@ -130,9 +140,11 @@ const PostModal: React.FC<PostModalProps> = ({ currentUser, onClose, onSubmit })
              <div className="mt-4 border border-divider dark:border-gray-700 rounded-lg">
                 <div className="p-3 flex justify-between items-center">
                     <span className="font-semibold text-sm">Add to your post</span>
-                     <button type="button" onClick={() => fileInputRef.current?.click()} disabled={imageFiles.length >= 5} className="text-green-500 font-semibold hover:bg-green-50 dark:hover:bg-gray-700 p-2 rounded-full disabled:opacity-50" aria-label="Add photos">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-                    </button>
+                     <div className="flex items-center space-x-2">
+                         <button type="button" onClick={() => fileInputRef.current?.click()} disabled={mediaFiles.length >= 5} className="text-green-500 font-semibold hover:bg-green-50 dark:hover:bg-gray-700 p-2 rounded-full disabled:opacity-50" aria-label="Add photos or videos">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                        </button>
+                     </div>
                 </div>
                 <div className="p-3 border-t border-divider dark:border-gray-700">
                     <button type="button" onClick={() => setShowAdvanced(!showAdvanced)} className="w-full flex justify-between items-center">
@@ -156,10 +168,10 @@ const PostModal: React.FC<PostModalProps> = ({ currentUser, onClose, onSubmit })
              </div>
           </div>
           <div className="p-4 border-t border-divider dark:border-gray-700 flex-shrink-0">
-             <input type="file" ref={fileInputRef} className="hidden" accept="image/*" multiple onChange={handleImageChange}/>
+             <input type="file" ref={fileInputRef} className="hidden" accept="image/*,video/*" multiple onChange={handleFileChange}/>
             <button
               type="submit"
-              disabled={(!content.trim() && imageFiles.length === 0) || isSubmitting}
+              disabled={(!content.trim() && mediaFiles.length === 0) || isSubmitting}
               className="w-full px-6 py-2.5 bg-accent text-white font-bold rounded-md disabled:bg-blue-300 disabled:cursor-not-allowed hover:bg-blue-700 transition-colors"
             >
               {isSubmitting ? 'Posting...' : 'Post'}

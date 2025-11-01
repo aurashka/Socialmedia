@@ -78,6 +78,8 @@ const ConversationList: React.FC<ConversationListProps> = ({ currentUser, conver
                     const lastMessageText = convo 
                         ? (convo.lastMessage.mediaType === 'image' 
                             ? 'Sent an image' 
+                            : convo.lastMessage.mediaType === 'video'
+                            ? 'Sent a video'
                             : convo.lastMessage.mediaType === 'audio'
                             ? 'Sent a voice message'
                             : convo.lastMessage.text)

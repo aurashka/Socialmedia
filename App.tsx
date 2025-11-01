@@ -220,17 +220,17 @@ const App: React.FC = () => {
     }
   }, [currentUser?.id]);
 
-  const handleCreatePost = async (content: string, imageFiles: File[], privacy: Post['privacy'], areCommentsDisabled: boolean) => {
+  const handleCreatePost = async (content: string, mediaFiles: File[], privacy: Post['privacy'], areCommentsDisabled: boolean) => {
     if (!currentUser) return;
 
-    let mediaUrls: string[] = [];
-    if (imageFiles.length > 0) {
+    let uploadedMedia: { url: string; type: 'image' | 'video' }[] = [];
+    if (mediaFiles.length > 0) {
       try {
-        const uploadPromises = imageFiles.map(file => uploadMedia(file, 'image'));
-        mediaUrls = await Promise.all(uploadPromises);
+        const uploadPromises = mediaFiles.map(file => uploadMedia(file));
+        uploadedMedia = await Promise.all(uploadPromises);
       } catch (error) {
-        console.error("Failed to upload one or more images:", error);
-        alert("Error uploading images. Please try again.");
+        console.error("Failed to upload media:", error);
+        alert("Error uploading media. Please try again.");
         return;
       }
     }
@@ -238,7 +238,7 @@ const App: React.FC = () => {
     const newPost: Omit<Post, 'id' | 'commentCount' | 'timestamp'> = {
       userId: currentUser.id,
       content,
-      mediaUrls: mediaUrls.length > 0 ? mediaUrls : undefined,
+      media: uploadedMedia.length > 0 ? uploadedMedia : undefined,
       privacy,
       areCommentsDisabled,
     };
