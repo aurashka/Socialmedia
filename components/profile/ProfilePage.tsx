@@ -8,6 +8,7 @@ import { db, createPost, unblockUser } from '../../services/firebase';
 import { uploadImage } from '../../services/imageUpload';
 import { GridIcon, MenuIcon } from '../Icons';
 import StoryViewer from '../StoryViewer';
+import PostViewer from './PostViewer';
 
 interface ProfilePageProps {
   currentUser: User;
@@ -24,6 +25,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ currentUser, profileUserId, u
   const [isFriendRequestSent, setIsFriendRequestSent] = useState(false);
   const [activeTab, setActiveTab] = useState<'grid' | 'list'>('grid');
   const [viewingStories, setViewingStories] = useState(false);
+  const [selectedPost, setSelectedPost] = useState<Post | null>(null);
 
   useEffect(() => {
     if (!users[targetUserId] || !currentUser || targetUserId === currentUser.id) return;
@@ -118,7 +120,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ currentUser, profileUserId, u
           <div className="grid grid-cols-3 gap-1">
             {userPosts.map(post => (
               post.mediaUrls && post.mediaUrls.length > 0 ? (
-                <div key={post.id} className="aspect-square bg-gray-200">
+                <div key={post.id} className="aspect-square bg-gray-200 cursor-pointer" onClick={() => setSelectedPost(post)}>
                   <img src={post.mediaUrls[0]} alt="post" className="w-full h-full object-cover" />
                 </div>
               ) : null
@@ -173,6 +175,14 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ currentUser, profileUserId, u
             stories={profileUserStories}
             onClose={() => setViewingStories(false)}
           />
+      )}
+      {selectedPost && (
+        <PostViewer
+          post={selectedPost}
+          user={users[selectedPost.userId]}
+          currentUser={currentUser}
+          onClose={() => setSelectedPost(null)}
+        />
       )}
     </div>
   );
