@@ -1,13 +1,39 @@
 
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import type { User } from '../types';
 import { HomeIcon, UsersIcon, ChatIcon, BellIcon, SearchIcon, MenuIcon } from './Icons';
+import { auth } from '../services/firebase';
+import { signOut } from 'firebase/auth';
 
 interface HeaderProps {
   currentUser: User;
 }
 
 const Header: React.FC<HeaderProps> = ({ currentUser }) => {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  const handleSignOut = async () => {
+    try {
+      await signOut(auth);
+    } catch (error) {
+      console.error("Error signing out: ", error);
+    }
+  };
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setIsMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+
   return (
     <header className="fixed top-0 left-0 right-0 bg-card shadow-md h-14 z-50 flex items-center justify-between px-2 md:px-4">
       {/* Left Section */}
@@ -53,11 +79,33 @@ const Header: React.FC<HeaderProps> = ({ currentUser }) => {
             <CircleButton Icon={ChatIcon} />
             <CircleButton Icon={BellIcon} />
         </div>
-        <img
-          src={currentUser.avatarUrl}
-          alt={currentUser.name}
-          className="w-10 h-10 rounded-full cursor-pointer"
-        />
+        <div className="relative" ref={menuRef}>
+          <img
+            src={currentUser.avatarUrl}
+            alt={currentUser.name}
+            className="w-10 h-10 rounded-full cursor-pointer"
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+          />
+          {isMenuOpen && (
+            <div className="absolute right-0 mt-2 w-48 bg-card rounded-md shadow-lg py-1 z-50">
+              <div className="px-4 py-2 border-b">
+                <p className="font-bold text-sm truncate">{currentUser.name}</p>
+                <p className="text-xs text-text-secondary truncate">@{currentUser.handle}</p>
+              </div>
+               {currentUser.role === 'admin' && (
+                <a href="#" className="block px-4 py-2 text-sm text-text-primary hover:bg-gray-100">
+                  Admin Panel
+                </a>
+              )}
+              <a href="#" className="block px-4 py-2 text-sm text-text-primary hover:bg-gray-100">
+                Profile
+              </a>
+              <a href="#" onClick={handleSignOut} className="block w-full text-left px-4 py-2 text-sm text-text-primary hover:bg-gray-100">
+                Sign Out
+              </a>
+            </div>
+          )}
+        </div>
       </div>
     </header>
   );

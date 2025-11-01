@@ -1,54 +1,94 @@
 
 import React, { useState, useEffect } from 'react';
 import { onValue, ref } from 'firebase/database';
-import { db, seedDatabase } from './services/firebase';
+import { db, seedDatabase, onAuthChange, getUserProfile } from './services/firebase';
 import type { User, Post, Story } from './types';
+import type { User as FirebaseUser } from 'firebase/auth';
 import Header from './components/Header';
 import SidebarLeft from './components/SidebarLeft';
 import MainContent from './components/MainContent';
 import SidebarRight from './components/SidebarRight';
 import BottomNav from './components/BottomNav';
+import Auth from './components/auth/Auth';
+import CompleteProfile from './components/auth/CompleteProfile';
+import LoadingSpinner from './components/LoadingSpinner';
 
 const App: React.FC = () => {
+  const [authUser, setAuthUser] = useState<FirebaseUser | null>(null);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [users, setUsers] = useState<Record<string, User>>({});
   const [posts, setPosts] = useState<Post[]>([]);
   const [stories, setStories] = useState<Story[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Mock current user
-  const currentUser: User = {
-    id: 'user1',
-    name: 'George Alex',
-    avatarUrl: 'https://i.pravatar.cc/150?u=user1',
-  };
-
   useEffect(() => {
-    const seedAndFetch = async () => {
-      await seedDatabase();
+    seedDatabase();
 
-      const usersRef = ref(db, 'users/');
-      onValue(usersRef, (snapshot) => {
-        setUsers(snapshot.val() || {});
-      });
-
-      const postsRef = ref(db, 'posts/');
-      onValue(postsRef, (snapshot) => {
-        const postsData = snapshot.val() || {};
-        const postsArray = Object.values(postsData) as Post[];
-        setPosts(postsArray.sort((a, b) => b.timestamp - a.timestamp));
-      });
-
-      const storiesRef = ref(db, 'stories/');
-      onValue(storiesRef, (snapshot) => {
-        const storiesData = snapshot.val() || {};
-        setStories(Object.values(storiesData) as Story[]);
-      });
-
+    const unsubscribe = onAuthChange(async (user) => {
+      if (user) {
+        setAuthUser(user);
+        const userProfile = await getUserProfile(user.uid);
+        if (userProfile) {
+          setCurrentUser(userProfile);
+        } else {
+          // This is a new user who needs to complete their profile
+          setCurrentUser({
+            id: user.uid,
+            email: user.email!,
+            avatarUrl: `https://i.pravatar.cc/150?u=${user.uid}`,
+            role: 'user',
+          });
+        }
+      } else {
+        setAuthUser(null);
+        setCurrentUser(null);
+      }
       setLoading(false);
-    };
+    });
 
-    seedAndFetch();
+    return () => unsubscribe();
   }, []);
+  
+  useEffect(() => {
+    if (!currentUser) return;
+
+    // Fetch all data once we have a logged-in user
+    const usersRef = ref(db, 'users/');
+    const usersUnsub = onValue(usersRef, (snapshot) => {
+      setUsers(snapshot.val() || {});
+    });
+
+    const postsRef = ref(db, 'posts/');
+    const postsUnsub = onValue(postsRef, (snapshot) => {
+      const postsData = snapshot.val() || {};
+      const postsArray = Object.values(postsData) as Post[];
+      setPosts(postsArray.sort((a, b) => b.timestamp - a.timestamp));
+    });
+
+    const storiesRef = ref(db, 'stories/');
+    const storiesUnsub = onValue(storiesRef, (snapshot) => {
+      const storiesData = snapshot.val() || {};
+      setStories(Object.values(storiesData) as Story[]);
+    });
+    
+    return () => {
+      usersUnsub();
+      postsUnsub();
+      storiesUnsub();
+    }
+  }, [currentUser]);
+
+  if (loading) {
+    return <LoadingSpinner />;
+  }
+
+  if (!authUser) {
+    return <Auth />;
+  }
+  
+  if (!currentUser?.handle || !currentUser?.name) {
+    return <CompleteProfile user={currentUser!} />;
+  }
 
   return (
     <div className="bg-background min-h-screen text-text-primary">
@@ -61,10 +101,10 @@ const App: React.FC = () => {
             users={users}
             posts={posts}
             stories={stories}
-            loading={loading}
+            loading={posts.length === 0} // Show loading if posts aren't there yet
           />
         </div>
-        <SidebarRight users={users} />
+        <SidebarRight users={users} currentUser={currentUser}/>
       </main>
       <BottomNav />
     </div>

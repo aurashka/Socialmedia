@@ -1,7 +1,11 @@
 export interface User {
-  id: string;
-  name: string;
+  id: string; // Firebase Auth UID
+  name?: string;
+  handle?: string;
   avatarUrl: string;
+  email: string;
+  phone?: string;
+  role: 'user' | 'admin';
 }
 
 export interface Post {
