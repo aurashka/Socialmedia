@@ -206,8 +206,11 @@ const App: React.FC = () => {
         if (snapshot.exists()) {
             const postsData = snapshot.val();
             if (typeof postsData === 'object' && postsData !== null) {
-                const postsArray = Object.values(postsData) as Post[];
-                setPosts(postsArray.sort((a, b) => b.timestamp - a.timestamp));
+                // FIX: Filter for valid post objects to prevent crashes from malformed data in Firebase.
+                const postsArray = Object.values(postsData)
+                    .filter((p): p is Post => p && typeof p === 'object')
+                    .sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+                setPosts(postsArray);
             } else {
                 setPosts([]);
                 console.warn('Posts data from Firebase is not a valid object:', postsData);
@@ -339,6 +342,11 @@ const App: React.FC = () => {
     const friendIds = currentUser.friends ? Object.keys(currentUser.friends) : [];
     
     return posts.filter(post => {
+      // FIX: Add a check for a valid post object to prevent potential crashes.
+      if (!post || typeof post !== 'object' || !post.userId) {
+        return false;
+      }
+
       // Hide posts from users blocked by the current user
       if (blockedUserIds.includes(post.userId)) {
         return false;
