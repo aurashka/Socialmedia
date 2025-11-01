@@ -25,9 +25,9 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({ profileUser, currentUser,
   const hasStories = stories.length > 0;
 
   const followerCount = useMemo(() => {
-    // This is a mock value. A real implementation would need a different DB structure.
-    return 567000;
-  }, [profileUser.id]);
+    // In this data model, friends are reciprocal, so followers and following are the same.
+    return profileUser.friends ? Object.keys(profileUser.friends).length : 0;
+  }, [profileUser.friends]);
 
   const followingCount = useMemo(() => {
     return profileUser.friends ? Object.keys(profileUser.friends).length : 0;
@@ -176,9 +176,9 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({ profileUser, currentUser,
           </div>
           
           <div className="flex justify-around w-full max-w-sm my-6 text-center">
+            <Stat value={postCount} label="Posts"/>
             <Stat value={followerCount} label="Followers"/>
             <Stat value={followingCount} label="Following"/>
-            <Stat value={postCount} label="Posts"/>
           </div>
 
           <div className="flex items-center space-x-2 w-full max-w-sm">

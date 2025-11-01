@@ -4,7 +4,7 @@ import ProfileHeader from './ProfileHeader';
 import PostCard from '../PostCard';
 import { onValue, ref } from 'firebase/database';
 import { db, unblockUser } from '../../services/firebase';
-import { GridIcon, MenuIcon } from '../Icons';
+import { GridIcon, VideoCameraIcon } from '../Icons';
 import StoryViewer from '../StoryViewer';
 import PostViewer from './PostViewer';
 
@@ -20,8 +20,8 @@ interface ProfilePageProps {
 const ProfilePage: React.FC<ProfilePageProps> = ({ currentUser, profileUserId, users, posts, friendRequests, stories }) => {
   const targetUserId = profileUserId || currentUser.id;
   const [isFriendRequestSent, setIsFriendRequestSent] = useState(false);
-  const [activeTab, setActiveTab] = useState<'grid' | 'list'>('grid');
-  const [viewingStories, setViewingStories] = useState(false);
+  const [activeTab, setActiveTab] = useState<'posts' | 'stories'>('posts');
+  const [storyViewerState, setStoryViewerState] = useState<{ open: boolean, initialIndex: number }>({ open: false, initialIndex: 0 });
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
 
   useEffect(() => {
@@ -76,38 +76,47 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ currentUser, profileUserId, u
   const isFriendRequestReceived = friendRequests && friendRequests[profileUser.id];
   
   const renderContent = () => {
-    if (userPosts.length === 0) {
+    if (activeTab === 'posts') {
+      if (userPosts.length === 0) {
         return (
           <div className="bg-surface rounded-lg p-8 text-center text-secondary mt-1">
-              <p>{isCurrentUser ? "You haven't" : `${profileUser.name} hasn't`} posted anything yet.</p>
+            <p>{isCurrentUser ? "You haven't" : `${profileUser.name} hasn't`} posted anything yet.</p>
           </div>
+        );
+      }
+      return (
+        <div className="grid grid-cols-3 gap-1">
+          {userPosts.map(post => (
+            post.mediaUrls && post.mediaUrls.length > 0 ? (
+              <div key={post.id} className="aspect-square bg-gray-200 cursor-pointer" onClick={() => setSelectedPost(post)}>
+                <img src={post.mediaUrls[0]} alt="post" className="w-full h-full object-cover" />
+              </div>
+            ) : null
+          ))}
+        </div>
+      );
+    }
+    
+    if (activeTab === 'stories') {
+        if (profileUserStories.length === 0) {
+            return (
+                <div className="bg-surface rounded-lg p-8 text-center text-secondary mt-1">
+                    <p>{isCurrentUser ? "You don't" : `${profileUser.name} doesn't`} have any stories.</p>
+                </div>
+            )
+        }
+        return (
+            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-1 p-1">
+                {profileUserStories.map((story, index) => (
+                    <div key={story.id} className="aspect-square bg-gray-200 cursor-pointer group" onClick={() => setStoryViewerState({ open: true, initialIndex: index })}>
+                        <img src={story.imageUrl} alt="story thumbnail" className="w-full h-full object-cover group-hover:opacity-80 transition-opacity" />
+                    </div>
+                ))}
+            </div>
         )
     }
 
-    switch(activeTab) {
-      case 'grid':
-        return (
-          <div className="grid grid-cols-3 gap-1">
-            {userPosts.map(post => (
-              post.mediaUrls && post.mediaUrls.length > 0 ? (
-                <div key={post.id} className="aspect-square bg-gray-200 cursor-pointer" onClick={() => setSelectedPost(post)}>
-                  <img src={post.mediaUrls[0]} alt="post" className="w-full h-full object-cover" />
-                </div>
-              ) : null
-            ))}
-          </div>
-        );
-      case 'list':
-          return (
-            <div className="space-y-4 max-w-xl mx-auto py-4">
-              {userPosts.map(post => (
-                  <PostCard key={post.id} post={post} user={users[post.userId]} currentUser={currentUser} />
-              ))}
-            </div>
-          )
-      default:
-        return null;
-    }
+    return null;
   }
 
   return (
@@ -120,23 +129,24 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ currentUser, profileUserId, u
         isFriendRequestReceived={!!isFriendRequestReceived}
         postCount={userPosts.length}
         stories={profileUserStories}
-        onViewStories={() => setViewingStories(true)}
+        onViewStories={() => setStoryViewerState({ open: true, initialIndex: 0 })}
       />
       
       <div className="border-t border-b border-divider flex justify-center">
-        <TabButton Icon={GridIcon} label="Grid" active={activeTab === 'grid'} onClick={() => setActiveTab('grid')} />
-        <TabButton Icon={MenuIcon} label="Feed" active={activeTab === 'list'} onClick={() => setActiveTab('list')} />
+        <TabButton Icon={GridIcon} label="Posts" active={activeTab === 'posts'} onClick={() => setActiveTab('posts')} />
+        <TabButton Icon={VideoCameraIcon} label="Stories" active={activeTab === 'stories'} onClick={() => setActiveTab('stories')} />
       </div>
 
       <div className="pt-1">
           {renderContent()}
       </div>
 
-      {viewingStories && profileUserStories.length > 0 && (
+      {storyViewerState.open && profileUserStories.length > 0 && (
           <StoryViewer 
             user={profileUser}
             stories={profileUserStories}
-            onClose={() => setViewingStories(false)}
+            initialIndex={storyViewerState.initialIndex}
+            onClose={() => setStoryViewerState({ open: false, initialIndex: 0 })}
           />
       )}
       {selectedPost && (

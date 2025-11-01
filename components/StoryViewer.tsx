@@ -6,12 +6,13 @@ interface StoryViewerProps {
   user: User;
   stories: Story[];
   onClose: () => void;
+  initialIndex?: number;
 }
 
 const STORY_DURATION = 5000; // 5 seconds per story
 
-const StoryViewer: React.FC<StoryViewerProps> = ({ user, stories, onClose }) => {
-  const [currentIndex, setCurrentIndex] = useState(0);
+const StoryViewer: React.FC<StoryViewerProps> = ({ user, stories, onClose, initialIndex = 0 }) => {
+  const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const [progress, setProgress] = useState(0);
 
   useEffect(() => {
