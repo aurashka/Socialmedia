@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import type { User, Community, Channel } from '../../types';
 import { SearchIcon } from '../Icons';
+import { UserResultCard, CommunityResultCard, ChannelResultCard } from './SearchResultCards';
 
 interface SearchPageProps {
   query: string;
@@ -137,36 +138,6 @@ const ResultSection: React.FC<{title: string, children: React.ReactNode}> = ({ t
             {children}
         </div>
     </section>
-);
-
-const UserResultCard: React.FC<{user: User}> = ({ user }) => (
-    <a href={`#/profile/${user.id}`} className="flex items-center space-x-4 p-3 hover:bg-gray-50 transition-colors">
-        <img src={user.avatarUrl} alt={user.name} className="w-14 h-14 rounded-full object-cover" />
-        <div>
-            <p className="font-bold">{user.name}</p>
-            <p className="text-sm text-secondary">@{user.handle}</p>
-        </div>
-    </a>
-);
-
-const CommunityResultCard: React.FC<{community: Community}> = ({ community }) => (
-    <a href={`#/community/${community.id}`} className="flex items-center space-x-4 p-3 hover:bg-gray-50 transition-colors">
-        <img src={community.avatarUrl} alt={community.name} className="w-14 h-14 rounded-lg object-cover" />
-        <div>
-            <p className="font-bold">{community.name}</p>
-            <p className="text-sm text-secondary">{Object.keys(community.members).length} members</p>
-        </div>
-    </a>
-);
-
-const ChannelResultCard: React.FC<{channel: Channel}> = ({ channel }) => (
-    <a href={`#/channel/${channel.id}`} className="flex items-center space-x-4 p-3 hover:bg-gray-50 transition-colors">
-        <img src={channel.avatarUrl} alt={channel.name} className="w-14 h-14 rounded-full object-cover" />
-        <div>
-            <p className="font-bold">{channel.name}</p>
-            <p className="text-sm text-secondary">{Object.keys(channel.subscribers).length} subscribers</p>
-        </div>
-    </a>
 );
 
 export default SearchPage;

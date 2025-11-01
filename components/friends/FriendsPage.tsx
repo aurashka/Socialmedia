@@ -1,83 +1,13 @@
 import React, { useMemo, useState } from 'react';
 import type { User } from '../../types';
-import { handleFriendRequest, sendFriendRequest } from '../../services/firebase';
 import LoadingSpinner from '../LoadingSpinner';
+import UserActionCard from './UserActionCard';
 
 interface FriendsPageProps {
     currentUser: User;
     users: Record<string, User>;
     friendRequests: Record<string, any>;
 }
-
-const UserActionCard: React.FC<{
-    cardUser: User;
-    currentUser: User;
-    type: 'request' | 'suggestion';
-    onAction: () => void;
-    actionText?: string;
-    isVertical?: boolean;
-}> = ({ cardUser, currentUser, type, onAction, actionText, isVertical = false }) => {
-    const [loading, setLoading] = useState(false);
-
-    if (!cardUser) return null;
-
-    const handleAccept = async () => {
-        setLoading(true);
-        await handleFriendRequest(currentUser.id, cardUser.id, true);
-        setLoading(false);
-    };
-
-    const handleDecline = async () => {
-        setLoading(true);
-        await handleFriendRequest(currentUser.id, cardUser.id, false);
-        setLoading(false);
-    };
-    
-    const handleAddFriend = async () => {
-        setLoading(true);
-        await sendFriendRequest(currentUser.id, cardUser.id);
-        onAction();
-        setLoading(false);
-    }
-    
-    if (isVertical) {
-        return (
-            <div className="bg-card rounded-lg shadow-sm overflow-hidden border border-divider">
-                <a href={`#/profile/${cardUser.id}`}>
-                    <img src={cardUser.avatarUrl} alt={cardUser.name} className="w-full h-40 object-cover"/>
-                </a>
-                <div className="p-3">
-                    <a href={`#/profile/${cardUser.id}`} className="font-bold text-text-primary hover:underline truncate block">{cardUser.name}</a>
-                    <div className="mt-3 flex flex-col gap-2">
-                        <button onClick={handleAddFriend} disabled={loading || actionText === 'Request Sent'} className="w-full px-3 py-2 text-sm bg-primary text-white font-semibold rounded-md hover:bg-blue-700 disabled:bg-blue-300 disabled:text-white/80 whitespace-nowrap">
-                            {loading ? '...' : actionText}
-                        </button>
-                    </div>
-                </div>
-            </div>
-        )
-    }
-
-    return (
-        <div className="bg-card rounded-lg p-3 flex items-center justify-between transition-shadow hover:shadow-md border border-divider">
-            <a href={`#/profile/${cardUser.id}`} className="flex items-center space-x-4">
-                <img src={cardUser.avatarUrl} alt={cardUser.name} className="w-14 h-14 rounded-lg object-cover"/>
-                <div>
-                    <p className="font-bold text-text-primary hover:underline">{cardUser.name}</p>
-                </div>
-            </a>
-            <div className="flex flex-col sm:flex-row gap-2">
-                {type === 'request' && (
-                    <>
-                        <button onClick={handleAccept} disabled={loading} className="px-4 py-2 text-sm bg-primary text-white font-semibold rounded-md hover:bg-blue-700 disabled:bg-blue-300 whitespace-nowrap">Confirm</button>
-                        <button onClick={handleDecline} disabled={loading} className="px-4 py-2 text-sm bg-gray-200 text-text-primary font-semibold rounded-md hover:bg-gray-300 disabled:bg-gray-100 whitespace-nowrap">Delete</button>
-                    </>
-                )}
-            </div>
-        </div>
-    );
-};
-
 
 const FriendsPage: React.FC<FriendsPageProps> = ({ currentUser, users, friendRequests }) => {
     
@@ -88,7 +18,6 @@ const FriendsPage: React.FC<FriendsPageProps> = ({ currentUser, users, friendReq
         if (!users || !currentUser) return [];
         const currentUserFriendIds = currentUser.friends ? Object.keys(currentUser.friends) : [];
         const friendRequestSenderIds = Object.keys(friendRequests);
-        // FIX: Cast Object.values(users) to User[] to resolve TypeScript errors.
         return (Object.values(users) as User[])
             .filter(user => 
                 user && user.id !== currentUser.id &&
@@ -114,7 +43,13 @@ const FriendsPage: React.FC<FriendsPageProps> = ({ currentUser, users, friendReq
                 <div className="space-y-3">
                     {requestSenderIds.length > 0 ? (
                         requestSenderIds.map(senderId => (
-                            <UserActionCard key={senderId} cardUser={users[senderId]} currentUser={currentUser} type="request" onAction={() => {}} />
+                            <UserActionCard 
+                                key={senderId} 
+                                cardUser={users[senderId]} 
+                                currentUser={currentUser} 
+                                type="request" 
+                                isVertical={false} 
+                            />
                         ))
                     ) : (
                         <div className="bg-card rounded-lg p-6 text-center text-text-secondary border border-divider">

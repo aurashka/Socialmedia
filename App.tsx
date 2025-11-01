@@ -214,7 +214,11 @@ const App: React.FC = () => {
     <div className="bg-background min-h-screen text-primary pb-20 md:pb-0">
       <Header 
         currentUser={currentUser} 
-        friendRequestCount={Object.keys(friendRequests).length} 
+        friendRequestCount={Object.keys(friendRequests).length}
+        users={users}
+        friendRequests={friendRequests}
+        communities={communities}
+        channels={channels}
       />
       <main className="flex pt-14 max-w-7xl mx-auto">
         <SidebarLeft currentUser={currentUser} />
