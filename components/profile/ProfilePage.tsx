@@ -4,7 +4,7 @@ import ProfileHeader from './ProfileHeader';
 import PostCard from '../PostCard';
 import { onValue, ref } from 'firebase/database';
 import { db, unblockUser } from '../../services/firebase';
-import { GridIcon, VideoCameraIcon } from '../Icons';
+import { GridIcon, VideoCameraIcon, BookmarkIcon } from '../Icons';
 import StoryViewer from '../StoryViewer';
 import PostViewer from './PostViewer';
 
@@ -20,7 +20,7 @@ interface ProfilePageProps {
 const ProfilePage: React.FC<ProfilePageProps> = ({ currentUser, profileUserId, users, posts, friendRequests, stories }) => {
   const targetUserId = profileUserId || currentUser.id;
   const [isFriendRequestSent, setIsFriendRequestSent] = useState(false);
-  const [activeTab, setActiveTab] = useState<'posts' | 'stories'>('posts');
+  const [activeTab, setActiveTab] = useState<'posts' | 'stories' | 'bookmarked'>('posts');
   const [storyViewerState, setStoryViewerState] = useState<{ open: boolean, initialIndex: number }>({ open: false, initialIndex: 0 });
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
 
@@ -68,6 +68,12 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ currentUser, profileUserId, u
         return post.isPublic !== false; // Others only see public posts
       });
   }, [posts, targetUserId, isCurrentUser]);
+
+  const bookmarkedPosts = useMemo(() => {
+    if (!currentUser.bookmarkedPosts) return [];
+    const bookmarkedIds = Object.keys(currentUser.bookmarkedPosts);
+    return posts.filter(post => bookmarkedIds.includes(post.id)).sort((a,b) => b.timestamp - a.timestamp);
+  }, [posts, currentUser.bookmarkedPosts]);
   
   const profileUserStories = useMemo(() => {
     return stories.filter(story => story.userId === targetUserId).sort((a,b) => b.timestamp - a.timestamp);
@@ -116,6 +122,28 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ currentUser, profileUserId, u
         )
     }
 
+    if (activeTab === 'bookmarked') {
+      if (bookmarkedPosts.length === 0) {
+        return (
+          <div className="bg-surface rounded-lg p-8 text-center text-secondary mt-1">
+            <p>You haven't saved any posts yet.</p>
+            <p className="text-xs mt-1">Only you can see what you've saved.</p>
+          </div>
+        );
+      }
+      return (
+        <div className="grid grid-cols-3 gap-1">
+          {bookmarkedPosts.map(post => (
+            post.mediaUrls && post.mediaUrls.length > 0 ? (
+              <div key={post.id} className="aspect-square bg-gray-200 cursor-pointer" onClick={() => setSelectedPost(post)}>
+                <img src={post.mediaUrls[0]} alt="post" className="w-full h-full object-cover" />
+              </div>
+            ) : null
+          ))}
+        </div>
+      );
+    }
+
     return null;
   }
 
@@ -135,6 +163,9 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ currentUser, profileUserId, u
       <div className="border-t border-b border-divider flex justify-center">
         <TabButton Icon={GridIcon} label="Posts" active={activeTab === 'posts'} onClick={() => setActiveTab('posts')} />
         <TabButton Icon={VideoCameraIcon} label="Stories" active={activeTab === 'stories'} onClick={() => setActiveTab('stories')} />
+        {isCurrentUser && (
+          <TabButton Icon={BookmarkIcon} label="Saved" active={activeTab === 'bookmarked'} onClick={() => setActiveTab('bookmarked')} />
+        )}
       </div>
 
       <div className="pt-1">

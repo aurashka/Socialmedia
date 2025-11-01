@@ -229,7 +229,7 @@ const App: React.FC = () => {
                         currentUser={currentUser}
                         profileUserId={route.id}
                         users={users}
-                        posts={filteredPosts}
+                        posts={posts} // Pass all posts to profile for bookmark lookup
                         friendRequests={friendRequests}
                         stories={filteredStories}
                      />
@@ -244,6 +244,9 @@ const App: React.FC = () => {
                          currentUser={currentUser}
                          users={users}
                          posts={filteredPosts}
+                         friendRequests={friendRequests}
+                         communities={communities}
+                         channels={channels}
                        />
           case 'search':
               return <SearchPage

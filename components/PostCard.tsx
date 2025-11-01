@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import type { User, Post } from '../types';
-import { DotsHorizontalIcon, HeartIcon, HeartIconFilled, ChatIcon, MessageIcon, TrashIcon, ChevronLeftIcon, ChevronRightIcon, PencilIcon, LockClosedIcon, BookmarkIcon } from './Icons';
+import { DotsHorizontalIcon, HeartIcon, HeartIconFilled, ChatIcon, MessageIcon, TrashIcon, ChevronLeftIcon, ChevronRightIcon, PencilIcon, LockClosedIcon, BookmarkIcon, BookmarkIconFilled } from './Icons';
 import { parseContent } from '../utils/textUtils';
-import { updatePost, deletePost, updatePostPrivacy, toggleReaction } from '../services/firebase';
+import { updatePost, deletePost, updatePostPrivacy, toggleReaction, toggleBookmark } from '../services/firebase';
 import CommentSection from './comments/CommentSection';
 import AddCommentForm from './comments/AddCommentForm';
 // FIX: Import PostCardShimmer component.
@@ -27,6 +27,7 @@ const PostCard: React.FC<PostCardProps> = ({ post, user, currentUser, users }) =
   
   const menuRef = useRef<HTMLDivElement>(null);
   const isOwner = currentUser?.id === post.userId;
+  const isBookmarked = !!currentUser.bookmarkedPosts?.[post.id];
 
   const reactionsSummary = useMemo(() => {
     if (!post.reactions || !post.reactions.like) {
@@ -66,6 +67,14 @@ const PostCard: React.FC<PostCardProps> = ({ post, user, currentUser, users }) =
     }
   };
   
+  const handleToggleBookmark = async () => {
+      try {
+          await toggleBookmark(currentUser.id, post.id);
+      } catch (error) {
+          console.error("Failed to toggle bookmark:", error);
+      }
+  };
+
   const handleEdit = () => {
     setIsEditing(true);
     setEditedContent(post.content);
@@ -208,7 +217,13 @@ const PostCard: React.FC<PostCardProps> = ({ post, user, currentUser, users }) =
             <button><ChatIcon className="w-7 h-7 text-primary"/></button>
             <button><MessageIcon className="w-7 h-7 text-primary"/></button>
           </div>
-          <button><BookmarkIcon className="w-7 h-7 text-primary"/></button>
+          <button onClick={handleToggleBookmark}>
+              {isBookmarked ? (
+                  <BookmarkIconFilled className="w-7 h-7 text-primary"/>
+              ) : (
+                  <BookmarkIcon className="w-7 h-7 text-primary"/>
+              )}
+          </button>
        </div>
 
       {/* Post Stats & Content */}

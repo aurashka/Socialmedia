@@ -14,6 +14,7 @@ export interface User {
   blocked?: Record<string, boolean>; // Record of blocked user IDs
   isVerified?: boolean;
   badgeUrl?: string;
+  bookmarkedPosts?: Record<string, boolean>; // Record of bookmarked post IDs
 }
 
 export interface Post {

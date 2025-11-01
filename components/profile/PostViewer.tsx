@@ -167,12 +167,12 @@ const PostViewer: React.FC<PostViewerProps> = ({ post: initialPost, user, curren
   };
 
   return (
-    <div className="fixed inset-0 bg-black/80 z-[100] flex items-center justify-center p-4" onClick={onClose} role="dialog">
+    <div className="fixed inset-0 bg-black/80 z-[100] flex items-center justify-center p-0 md:p-4" onClick={onClose} role="dialog">
       <button onClick={onClose} className="absolute top-4 right-4 text-white z-[110]"><XIcon className="w-8 h-8" /></button>
       
-      <div className="bg-surface w-full max-w-5xl h-[90vh] rounded-lg flex overflow-hidden" onClick={(e) => e.stopPropagation()}>
+      <div className="bg-surface w-full h-full md:max-w-5xl md:h-[90vh] rounded-none md:rounded-lg flex flex-col md:flex-row overflow-hidden" onClick={(e) => e.stopPropagation()}>
         {/* Media Section */}
-        <div className="w-3/5 bg-black flex items-center justify-center relative group">
+        <div className="w-full md:w-3/5 bg-black flex items-center justify-center relative group aspect-square md:aspect-auto">
           {post.mediaUrls && post.mediaUrls.length > 0 ? (
             <>
               <img src={post.mediaUrls[currentImageIndex]} alt="Post media" className="max-h-full max-w-full object-contain" />
@@ -187,7 +187,7 @@ const PostViewer: React.FC<PostViewerProps> = ({ post: initialPost, user, curren
         </div>
 
         {/* Details Section */}
-        <div className="w-2/5 flex flex-col">
+        <div className="w-full md:w-2/5 flex flex-col flex-grow min-h-0">
           {/* Header */}
           <div className="p-4 border-b flex justify-between items-center flex-shrink-0">
             <a href={`#/profile/${user?.id}`} className="flex items-center space-x-3">

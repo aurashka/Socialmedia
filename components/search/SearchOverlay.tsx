@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import type { User, Community, Channel } from '../../types';
-import { SearchIcon, XIcon, ChevronLeftIcon } from '../Icons';
+import { SearchIcon, XIcon } from '../Icons';
 import { UserResultCard, CommunityResultCard, ChannelResultCard } from './SearchResultCards';
 import UserActionCard from '../friends/UserActionCard';
 
@@ -224,13 +224,12 @@ const SearchOverlay: React.FC<SearchOverlayProps> = ({ onClose, currentUser, use
     };
 
     return (
-        <div className="fixed inset-0 z-[60] bg-background md:bg-black/50" role="dialog" aria-modal="true">
-            <div className="absolute top-0 left-0 md:pl-72 h-full w-full md:w-[28rem] bg-surface shadow-lg border-r border-divider flex flex-col">
+        <div className="fixed inset-0 z-[60] bg-background" role="dialog" aria-modal="true">
+            <div className="h-full w-full bg-surface flex flex-col">
                 <div className="p-4 border-b border-divider flex-shrink-0">
-                    <h2 className="text-2xl font-bold mb-4 hidden md:block">Search</h2>
                     <form onSubmit={handleSearchSubmit} className="flex items-center space-x-2">
-                        <button onClick={onClose} className="p-2 md:hidden">
-                            <ChevronLeftIcon className="w-6 h-6"/>
+                        <button type="button" onClick={onClose} className="p-2">
+                            <XIcon className="w-6 h-6"/>
                         </button>
                         <div className="relative flex-grow">
                              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">

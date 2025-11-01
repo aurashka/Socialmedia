@@ -1,15 +1,23 @@
 import React, { useMemo, useState } from 'react';
-import type { User, Post } from '../../types';
+import type { User, Post, Community, Channel } from '../../types';
 import PostViewerModal from './PostViewerModal';
+import { SearchIcon } from '../Icons';
+import UserActionCard from '../friends/UserActionCard';
+import SearchOverlay from '../search/SearchOverlay';
 
 interface ExplorePageProps {
     currentUser: User;
     users: Record<string, User>;
     posts: Post[];
+    friendRequests: Record<string, any>;
+    communities: Record<string, Community>;
+    channels: Record<string, Channel>;
 }
 
-const ExplorePage: React.FC<ExplorePageProps> = ({ currentUser, users, posts }) => {
+const ExplorePage: React.FC<ExplorePageProps> = ({ currentUser, users, posts, friendRequests, communities, channels }) => {
     const [selectedPost, setSelectedPost] = useState<Post | null>(null);
+    const [isSearchOpen, setIsSearchOpen] = useState(false);
+    const [sentRequests, setSentRequests] = useState<Record<string, boolean>>({});
 
     const explorePosts = useMemo(() => {
         return posts
@@ -22,10 +30,54 @@ const ExplorePage: React.FC<ExplorePageProps> = ({ currentUser, users, posts }) 
             .sort(() => 0.5 - Math.random());
     }, [posts, users, currentUser.id]);
 
+    const suggestedUsers = useMemo(() => {
+        if (!users || !currentUser) return [];
+        const currentUserFriendIds = currentUser.friends ? Object.keys(currentUser.friends) : [];
+        const friendRequestSenderIds = Object.keys(friendRequests);
+        return (Object.values(users) as User[])
+            .filter(user => 
+                user && user.id !== currentUser.id &&
+                !currentUserFriendIds.includes(user.id) &&
+                !friendRequestSenderIds.includes(user.id) &&
+                user.isPublic
+            )
+            .sort(() => 0.5 - Math.random())
+            .slice(0, 10);
+    }, [currentUser, users, friendRequests]);
+
+    const handleSuggestionAction = (userId: string) => {
+        setSentRequests(prev => ({ ...prev, [userId]: true }));
+    };
+
 
     return (
-        <div className="bg-background">
-            <main className="max-w-5xl mx-auto py-1">
+        <div className="bg-background min-h-screen">
+            <main className="max-w-5xl mx-auto py-4 px-2 space-y-6">
+                <div onClick={() => setIsSearchOpen(true)} className="flex items-center bg-divider rounded-md h-10 px-4 cursor-text">
+                    <SearchIcon className="h-5 w-5 text-secondary" />
+                    <span className="ml-3 text-secondary">Search</span>
+                </div>
+
+                {suggestedUsers.length > 0 && (
+                    <div>
+                        <h2 className="text-lg font-bold text-primary mb-3">Suggested for you</h2>
+                        <div className="flex space-x-4 overflow-x-auto pb-2 -mx-2 px-2">
+                            {suggestedUsers.map(user => (
+                                <div key={user.id} className="w-40 flex-shrink-0">
+                                    <UserActionCard 
+                                        cardUser={user} 
+                                        currentUser={currentUser} 
+                                        type="suggestion" 
+                                        isVertical={true}
+                                        onAction={() => handleSuggestionAction(user.id)}
+                                        actionText={sentRequests[user.id] ? "Request Sent" : "Add Friend"}
+                                    />
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
                 <div className="grid grid-cols-3 gap-1">
                     {explorePosts.map((post) => (
                         <div 
@@ -54,6 +106,16 @@ const ExplorePage: React.FC<ExplorePageProps> = ({ currentUser, users, posts }) 
                     currentUser={currentUser}
                     users={users}
                     onClose={() => setSelectedPost(null)}
+                />
+            )}
+            {isSearchOpen && (
+                <SearchOverlay 
+                    onClose={() => setIsSearchOpen(false)}
+                    currentUser={currentUser}
+                    users={users}
+                    friendRequests={friendRequests}
+                    communities={communities}
+                    channels={channels}
                 />
             )}
         </div>

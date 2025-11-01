@@ -179,6 +179,15 @@ export const toggleReaction = async (postId: string, userId: string, reactionTyp
     });
 };
 
+export const toggleBookmark = async (userId: string, postId: string) => {
+    const bookmarkRef = ref(db, `users/${userId}/bookmarkedPosts/${postId}`);
+    return runTransaction(bookmarkRef, (currentData) => {
+        // If it exists (is true), remove it (return null). Otherwise, add it (return true).
+        return currentData ? null : true;
+    });
+};
+
+
 export const updatePost = async (postId: string, newContent: string) => {
     const postRef = ref(db, `posts/${postId}`);
     return update(postRef, { content: newContent });
