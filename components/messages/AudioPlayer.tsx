@@ -12,9 +12,10 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ src, isCompact = false }) => 
   const [speed, setSpeed] = useState(1.0);
   const audioRef = useRef<HTMLAudioElement>(null);
   const progressBarRef = useRef<HTMLDivElement>(null);
+  const isSeeking = useRef(false);
 
   const handleTimeUpdate = useCallback(() => {
-    if (audioRef.current) {
+    if (audioRef.current && !isSeeking.current) {
         setCurrentTime(audioRef.current.currentTime);
     }
   }, []);
@@ -61,16 +62,41 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ src, isCompact = false }) => 
     setSpeed(s => s === 1 ? 1.5 : s === 1.5 ? 2 : 1);
   };
   
-  const handleSeek = (e: React.MouseEvent<HTMLDivElement>) => {
-    if(!audioRef.current || !progressBarRef.current) return;
+  const seek = (e: React.MouseEvent<HTMLDivElement> | MouseEvent) => {
+    if (!audioRef.current || !progressBarRef.current || duration === 0) return;
     const rect = progressBarRef.current.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const width = rect.width;
-    const newTime = (x / width) * duration;
-    if(isFinite(newTime)) {
+    const newTime = Math.max(0, Math.min(duration, (x / width) * duration));
+    if (isFinite(newTime)) {
         audioRef.current.currentTime = newTime;
+        setCurrentTime(newTime);
     }
   };
+  
+  const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    isSeeking.current = true;
+    seek(e);
+  };
+  
+  const handleMouseMove = useCallback((e: MouseEvent) => {
+    if (isSeeking.current) {
+        seek(e);
+    }
+  }, [duration]);
+  
+  const handleMouseUp = useCallback(() => {
+    isSeeking.current = false;
+  }, []);
+
+  useEffect(() => {
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+    return () => {
+        window.removeEventListener('mousemove', handleMouseMove);
+        window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [handleMouseMove, handleMouseUp]);
   
   const formatTime = (time: number) => {
     if (isNaN(time) || time === Infinity) return '0:00';
@@ -92,7 +118,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ src, isCompact = false }) => 
         )}
       </button>
       <div className="flex-grow flex flex-col justify-center">
-          <div ref={progressBarRef} className="w-full h-1.5 bg-gray-200 dark:bg-gray-500 rounded-full relative group cursor-pointer" onMouseDown={handleSeek}>
+          <div ref={progressBarRef} className="w-full h-1.5 bg-gray-200 dark:bg-gray-500 rounded-full relative group cursor-pointer" onMouseDown={handleMouseDown}>
               <div style={{ width: `${progress}%` }} className="h-1.5 bg-accent rounded-full"></div>
               <div style={{ left: `${progress}%` }} className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-3 h-3 bg-accent rounded-full transition-opacity opacity-0 group-hover:opacity-100"></div>
           </div>

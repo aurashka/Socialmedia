@@ -29,6 +29,11 @@ const AdminSettings: React.FC = () => {
         e.preventDefault();
         setStatus('saving');
         try {
+            if (!keys.imgbb || !keys.cloudinaryCloudName || !keys.cloudinaryUploadPreset) {
+                alert("All fields are required.");
+                setStatus('error');
+                return;
+            }
             await updateApiKeys(keys as ApiKeys);
             setStatus('saved');
             setTimeout(() => setStatus('idle'), 3000);
@@ -56,14 +61,14 @@ const AdminSettings: React.FC = () => {
                     name="imgbb"
                     value={keys.imgbb || ''}
                     onChange={handleChange}
-                    helpText="Used for all image uploads."
+                    helpText="Used for all image uploads. Get your key from api.imgbb.com."
                 />
                 <InputField
                     label="Cloudinary Cloud Name"
                     name="cloudinaryCloudName"
                     value={keys.cloudinaryCloudName || ''}
                     onChange={handleChange}
-                    helpText="Used for video and audio uploads."
+                    helpText="Your cloud name from the Cloudinary dashboard. Used for video and audio uploads."
                 />
                 <InputField
                     label="Cloudinary Upload Preset"

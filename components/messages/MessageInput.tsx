@@ -10,9 +10,10 @@ interface MessageInputProps {
   conversation: Conversation;
   replyingTo: Message | null;
   onCancelReply: () => void;
+  users: Record<string, User>;
 }
 
-const MessageInput: React.FC<MessageInputProps> = ({ currentUser, conversation, replyingTo, onCancelReply }) => {
+const MessageInput: React.FC<MessageInputProps> = ({ currentUser, conversation, replyingTo, onCancelReply, users }) => {
   const [text, setText] = useState('');
   const [isRecording, setIsRecording] = useState(false);
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
@@ -96,7 +97,7 @@ const MessageInput: React.FC<MessageInputProps> = ({ currentUser, conversation, 
   const handleStartRecording = async () => {
     try {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        mediaRecorderRef.current = new MediaRecorder(stream);
+        mediaRecorderRef.current = new MediaRecorder(stream, { mimeType: 'audio/webm' });
         audioChunksRef.current = [];
 
         mediaRecorderRef.current.ondataavailable = (event) => {
@@ -137,7 +138,7 @@ const MessageInput: React.FC<MessageInputProps> = ({ currentUser, conversation, 
         {replyingTo && (
              <div className="bg-gray-100 dark:bg-gray-700 rounded-t-lg p-2 text-sm text-secondary dark:text-gray-300 flex justify-between items-center">
                 <div>
-                    <p className="font-semibold">Replying to {replyingTo.senderId === currentUser.id ? 'yourself' : 'them'}</p>
+                    <p className="font-semibold">Replying to {replyingTo.senderId === currentUser.id ? 'yourself' : users[replyingTo.senderId]?.name || 'a message'}</p>
                     <p className="truncate opacity-80">{replyingTo.text || 'Media'}</p>
                 </div>
                 <button onClick={onCancelReply} className="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600">

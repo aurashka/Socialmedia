@@ -33,7 +33,8 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message, currentUser, sen
         if (!repliedToMessage || !repliedToUser) return null;
         
         let content: React.ReactNode = repliedToMessage.text;
-        if (repliedToMessage.mediaType === 'image') content = 'Photo';
+        if(repliedToMessage.isDeleted) content = 'This message was deleted.';
+        else if (repliedToMessage.mediaType === 'image') content = 'Photo';
         else if (repliedToMessage.mediaType === 'video') content = 'Video';
         else if (repliedToMessage.mediaType === 'audio') content = 'Voice message';
 
@@ -77,7 +78,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message, currentUser, sen
                                             <img src={message.postLink.imageUrl} alt="Post preview" className="rounded-md max-h-40 w-full object-cover my-1" />
                                         )}
                                         <p className="text-xs opacity-80 mt-1 italic">
-                                            {message.postLink.textSnippet}
+                                            "{message.postLink.textSnippet}"
                                         </p>
                                     </div>
                                 </a>
@@ -90,7 +91,9 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message, currentUser, sen
                                 <video src={message.mediaUrl} controls className="rounded-lg max-w-xs max-h-64 my-1" />
                             )}
                             {message.mediaUrl && message.mediaType === 'audio' && (
-                                <AudioPlayer src={message.mediaUrl} />
+                                <div className="my-1">
+                                    <AudioPlayer src={message.mediaUrl} />
+                                </div>
                             )}
                         </>
                     )}
@@ -98,8 +101,8 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message, currentUser, sen
                         {time}
                     </p>
                 </div>
-                {reactions.length > 0 && (
-                    <div className="flex gap-1 mt-1 px-2">
+                {reactions.length > 0 && !message.isDeleted && (
+                    <div className={`flex gap-1 mt-1 px-2 ${isSentByCurrentUser ? 'justify-end' : ''}`}>
                         {reactions.map(r => (
                             <div key={r.emoji} className={`px-1.5 py-0.5 rounded-full text-xs ${r.isReactedByCurrentUser ? 'bg-blue-200 dark:bg-blue-800' : 'bg-gray-200 dark:bg-gray-600'}`}>
                                 {r.emoji} {r.count > 1 ? r.count : ''}

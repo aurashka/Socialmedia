@@ -63,60 +63,62 @@ const AdminPage: React.FC<AdminPageProps> = ({ users, onlineStatuses }) => {
         <div className="p-4 sm:p-6 max-w-7xl mx-auto flex flex-col h-full">
             <h1 className="text-3xl font-bold mb-6 text-primary dark:text-gray-100 flex-shrink-0">Admin Panel</h1>
             
-            <div className="flex space-x-4 border-b border-divider dark:border-gray-700 mb-4">
+            <div className="flex space-x-2 border-b border-divider dark:border-gray-700 mb-4 flex-shrink-0">
                 <TabButton label="User Management" active={activeTab === 'users'} onClick={() => setActiveTab('users')} />
                 <TabButton label="API Settings" active={activeTab === 'settings'} onClick={() => setActiveTab('settings')} />
             </div>
 
-            {activeTab === 'users' ? (
-                 <>
-                    <div className="flex flex-col sm:flex-row gap-4 mb-4 flex-shrink-0">
-                        <div className="relative flex-grow">
-                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <SearchIcon className="h-5 w-5 text-secondary dark:text-gray-400" />
+            <div className="flex-grow min-h-0">
+                {activeTab === 'users' ? (
+                    <div className="flex flex-col h-full">
+                        <div className="flex flex-col sm:flex-row gap-4 mb-4 flex-shrink-0">
+                            <div className="relative flex-grow">
+                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <SearchIcon className="h-5 w-5 text-secondary dark:text-gray-400" />
+                                </div>
+                                <input
+                                    type="text"
+                                    placeholder="Search by name, email, or @handle..."
+                                    value={searchQuery}
+                                    onChange={e => setSearchQuery(e.target.value)}
+                                    className="w-full pl-10 pr-4 py-2 border border-divider dark:border-gray-700 rounded-md bg-surface dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-accent"
+                                />
                             </div>
-                            <input
-                                type="text"
-                                placeholder="Search by name, email, or @handle..."
-                                value={searchQuery}
-                                onChange={e => setSearchQuery(e.target.value)}
-                                className="w-full pl-10 pr-4 py-2 border border-divider dark:border-gray-700 rounded-md bg-surface dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-accent"
-                            />
+                            <div className="flex items-center gap-4">
+                                <select value={statusFilter} onChange={e => setStatusFilter(e.target.value as any)} className="border border-divider dark:border-gray-700 rounded-md bg-surface dark:bg-gray-800 py-2 px-3 focus:outline-none focus:ring-2 focus:ring-accent">
+                                    <option value="all">All Statuses</option>
+                                    <option value="online">Online</option>
+                                    <option value="offline">Offline</option>
+                                </select>
+                                <select value={typeFilter} onChange={e => setTypeFilter(e.target.value as any)} className="border border-divider dark:border-gray-700 rounded-md bg-surface dark:bg-gray-800 py-2 px-3 focus:outline-none focus:ring-2 focus:ring-accent">
+                                    <option value="all">All Types</option>
+                                    <option value="verified">Verified</option>
+                                    <option value="banned">Banned</option>
+                                    <option value="admin">Admins</option>
+                                </select>
+                            </div>
                         </div>
-                        <div className="flex items-center gap-4">
-                            <select value={statusFilter} onChange={e => setStatusFilter(e.target.value as any)} className="border border-divider dark:border-gray-700 rounded-md bg-surface dark:bg-gray-800 py-2 px-3 focus:outline-none focus:ring-2 focus:ring-accent">
-                                <option value="all">All Statuses</option>
-                                <option value="online">Online</option>
-                                <option value="offline">Offline</option>
-                            </select>
-                            <select value={typeFilter} onChange={e => setTypeFilter(e.target.value as any)} className="border border-divider dark:border-gray-700 rounded-md bg-surface dark:bg-gray-800 py-2 px-3 focus:outline-none focus:ring-2 focus:ring-accent">
-                                <option value="all">All Types</option>
-                                <option value="verified">Verified</option>
-                                <option value="banned">Banned</option>
-                                <option value="admin">Admins</option>
-                            </select>
-                        </div>
-                    </div>
 
-                    <div className="bg-surface dark:bg-[#1E1E1E] rounded-lg shadow-sm border border-divider dark:border-gray-700 flex-grow overflow-y-auto">
-                        {filteredUsers.length > 0 ? (
-                            <div className="divide-y divide-divider dark:divide-gray-700">
-                                {filteredUsers.map(user => (
-                                    <UserEditorRow key={user.id} user={user} isOnline={onlineStatuses[user.id]?.state === 'online'} />
-                                ))}
-                            </div>
-                        ) : (
-                            <div className="p-8 text-center text-secondary dark:text-gray-400">
-                                <p>No users match the current filters.</p>
-                            </div>
-                        )}
+                        <div className="bg-surface dark:bg-[#1E1E1E] rounded-lg shadow-sm border border-divider dark:border-gray-700 flex-grow overflow-y-auto">
+                            {filteredUsers.length > 0 ? (
+                                <div className="divide-y divide-divider dark:divide-gray-700">
+                                    {filteredUsers.map(user => (
+                                        <UserEditorRow key={user.id} user={user} isOnline={onlineStatuses[user.id]?.state === 'online'} />
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="p-8 text-center text-secondary dark:text-gray-400">
+                                    <p>No users match the current filters.</p>
+                                </div>
+                            )}
+                        </div>
                     </div>
-                </>
-            ) : (
-                <div className="bg-surface dark:bg-[#1E1E1E] rounded-lg shadow-sm border border-divider dark:border-gray-700 flex-grow overflow-y-auto">
-                    <AdminSettings />
-                </div>
-            )}
+                ) : (
+                    <div className="bg-surface dark:bg-[#1E1E1E] rounded-lg shadow-sm border border-divider dark:border-gray-700 h-full overflow-y-auto">
+                        <AdminSettings />
+                    </div>
+                )}
+            </div>
         </div>
     );
 };

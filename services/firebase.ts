@@ -19,7 +19,6 @@ import {
   serverTimestamp,
   goOnline,
   goOffline,
-  // FIX: Import onDisconnect to handle user presence.
   onDisconnect,
 } from 'firebase/database';
 import { 
@@ -43,7 +42,6 @@ const firebaseConfig = {
   appId: "1:95634892627:web:1500052cb60f3b7e4823a6",
 };
 
-// FIX: Export 'app' so it can be used in other files (e.g., for initializing storage).
 export const app = initializeApp(firebaseConfig);
 export const db = getDatabase(app);
 export const auth = getAuth(app);
@@ -79,7 +77,6 @@ export const onAuthChange = (callback: (user: FirebaseUser | null) => void) => {
   return onAuthStateChanged(auth, (user) => {
     if (user) {
         // User is signed in.
-        goOnline(db);
         const userStatusDatabaseRef = ref(db, `/status/${user.uid}`);
         const isOfflineForDatabase = {
             state: 'offline',
@@ -92,10 +89,11 @@ export const onAuthChange = (callback: (user: FirebaseUser | null) => void) => {
 
         onValue(ref(db, '.info/connected'), (snapshot) => {
             if (snapshot.val() === false) {
-                // Instead of returning, we'll just set the offline status
+                goOffline(db);
                 set(userStatusDatabaseRef, isOfflineForDatabase);
                 return;
             }
+            goOnline(db);
             onDisconnect(userStatusDatabaseRef).set(isOfflineForDatabase).then(() => {
                 set(userStatusDatabaseRef, isOnlineForDatabase);
             });
@@ -116,7 +114,6 @@ export const getUserProfile = async (userId: string): Promise<User | null> => {
 
 export const updateUserProfile = async (userId: string, data: Partial<User>): Promise<void> => {
     const userRef = ref(db, `users/${userId}`);
-    // Use update instead of set to avoid overwriting the whole object
     const snapshot = await get(userRef);
     const existingProfile = snapshot.exists() ? snapshot.val() : {};
     return set(userRef, { ...existingProfile, ...data, id: userId });
@@ -179,10 +176,8 @@ export const removeFriend = async (currentUserId: string, friendId: string) => {
 
 // --- Block/Unblock Functions ---
 export const blockUser = async (blockerId: string, blockedId: string) => {
-    // First, ensure they are not friends
     await removeFriend(blockerId, blockedId);
     
-    // Then, add to the block list
     const blockRef = ref(db, `users/${blockerId}/blocked/${blockedId}`);
     return set(blockRef, true);
 };
@@ -262,7 +257,6 @@ export const createPost = async (postData: Omit<Post, 'id' | 'commentCount' | 't
         timestamp: Date.now(),
     });
     
-    // Notify mentioned users
     const mentionedUserIds = findMentions(postData.content, allUsers);
     mentionedUserIds.forEach(userId => {
         createNotification({
@@ -314,7 +308,6 @@ export const toggleReaction = async (post: Post, userId: string, reactionType: s
 export const toggleBookmark = async (userId: string, postId: string) => {
     const bookmarkRef = ref(db, `users/${userId}/bookmarkedPosts/${postId}`);
     return runTransaction(bookmarkRef, (currentData) => {
-        // If it exists (is true), remove it (return null). Otherwise, add it (return true).
         return currentData ? null : true;
     });
 };
@@ -325,7 +318,6 @@ export const updatePost = async (postId: string, newContent: string) => {
     return update(postRef, { content: newContent });
 };
 
-// FIX: Add updatePostPrivacy function to update post privacy settings.
 export const updatePostPrivacy = async (postId: string, newPrivacy: Post['privacy']) => {
     const postRef = ref(db, `posts/${postId}`);
     return update(postRef, { privacy: newPrivacy });
@@ -387,7 +379,6 @@ export const addComment = async (postId: string, commentData: Omit<Comment, 'id'
         await runTransaction(parentCommentReplyCountRef, (currentCount) => (currentCount || 0) + 1);
         // TODO: Notify parent comment owner
     } else {
-        // This is a top-level comment, notify post owner
         createNotification({
             recipientId: postOwnerId,
             senderId: commentData.userId,
@@ -397,7 +388,6 @@ export const addComment = async (postId: string, commentData: Omit<Comment, 'id'
         });
     }
 
-    // Notify mentioned users
     const mentionedUserIds = findMentions(newComment.content, allUsers);
     mentionedUserIds.forEach(userId => {
         createNotification({
@@ -411,14 +401,11 @@ export const addComment = async (postId: string, commentData: Omit<Comment, 'id'
 };
 
 export const deleteComment = async (postId: string, comment: Comment) => {
-    // 1. Remove the comment itself
     await remove(ref(db, `posts/${postId}/comments/${comment.id}`));
 
-    // 2. Decrement post's comment count transactionally
     const postCommentCountRef = ref(db, `posts/${postId}/commentCount`);
     await runTransaction(postCommentCountRef, (currentCount) => (currentCount || 1) - 1);
 
-    // 3. If it's a reply, decrement parent's reply count transactionally
     if (comment.parentCommentId) {
         const parentReplyCountRef = ref(db, `posts/${postId}/comments/${comment.parentCommentId}/replyCount`);
         await runTransaction(parentReplyCountRef, (currentCount) => (currentCount || 1) - 1);
@@ -473,6 +460,7 @@ export const getOrCreateConversation = async (currentUserId: string, otherUserId
     if (snapshot.exists()) {
         return conversationId;
     } else {
+        const now = Date.now();
         await set(conversationRef, {
             id: conversationId,
             participants: {
@@ -485,7 +473,7 @@ export const getOrCreateConversation = async (currentUserId: string, otherUserId
                 timestamp: serverTimestamp()
             },
             lastRead: {
-                [currentUserId]: Date.now(),
+                [currentUserId]: now,
                 [otherUserId]: 0
             }
         });
@@ -508,7 +496,7 @@ export const sendMessage = async (conversationId: string, senderId: string, mess
     const conversationRef = ref(db, `conversations/${conversationId}`);
     await update(conversationRef, {
         lastMessage: {
-            text: message.text || (message.postLink ? 'Shared a post' : 'Sent media'),
+            text: message.text || (message.postLink ? 'Shared a post' : (message.mediaType === 'audio' ? 'Voice message' : 'Sent media')),
             mediaType: message.mediaType,
             senderId: senderId,
             timestamp: serverTimestamp(),
@@ -520,11 +508,12 @@ export const sendMessage = async (conversationId: string, senderId: string, mess
 export const deleteMessage = async (conversationId: string, messageId: string) => {
     const messageRef = ref(db, `messages/${conversationId}/${messageId}`);
     return update(messageRef, {
-        text: 'This message was deleted.',
+        text: null,
         isDeleted: true,
         mediaUrl: null,
         mediaType: null,
         replyTo: null,
+        postLink: null,
     });
 };
 

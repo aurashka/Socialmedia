@@ -5,7 +5,7 @@ let apiKeysCache: ApiKeys | null = null;
 
 export const defaultApiKeys: ApiKeys = {
     imgbb: '5fd2a4346ac2e5485a916a5d734d508b',
-    cloudinaryCloudName: 'creadit-loan-5203b',
+    cloudinaryCloudName: 'dzqnfaqzy',
     cloudinaryUploadPreset: 'connectsphere_preset'
 };
 
@@ -56,7 +56,8 @@ export const uploadMedia = async (file: File): Promise<UploadedMedia> => {
         const formData = new FormData();
         formData.append('file', file);
         formData.append('upload_preset', keys.cloudinaryUploadPreset);
-        formData.append('resource_type', 'video');
+        // Let Cloudinary auto-detect resource type for audio/video
+        formData.append('resource_type', 'auto');
 
         const response = await fetch(`https://api.cloudinary.com/v1_1/${keys.cloudinaryCloudName}/upload`, {
             method: 'POST',

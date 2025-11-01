@@ -103,6 +103,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ currentUser, conversation, user
                     conversation={conversation} 
                     replyingTo={replyingTo}
                     onCancelReply={() => setReplyingTo(null)}
+                    users={users}
                 />
             </div>
             

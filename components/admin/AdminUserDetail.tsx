@@ -135,7 +135,7 @@ const AdminUserDetail: React.FC<AdminUserDetailProps> = ({ userId, users, posts 
                     </div>
                 </div>
             </div>
-            <div className="border-b border-divider dark:border-gray-700 flex-shrink-0">
+            <div className="border-b border-divider dark:border-gray-700 flex-shrink-0 overflow-x-auto">
                 <div className="flex items-center">
                     <TabButton label="Profile" active={activeTab === 'profile'} onClick={() => setActiveTab('profile')} />
                     <TabButton label="Posts" active={activeTab === 'posts'} onClick={() => setActiveTab('posts')} />
@@ -152,7 +152,7 @@ const AdminUserDetail: React.FC<AdminUserDetailProps> = ({ userId, users, posts 
 };
 
 const TabButton: React.FC<{label: string, active: boolean, onClick: () => void}> = ({ label, active, onClick }) => (
-    <button onClick={onClick} className={`px-4 py-3 font-semibold text-sm border-b-2 ${active ? 'border-accent text-accent' : 'border-transparent text-secondary dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'}`}>
+    <button onClick={onClick} className={`px-4 py-3 font-semibold text-sm border-b-2 whitespace-nowrap ${active ? 'border-accent text-accent' : 'border-transparent text-secondary dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'}`}>
         {label}
     </button>
 );
