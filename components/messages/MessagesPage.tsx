@@ -50,7 +50,7 @@ const MessagesPage: React.FC<MessagesPageProps> = ({ currentUser, users, onlineS
                         isOnline={onlineStatuses[Object.keys(activeConversation.participants).find(id => id !== currentUser.id)!]?.state === 'online'}
                     />
                 ) : (
-                    <div className="hidden md:flex flex-col items-center justify-center h-full text-center text-secondary dark:text-gray-400 bg-surface dark:bg-[#303030]">
+                    <div className="hidden md:flex flex-col items-center justify-center h-full text-center text-secondary dark:text-gray-400 bg-surface dark:bg-[#121212]">
                        <MessageIcon className="w-24 h-24 text-gray-300 dark:text-gray-600 mb-4" strokeWidth={1} />
                        <h2 className="text-2xl font-semibold text-primary dark:text-gray-100">Your Messages</h2>
                        <p>Select a conversation to start chatting.</p>

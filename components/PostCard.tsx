@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import type { User, Post } from '../types';
-import { DotsHorizontalIcon, HeartIcon, HeartIconFilled, ChatIcon, MessageIcon, TrashIcon, ChevronLeftIcon, ChevronRightIcon, PencilIcon, BookmarkIcon, BookmarkIconFilled, GlobeIcon, UsersIcon, LockClosedIcon } from './Icons';
+import { DotsHorizontalIcon, HeartIcon, HeartIconFilled, ChatIcon, ShareIcon, TrashIcon, ChevronLeftIcon, ChevronRightIcon, PencilIcon, BookmarkIcon, BookmarkIconFilled, GlobeIcon, UsersIcon, LockClosedIcon } from './Icons';
 import { parseContent } from '../utils/textUtils';
 import { updatePost, deletePost, toggleReaction, toggleBookmark } from '../services/firebase';
 import AddCommentForm from './comments/AddCommentForm';
@@ -113,6 +113,27 @@ const PostCard: React.FC<PostCardProps> = ({ post, user, currentUser, users, onO
     setCurrentImageIndex(prev => (prev === post.mediaUrls!.length - 1 ? 0 : prev + 1));
   };
   
+  const handleShare = async () => {
+    const postUrl = `${window.location.origin}${window.location.pathname}#/post/${post.id}`;
+    if (navigator.share) {
+        try {
+            await navigator.share({
+                title: `Post by ${user?.name}`,
+                text: post.content,
+                url: postUrl,
+            });
+        } catch (error) {
+            console.error('Error sharing post:', error);
+        }
+    } else {
+        navigator.clipboard.writeText(postUrl).then(() => {
+            alert('Post link copied to clipboard!');
+        }, () => {
+            alert('Could not copy link.');
+        });
+    }
+  };
+  
   const timeAgo = (timestamp: number): string => {
     const seconds = Math.floor((Date.now() - timestamp) / 1000);
     if (seconds < 60) return `Just now`;
@@ -140,7 +161,7 @@ const PostCard: React.FC<PostCardProps> = ({ post, user, currentUser, users, onO
   }
   
   return (
-    <div className="bg-surface dark:bg-[#424242] md:border-y border-divider dark:border-gray-700">
+    <div className="bg-surface dark:bg-[#1E1E1E] md:border-y border-divider dark:border-gray-700">
       {/* Post Header */}
       <div className="p-3 flex justify-between items-center">
         <div className="flex items-center space-x-3">
@@ -160,7 +181,7 @@ const PostCard: React.FC<PostCardProps> = ({ post, user, currentUser, users, onO
                 <DotsHorizontalIcon className="w-5 h-5" />
             </button>
             {isMenuOpen && (
-                <div className="absolute right-0 mt-2 w-48 bg-surface dark:bg-[#424242] rounded-md shadow-lg py-1 z-10 border border-divider dark:border-gray-700">
+                <div className="absolute right-0 mt-2 w-48 bg-surface dark:bg-[#262626] rounded-md shadow-lg py-1 z-10 border border-divider dark:border-gray-700">
                     {isOwner && (
                         <>
                         <button onClick={handleEdit} className="w-full text-left flex items-center space-x-2 px-4 py-2 text-sm text-primary dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700">
@@ -214,7 +235,7 @@ const PostCard: React.FC<PostCardProps> = ({ post, user, currentUser, users, onO
                 <HeartIcon className={`w-7 h-7 ${isLiked && 'hidden'}`} />
             </button>
             <button onClick={() => onOpenCommentSheet(post.id)}><ChatIcon className="w-7 h-7"/></button>
-            <button><MessageIcon className="w-7 h-7"/></button>
+            <button onClick={handleShare}><ShareIcon className="w-7 h-7"/></button>
           </div>
           <button onClick={handleToggleBookmark}>
               {isBookmarked ? (
@@ -250,7 +271,7 @@ const PostCard: React.FC<PostCardProps> = ({ post, user, currentUser, users, onO
         </div>
       ) : (
        <div className="border-t border-divider dark:border-gray-700 px-3 py-2">
-            <AddCommentForm postId={post.id} postOwnerId={post.userId} currentUser={currentUser} allUsers={users} onCommentAdded={() => onOpenCommentSheet(post.id)} />
+            <AddCommentForm postId={post.id} postOwnerId={post.userId} currentUser={currentUser} allUsers={users} />
        </div>
       )}
        <style>{`

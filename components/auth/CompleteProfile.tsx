@@ -70,9 +70,9 @@ const CompleteProfile: React.FC<CompleteProfileProps> = ({ user }) => {
   }
 
   return (
-    <div className="min-h-screen bg-background dark:bg-[#303030] flex items-center justify-center p-4">
+    <div className="min-h-screen bg-background dark:bg-[#121212] flex items-center justify-center p-4">
       <div className="w-full max-w-md">
-        <div className="bg-surface dark:bg-[#424242] p-8 rounded-lg shadow-lg">
+        <div className="bg-surface dark:bg-[#1E1E1E] p-8 rounded-lg shadow-lg">
           <div className="text-center mb-6">
             <h1 className="text-3xl font-bold text-primary dark:text-gray-100">One Last Step</h1>
             <p className="text-secondary dark:text-gray-400 mt-2">Complete your profile to join ConnectSphere.</p>
@@ -87,13 +87,13 @@ const CompleteProfile: React.FC<CompleteProfileProps> = ({ user }) => {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="e.g., Jane Doe"
-                className="w-full p-3 border dark:border-gray-700 rounded-md bg-background dark:bg-[#303030] focus:outline-none focus:ring-2 focus:ring-primary"
+                className="w-full p-3 border dark:border-gray-700 rounded-md bg-background dark:bg-[#262626] focus:outline-none focus:ring-2 focus:ring-primary"
                 required
               />
             </div>
             <div className="mb-6">
                 <label htmlFor="handle" className="block text-sm font-bold mb-2 text-secondary dark:text-gray-400">Unique Handle</label>
-                <div className="flex items-center border dark:border-gray-700 rounded-md bg-background dark:bg-[#303030] focus-within:ring-2 focus-within:ring-primary">
+                <div className="flex items-center border dark:border-gray-700 rounded-md bg-background dark:bg-[#262626] focus-within:ring-2 focus-within:ring-primary">
                     <span className="pl-3 text-secondary dark:text-gray-400">@</span>
                     <input
                         id="handle"

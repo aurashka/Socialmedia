@@ -102,7 +102,7 @@ const SearchPage: React.FC<SearchPageProps> = ({ query, currentUser, users, comm
         const noResults = searchResults.people.length === 0 && searchResults.communities.length === 0 && searchResults.channels.length === 0 && searchResults.posts.length === 0;
         if (noResults) {
             return (
-                <div className="bg-surface dark:bg-[#424242] rounded-lg p-8 text-center text-secondary dark:text-gray-400 mt-4">
+                <div className="bg-surface dark:bg-[#1E1E1E] rounded-lg p-8 text-center text-secondary dark:text-gray-400 mt-4">
                     <SearchIcon className="w-16 h-16 mx-auto mb-4 text-gray-300 dark:text-gray-600" />
                     <h2 className="font-bold text-lg text-primary dark:text-gray-100">No results for "{query}"</h2>
                     <p>Try searching for something else.</p>
@@ -143,7 +143,7 @@ const SearchPage: React.FC<SearchPageProps> = ({ query, currentUser, users, comm
 
   return (
     <div className="flex">
-        <aside className="hidden md:block w-80 h-[calc(100vh-56px)] bg-surface dark:bg-[#424242] border-r border-divider dark:border-gray-800 p-4 flex-shrink-0">
+        <aside className="hidden md:block w-80 h-[calc(100vh-56px)] bg-surface dark:bg-[#1E1E1E] border-r border-divider dark:border-gray-800 p-4 flex-shrink-0">
             <h2 className="text-xl font-bold mb-4 text-primary dark:text-gray-100">Search Results</h2>
             <ul className="space-y-1">
                 <FilterButton label="All" active={activeFilter === 'all'} onClick={() => setActiveFilter('all')} />
@@ -154,7 +154,7 @@ const SearchPage: React.FC<SearchPageProps> = ({ query, currentUser, users, comm
             </ul>
             <hr className="my-4 border-divider dark:border-gray-700" />
             <h3 className="text-lg font-bold mb-2 text-primary dark:text-gray-100">Filters</h3>
-            <label className="flex items-center space-x-2 p-2 rounded-md hover:bg-gray-100 dark:hover:bg-[#303030] cursor-pointer">
+            <label className="flex items-center space-x-2 p-2 rounded-md hover:bg-gray-100 dark:hover:bg-[#262626] cursor-pointer">
                 <input type="checkbox" checked={showVerifiedOnly} onChange={(e) => setShowVerifiedOnly(e.target.checked)} className="h-4 w-4 rounded text-accent focus:ring-accent" />
                 <span className="font-semibold text-primary dark:text-gray-100">Verified Only</span>
             </label>
@@ -173,7 +173,7 @@ const FilterButton: React.FC<{label: string, active: boolean, onClick: () => voi
     <li>
         <button 
             onClick={onClick}
-            className={`w-full text-left p-2 rounded-md font-semibold ${active ? 'bg-blue-100 dark:bg-accent/20 text-accent dark:text-blue-300' : 'hover:bg-gray-100 dark:hover:bg-[#303030] text-primary dark:text-gray-100'}`}
+            className={`w-full text-left p-2 rounded-md font-semibold ${active ? 'bg-blue-100 dark:bg-accent/20 text-accent dark:text-blue-300' : 'hover:bg-gray-100 dark:hover:bg-[#262626] text-primary dark:text-gray-100'}`}
         >
             {label}
         </button>
@@ -183,7 +183,7 @@ const FilterButton: React.FC<{label: string, active: boolean, onClick: () => voi
 const ResultSection: React.FC<{title: string, children: React.ReactNode}> = ({ title, children }) => (
     <section>
         <h3 className="text-lg font-bold mb-3 text-primary dark:text-gray-100">{title}</h3>
-        <div className="bg-surface dark:bg-[#424242] rounded-lg border border-divider dark:border-gray-800 divide-y divide-divider dark:divide-gray-800">
+        <div className="bg-surface dark:bg-[#1E1E1E] rounded-lg border border-divider dark:border-gray-800 divide-y divide-divider dark:divide-gray-800">
             {children}
         </div>
     </section>

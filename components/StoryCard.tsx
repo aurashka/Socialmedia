@@ -57,10 +57,10 @@ const StoryCard: React.FC<StoryCardProps> = ({ story, user, isAddStory, currentU
         />
         <img src={currentUser.avatarUrl} alt="Add Story" className="w-full h-full object-cover" />
         <div className="absolute inset-0 bg-black bg-opacity-20"></div>
-        <div className="absolute bottom-0 left-0 right-0 h-1/3 bg-surface dark:bg-[#424242] flex flex-col items-center justify-end p-1">
+        <div className="absolute bottom-0 left-0 right-0 h-1/3 bg-surface dark:bg-[#1E1E1E] flex flex-col items-center justify-end p-1">
           <span className="text-xs font-semibold text-center text-primary dark:text-gray-100">Create Story</span>
         </div>
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-full transform border-4 border-surface dark:border-[#424242] rounded-full bg-accent text-white p-1">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-full transform border-4 border-surface dark:border-[#1E1E1E] rounded-full bg-accent text-white p-1">
           <PlusIcon className="w-6 h-6" />
         </div>
         {isUploading && (

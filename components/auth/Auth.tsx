@@ -44,9 +44,9 @@ const Auth: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background dark:bg-[#303030] flex items-center justify-center p-4">
+    <div className="min-h-screen bg-background dark:bg-[#121212] flex items-center justify-center p-4">
       <main className="w-full max-w-sm">
-        <div className="bg-surface dark:bg-[#424242] border border-divider dark:border-gray-700 rounded-lg p-6">
+        <div className="bg-surface dark:bg-[#1E1E1E] border border-divider dark:border-gray-700 rounded-lg p-6">
           {renderView()}
         </div>
       </main>

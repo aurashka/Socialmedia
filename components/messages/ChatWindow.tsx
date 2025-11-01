@@ -46,7 +46,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ currentUser, conversation, user
     }
 
     return (
-        <div className="flex flex-col h-full w-full bg-surface dark:bg-[#303030]">
+        <div className="flex flex-col h-full w-full bg-surface dark:bg-[#121212]">
             {/* Header */}
             <div className="flex items-center p-3 border-b border-divider dark:border-gray-700 flex-shrink-0">
                 <a href="#/messages" className="md:hidden p-2 -ml-2 mr-2">

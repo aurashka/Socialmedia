@@ -22,6 +22,8 @@ import { ThemeProvider } from './contexts/ThemeContext';
 import SettingsPage from './components/settings/SettingsPage';
 import CommentSheet from './components/comments/CommentSheet';
 import MessagesPage from './components/messages/MessagesPage';
+import NotificationsPage from './components/notifications/NotificationsPage';
+import PostPage from './components/PostPage';
 
 type Route = 
   | { name: 'home' }
@@ -31,7 +33,9 @@ type Route =
   | { name: 'search'; query?: string }
   | { name: 'admin' }
   | { name: 'settings' }
-  | { name: 'messages'; id?: string };
+  | { name: 'messages'; id?: string }
+  | { name: 'notifications' }
+  | { name: 'post'; id: string };
 
 const parseHash = (): Route => {
     const hash = window.location.hash.substring(2);
@@ -52,6 +56,10 @@ const parseHash = (): Route => {
             return { name: 'settings' };
         case 'messages':
             return { name: 'messages', id: param };
+        case 'notifications':
+            return { name: 'notifications' };
+        case 'post':
+            return { name: 'post', id: param };
         default:
             return { name: 'home' };
     }
@@ -172,7 +180,7 @@ const App: React.FC = () => {
     });
 
     const notifsRef = ref(db, `notifications/${currentUser.id}`);
-    const notifsQuery = query(notifsRef, orderByChild('timestamp'), limitToLast(30));
+    const notifsQuery = query(notifsRef, orderByChild('timestamp'), limitToLast(50));
     const notifsUnsub = onValue(notifsQuery, (snapshot) => {
         if (snapshot.exists()) {
             const notifsData = snapshot.val();
@@ -356,6 +364,21 @@ const App: React.FC = () => {
                           conversations={conversations}
                           activeConversationId={route.id}
                        />
+          case 'notifications':
+                return <NotificationsPage
+                          currentUser={currentUser}
+                          notifications={notifications}
+                          users={users}
+                          posts={posts}
+                       />
+          case 'post':
+                return <PostPage
+                          postId={route.id}
+                          currentUser={currentUser}
+                          users={users}
+                          posts={posts}
+                          onOpenCommentSheet={openCommentSheet}
+                        />
           case 'admin':
               if (currentUser.role !== 'admin') {
                   return <div className="p-8 text-center text-primary dark:text-gray-100"><h1 className="text-2xl font-bold">Access Denied</h1><p>You do not have permission to view this page.</p></div>
@@ -385,7 +408,7 @@ const App: React.FC = () => {
 
   return (
     <ThemeProvider>
-      <div className="bg-background dark:bg-[#303030] min-h-screen pb-20 md:pb-0 text-primary dark:text-gray-100">
+      <div className="bg-background dark:bg-[#121212] min-h-screen pb-20 md:pb-0 text-primary dark:text-gray-100">
         <Header 
           currentUser={currentUser} 
           friendRequestCount={Object.keys(friendRequests).length}
