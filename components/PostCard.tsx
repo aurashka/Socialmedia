@@ -1,16 +1,76 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import type { User, Post } from '../types';
-import { ChevronDownIcon, ThumbUpIcon, ChatAltIcon, ShareIcon } from './Icons';
+import { DotsHorizontalIcon, ThumbUpIcon, ChatAltIcon, ShareIcon, PencilIcon, TrashIcon } from './Icons';
 import { parseContent } from '../utils/textUtils';
 import ImageLightbox from './ImageLightbox';
+import { updatePost, deletePost } from '../services/firebase';
 
 interface PostCardProps {
   post: Post;
   user?: User;
+  currentUser: User;
 }
 
-const PostCard: React.FC<PostCardProps> = ({ post, user }) => {
+const PostCard: React.FC<PostCardProps> = ({ post, user, currentUser }) => {
   const [lightboxImage, setLightboxImage] = useState<string | null>(null);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedContent, setEditedContent] = useState(post.content);
+  const [isSaving, setIsSaving] = useState(false);
+  
+  const menuRef = useRef<HTMLDivElement>(null);
+  const isOwner = currentUser?.id === post.userId;
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setIsMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+  
+  const handleEdit = () => {
+    setIsEditing(true);
+    setEditedContent(post.content);
+    setIsMenuOpen(false);
+  };
+  
+  const handleCancelEdit = () => {
+    setIsEditing(false);
+  };
+  
+  const handleUpdatePost = async () => {
+    if (editedContent.trim() === post.content.trim()) {
+        setIsEditing(false);
+        return;
+    }
+    setIsSaving(true);
+    try {
+        await updatePost(post.id, editedContent);
+        setIsEditing(false);
+    } catch (error) {
+        console.error("Failed to update post:", error);
+        alert("Could not update post. Please try again.");
+    } finally {
+        setIsSaving(false);
+    }
+  };
+  
+  const handleDeletePost = async () => {
+    setIsMenuOpen(false);
+    if (window.confirm("Are you sure you want to delete this post? This action cannot be undone.")) {
+        try {
+            await deletePost(post.id);
+        } catch (error) {
+            console.error("Failed to delete post:", error);
+            alert("Could not delete post. Please try again.");
+        }
+    }
+  };
 
   if (!user) {
     return (
@@ -105,13 +165,48 @@ const PostCard: React.FC<PostCardProps> = ({ post, user }) => {
             </div>
           </div>
         </div>
-        <button className="text-text-secondary hover:text-text-primary">
-          <ChevronDownIcon className="w-5 h-5" />
-        </button>
+        {isOwner && (
+          <div className="relative" ref={menuRef}>
+            <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="text-text-secondary hover:text-text-primary p-1 rounded-full hover:bg-gray-100">
+              <DotsHorizontalIcon className="w-5 h-5" />
+            </button>
+            {isMenuOpen && (
+              <div className="absolute right-0 mt-2 w-48 bg-card rounded-md shadow-lg py-1 z-10">
+                  <button onClick={handleEdit} className="w-full text-left flex items-center space-x-2 px-4 py-2 text-sm text-text-primary hover:bg-gray-100">
+                      <PencilIcon className="w-4 h-4" />
+                      <span>Edit Post</span>
+                  </button>
+                  <button onClick={handleDeletePost} className="w-full text-left flex items-center space-x-2 px-4 py-2 text-sm text-red-500 hover:bg-gray-100">
+                      <TrashIcon className="w-4 h-4" />
+                      <span>Delete Post</span>
+                  </button>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Post Content */}
-      <p className="px-4 pb-2 whitespace-pre-wrap text-text-primary">{parseContent(post.content)}</p>
+      {isEditing ? (
+        <div className="px-4 pb-2">
+            <textarea
+                value={editedContent}
+                onChange={(e) => setEditedContent(e.target.value)}
+                className="w-full p-2 border rounded-md resize-y bg-background focus:outline-none focus:ring-2 focus:ring-primary"
+                rows={4}
+                autoFocus
+            />
+            <div className="flex justify-end space-x-2 mt-2">
+                <button onClick={handleCancelEdit} className="px-4 py-1.5 bg-gray-200 text-text-primary font-semibold rounded-md hover:bg-gray-300 text-sm">Cancel</button>
+                <button onClick={handleUpdatePost} disabled={isSaving} className="px-4 py-1.5 bg-primary text-white font-semibold rounded-md hover:bg-blue-700 disabled:bg-blue-300 text-sm">
+                    {isSaving ? 'Saving...' : 'Save'}
+                </button>
+            </div>
+        </div>
+      ) : (
+        <p className="px-4 pb-2 whitespace-pre-wrap text-text-primary">{parseContent(post.content)}</p>
+      )}
+
 
       {/* Post Media */}
       <div className="bg-gray-100 max-h-[600px] overflow-hidden">

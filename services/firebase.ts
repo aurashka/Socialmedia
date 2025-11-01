@@ -135,6 +135,17 @@ export const createPost = async (postData: Omit<Post, 'id' | 'likes' | 'comments
     });
 };
 
+export const updatePost = async (postId: string, newContent: string) => {
+    const postRef = ref(db, `posts/${postId}`);
+    return update(postRef, { content: newContent });
+};
+
+export const deletePost = async (postId: string) => {
+    const postRef = ref(db, `posts/${postId}`);
+    return remove(postRef);
+};
+
+
 export const createStory = async (storyData: Omit<Story, 'id' | 'timestamp'>) => {
     const storiesRef = ref(db, 'stories');
     const newStoryRef = push(storiesRef);

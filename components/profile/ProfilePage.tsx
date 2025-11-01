@@ -102,7 +102,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ currentUser, profileUserId, u
 
               {userPosts.length > 0 ? (
                   userPosts.map(post => (
-                    <PostCard key={post.id} post={post} user={profileUser} />
+                    <PostCard key={post.id} post={post} user={profileUser} currentUser={currentUser} />
                   ))
               ) : (
                   <div className="bg-card rounded-lg shadow-sm p-8 text-center text-text-secondary">

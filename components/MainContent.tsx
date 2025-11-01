@@ -115,7 +115,7 @@ const MainContent: React.FC<MainContentProps> = ({ currentUser, users, posts, st
             <p>Loading posts...</p>
         ) : (
             posts.map(post => (
-                <PostCard key={post.id} post={post} user={users[post.userId]} />
+                <PostCard key={post.id} post={post} user={users[post.userId]} currentUser={currentUser} />
             ))
         )}
       </div>
