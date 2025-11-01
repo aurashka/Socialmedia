@@ -341,8 +341,15 @@ export const addComment = async (commentData: Omit<Comment, 'id' | 'timestamp'>,
     const commentsRef = ref(db, 'comments');
     const newCommentRef = push(commentsRef);
     
+    const cleanCommentData = Object.entries(commentData).reduce((acc, [key, value]) => {
+        if (value !== undefined) {
+            (acc as any)[key] = value;
+        }
+        return acc;
+    }, {} as Omit<Comment, 'id' | 'timestamp'>);
+
     const newComment: Comment = {
-        ...commentData,
+        ...cleanCommentData,
         id: newCommentRef.key!,
         timestamp: Date.now(),
     };

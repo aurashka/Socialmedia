@@ -8,7 +8,6 @@ const CLOUDINARY_UPLOAD_PRESET = 'connectsphere_preset';
 
 interface UploadedMedia {
     url: string;
-    // FIX: Add 'audio' to support voice messages.
     type: 'image' | 'video' | 'audio';
 }
 
@@ -34,7 +33,6 @@ export const uploadMedia = async (file: File): Promise<UploadedMedia> => {
         } else {
             throw new Error(data.error.message || 'Image upload failed on ImgBB');
         }
-    // FIX: Handle audio uploads using the same Cloudinary endpoint as video.
     } else if (fileType === 'video' || fileType === 'audio') {
         const formData = new FormData();
         formData.append('file', file);
