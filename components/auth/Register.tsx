@@ -41,7 +41,7 @@ const Register: React.FC<RegisterProps> = ({ onSwitchToLogin }) => {
 
   return (
     <div className="flex flex-col items-center">
-      <h1 className="text-4xl text-primary dark:text-gray-100 mb-4" style={{ fontFamily: "'Cookie', cursive" }}>ConnectSphere</h1>
+      <h1 className="text-5xl text-primary dark:text-gray-100 mb-4" style={{ fontFamily: "'Cookie', cursive" }}>ConnectSphere</h1>
       <p className="text-md font-semibold text-secondary dark:text-gray-400 text-center mb-4">
         Sign up to see photos and videos from your friends.
       </p>

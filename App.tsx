@@ -192,9 +192,13 @@ const App: React.FC = () => {
     };
 
     setInitialPostLoad(true); // Reset loading state for new user login
+    
+    const handleError = (error: Error, path: string) => {
+        console.error(`Firebase read failed at ${path}:`, error);
+    };
 
     const usersRef = ref(db, 'users/');
-    const usersUnsub = onValue(usersRef, (snapshot) => setUsers(snapshot.val() || {}));
+    const usersUnsub = onValue(usersRef, (snapshot) => setUsers(snapshot.val() || {}), (error) => handleError(error, 'users/'));
 
     const postsRef = ref(db, 'posts/');
     const postsQuery = query(postsRef, orderByChild('timestamp'), limitToLast(25));
@@ -207,6 +211,9 @@ const App: React.FC = () => {
             setPosts([]);
         }
         setInitialPostLoad(false);
+    }, (error) => {
+        handleError(error, 'posts/');
+        setInitialPostLoad(false); // Ensure shimmer doesn't get stuck on error
     });
 
     const storiesRef = ref(db, 'stories/');
@@ -217,22 +224,22 @@ const App: React.FC = () => {
         (story) => story.timestamp > twentyFourHoursAgo
       );
       setStories(recentStories);
-    });
+    }, (error) => handleError(error, 'stories/'));
     
     const communitiesRef = ref(db, 'communities/');
     const communitiesUnsub = onValue(communitiesRef, (snapshot) => {
       setCommunities(snapshot.val() || {});
-    });
+    }, (error) => handleError(error, 'communities/'));
     
     const channelsRef = ref(db, 'channels/');
     const channelsUnsub = onValue(channelsRef, (snapshot) => {
       setChannels(snapshot.val() || {});
-    });
+    }, (error) => handleError(error, 'channels/'));
 
     const requestsRef = ref(db, `friendRequests/${currentUser.id}`);
     const requestsUnsub = onValue(requestsRef, (snapshot) => {
         setFriendRequests(snapshot.val() || {});
-    });
+    }, (error) => handleError(error, `friendRequests/${currentUser.id}`));
 
     const notifsRef = ref(db, `notifications/${currentUser.id}`);
     const notifsQuery = query(notifsRef, orderByChild('timestamp'), limitToLast(50));
@@ -243,7 +250,7 @@ const App: React.FC = () => {
         } else {
             setNotifications([]);
         }
-    });
+    }, (error) => handleError(error, `notifications/${currentUser.id}`));
 
     const conversationsRef = ref(db, 'conversations');
     const userConvsQuery = query(conversationsRef, orderByChild(`participants/${currentUser.id}`), equalTo(true));
@@ -255,12 +262,12 @@ const App: React.FC = () => {
         } else {
             setConversations([]);
         }
-    });
+    }, (error) => handleError(error, 'conversations'));
 
     const statusRef = ref(db, 'status');
     const statusUnsub = onValue(statusRef, (snapshot) => {
         setOnlineStatuses(snapshot.val() || {});
-    });
+    }, (error) => handleError(error, 'status'));
     
     return () => {
       usersUnsub();
@@ -366,12 +373,10 @@ const App: React.FC = () => {
   };
 
   const renderContent = () => {
-      if (!currentUser) return <div className="space-y-4 max-w-lg mx-auto py-4"><PostCardShimmer /><PostCardShimmer /></div>;
-
       switch(route.name) {
           case 'home':
               return <MainContent
-                        currentUser={currentUser}
+                        currentUser={currentUser!}
                         users={filteredUsers}
                         posts={filteredPosts}
                         stories={filteredStories}
@@ -381,7 +386,7 @@ const App: React.FC = () => {
                       />;
           case 'profile':
               return <ProfilePage
-                        currentUser={currentUser}
+                        currentUser={currentUser!}
                         profileUserId={route.id}
                         users={users}
                         posts={posts} // Pass all posts to profile page for its own filtering
@@ -391,14 +396,14 @@ const App: React.FC = () => {
                      />
           case 'friends':
               return <FriendsPage
-                        currentUser={currentUser}
+                        currentUser={currentUser!}
                         users={users}
                         friendRequests={friendRequests}
                         onlineStatuses={onlineStatuses}
                      />
            case 'explore':
                 return <ExplorePage
-                         currentUser={currentUser}
+                         currentUser={currentUser!}
                          users={users}
                          posts={posts} // Pass all posts
                          friendRequests={friendRequests}
@@ -409,7 +414,7 @@ const App: React.FC = () => {
           case 'search':
               return <SearchPage
                         query={route.query || ''}
-                        currentUser={currentUser}
+                        currentUser={currentUser!}
                         users={users}
                         communities={communities}
                         channels={channels}
@@ -418,7 +423,7 @@ const App: React.FC = () => {
                      />
           case 'messages':
                 return <MessagesPage
-                          currentUser={currentUser}
+                          currentUser={currentUser!}
                           users={users}
                           onlineStatuses={onlineStatuses}
                           conversations={conversations}
@@ -426,7 +431,7 @@ const App: React.FC = () => {
                        />
           case 'notifications':
                 return <NotificationsPage
-                          currentUser={currentUser}
+                          currentUser={currentUser!}
                           notifications={notifications}
                           users={users}
                           posts={posts}
@@ -434,18 +439,18 @@ const App: React.FC = () => {
           case 'post':
                 return <PostPage
                           postId={route.id}
-                          currentUser={currentUser}
+                          currentUser={currentUser!}
                           users={users}
                           posts={posts}
                           onOpenCommentSheet={openCommentSheet}
                         />
           case 'admin':
-              if (currentUser.role !== 'admin') {
+              if (currentUser!.role !== 'admin') {
                   return <div className="p-8 text-center text-primary dark:text-gray-100"><h1 className="text-2xl font-bold">Access Denied</h1><p>You do not have permission to view this page.</p></div>
               }
               return <AdminPage users={users} onlineStatuses={onlineStatuses} />;
           case 'admin-user':
-                if (currentUser.role !== 'admin') {
+                if (currentUser!.role !== 'admin') {
                     return <div className="p-8 text-center text-primary dark:text-gray-100"><h1 className="text-2xl font-bold">Access Denied</h1><p>You do not have permission to view this page.</p></div>
                 }
                 return <AdminUserDetail userId={route.id} users={users} posts={posts} />;
@@ -458,6 +463,10 @@ const App: React.FC = () => {
 
   if (!authUser) {
     return <Auth />;
+  }
+
+  if (!currentUser) {
+    return <LoadingSpinner />;
   }
   
   if (currentUser && (!currentUser.handle || !currentUser.name)) {

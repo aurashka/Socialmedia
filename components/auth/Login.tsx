@@ -28,7 +28,7 @@ const Login: React.FC<LoginProps> = ({ onSwitchToRegister }) => {
 
   return (
     <div className="flex flex-col items-center">
-      <h1 className="text-4xl text-primary dark:text-gray-100 mb-6" style={{ fontFamily: "'Cookie', cursive" }}>ConnectSphere</h1>
+      <h1 className="text-5xl text-primary dark:text-gray-100 mb-6" style={{ fontFamily: "'Cookie', cursive" }}>ConnectSphere</h1>
       
       <form onSubmit={handleLogin} className="w-full space-y-2">
           <input
