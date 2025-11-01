@@ -69,14 +69,14 @@ export const ThumbUpIcon: React.FC<IconProps> = ({ className }) => (
 );
 
 export const ChatAltIcon: React.FC<IconProps> = ({ className }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 20 20" fill="currentColor">
-    <path fillRule="evenodd" d="M18 5v8a2 2 0 01-2 2h-5l-5 4v-4H4a2 2 0 01-2-2V5a2 2 0 012-2h12a2 2 0 012 2zM7 8H5v2h2V8zm2 0h2v2H9V8zm6 0h-2v2h2V8z" clipRule="evenodd" />
+  <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
   </svg>
 );
 
 export const ShareIcon: React.FC<IconProps> = ({ className }) => (
   <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8m-4-6l-4-4m0 0L8 6m4-4v12" />
+    <path strokeLinecap="round" strokeLinejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
   </svg>
 );
 
@@ -113,15 +113,14 @@ export const HeartIconFilled: React.FC<IconProps> = ({ className }) => (
 
 export const PlusSquareIcon: React.FC<IconProps> = ({ className, strokeWidth = 2 }) => (
     <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={strokeWidth} d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={strokeWidth} d="M9 12h6m-3-3v6m-9 3V6a2 2 0 012-2h12a2 2 0 012 2v12a2 2 0 01-2 2H6a2 2 0 01-2-2z" />
     </svg>
 );
 
 export const MessageIcon: React.FC<IconProps> = ({ className, strokeWidth = 2 }) => (
   <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={strokeWidth} d="M20 12H4m16 0-4 4m4-4-4-4M4 12l4 4M4 12l4-4" />
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={strokeWidth} d="M3 8.688V5.313C3 4.588 3.588 4 4.313 4h15.374C20.412 4 21 4.588 21 5.313v13.374c0 .725-.588 1.313-1.313 1.313H4.313C3.588 20 3 19.412 3 18.688V15.312" />
-</svg>
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={strokeWidth} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+  </svg>
 );
 
 
