@@ -205,8 +205,13 @@ const App: React.FC = () => {
     const postsUnsub = onValue(postsQuery, (snapshot) => {
         if (snapshot.exists()) {
             const postsData = snapshot.val();
-            const postsArray = Object.values(postsData) as Post[];
-            setPosts(postsArray.sort((a, b) => b.timestamp - a.timestamp));
+            if (typeof postsData === 'object' && postsData !== null) {
+                const postsArray = Object.values(postsData) as Post[];
+                setPosts(postsArray.sort((a, b) => b.timestamp - a.timestamp));
+            } else {
+                setPosts([]);
+                console.warn('Posts data from Firebase is not a valid object:', postsData);
+            }
         } else {
             setPosts([]);
         }
@@ -328,7 +333,7 @@ const App: React.FC = () => {
   }, [users, currentUser]);
 
   const filteredPosts = useMemo(() => {
-    if (!currentUser) return posts;
+    if (!currentUser) return [];
     
     const blockedUserIds = currentUser.blocked ? Object.keys(currentUser.blocked) : [];
     const friendIds = currentUser.friends ? Object.keys(currentUser.friends) : [];
