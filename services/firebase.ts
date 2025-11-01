@@ -131,28 +131,10 @@ export const createStory = async (storyData: Omit<Story, 'id' | 'timestamp'>) =>
 };
 
 export const seedDatabase = async () => {
-  const postsRef = ref(db, 'posts');
-  const postsSnapshot = await get(postsRef);
-  if (!postsSnapshot.exists()) {
-    console.log('Seeding database...');
-    // We need dummy users for posts to resolve correctly.
-    const users = {
-      user2: { id: 'user2', name: 'Krishna Vinjam', avatarUrl: 'https://i.pravatar.cc/150?u=user2', role: 'user', email: 'krishna@demo.com', handle: 'krishna', coverPhotoUrl: 'https://picsum.photos/seed/cover2/1000/300', bio: 'Frontend Developer | React Enthusiast', isPublic: true },
-      user3: { id: 'user3', name: 'Habib Habib', avatarUrl: 'https://i.pravatar.cc/150?u=user3', role: 'user', email: 'habib@demo.com', handle: 'habib', coverPhotoUrl: 'https://picsum.photos/seed/cover3/1000/300', bio: 'Loves hiking and photography.', isPublic: true },
-    };
-    await set(ref(db, 'users'), users);
-
-    const posts = {
-      post1: { id: 'post1', userId: 'user2', content: 'Exploring the serene beauty of nature. #nature #travel', mediaUrls: [`https://picsum.photos/seed/postA/600/400`, `https://picsum.photos/seed/postB/600/400`], timestamp: Date.now() - 86400000 * 2, likes: 125, comments: 23 },
-      post2: { id: 'post2', userId: 'user3', content: 'What a beautiful sunset today! Feeling blessed.', mediaUrls: [`https://picsum.photos/seed/post2/600/400`], timestamp: Date.now() - 3600000 * 5, likes: 210, comments: 45 },
-    };
-    await set(postsRef, posts);
-    
-    const stories = {
-      story1: { id: 'story1', userId: 'user2', imageUrl: 'https://i.pravatar.cc/300?u=story1', timestamp: Date.now() - 3600000 * 3 },
-      story2: { id: 'story2', userId: 'user3', imageUrl: 'https://i.pravatar.cc/300?u=story2', timestamp: Date.now() - 3600000 * 2 },
-      story3: { id: 'story3', userId: 'user2', imageUrl: 'https://i.pravatar.cc/300?u=story3', timestamp: Date.now() - 3600000 * 1 },
-    };
-    await set(ref(db, 'stories'), stories);
+  const usersRef = ref(db, 'users');
+  const snapshot = await get(usersRef);
+  if (!snapshot.exists()) {
+    console.log('Database is empty. Ready for new users.');
+    // No more seeding of users, posts, or stories.
   }
 };

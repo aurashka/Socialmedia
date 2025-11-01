@@ -52,7 +52,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ currentUser, profileUserId, u
   };
 
   return (
-    <div className="space-y-4 pb-16 md:pb-4">
+    <div className="space-y-4 pb-4">
       <ProfileHeader 
         profileUser={profileUser} 
         currentUser={currentUser}

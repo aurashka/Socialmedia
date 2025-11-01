@@ -47,7 +47,7 @@ const SearchResultsPage: React.FC<SearchResultsPageProps> = ({ query, users }) =
   }, [query, users]);
 
   return (
-    <div className="p-2 sm:p-4 pb-16 md:pb-4 space-y-4 max-w-2xl mx-auto">
+    <div className="p-2 sm:p-4 pb-4 space-y-4 max-w-2xl mx-auto">
         <div className="bg-card rounded-lg shadow-sm p-4">
              <h1 className="text-xl font-bold">Search results for "{query}"</h1>
              <p className="text-sm text-text-secondary">{searchResults.length} result(s) found</p>

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { auth, updateUserProfile } from '../../services/firebase';
+import { MailIcon, LockClosedIcon } from '../Icons';
 
 interface RegisterProps {
   onSwitchToLogin: () => void;
@@ -45,29 +46,35 @@ const Register: React.FC<RegisterProps> = ({ onSwitchToLogin }) => {
 
   return (
     <div>
-      <h2 className="text-3xl mb-4 font-bold text-text-primary">Sign Up</h2>
-      <p className="mb-4 text-text-secondary">
-        Create an account to start connecting.
+      <h2 className="text-3xl mb-2 font-bold text-text-primary text-center">Create your Account</h2>
+      <p className="mb-6 text-text-secondary text-center">
+        Sign up to start connecting with friends.
       </p>
-      {error && <p className="mb-4 text-red-500 bg-red-100 p-2 rounded-md">{error}</p>}
+      {error && <p className="mb-4 text-red-500 bg-red-100 p-3 rounded-md text-sm">{error}</p>}
       <form onSubmit={handleRegister}>
-        <div className="mb-4">
+        <div className="relative mb-4">
+             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <MailIcon className="h-5 w-5 text-gray-400" />
+            </div>
           <input
             type="email"
             placeholder="Email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full p-3 border rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-primary"
+            className="w-full p-3 pl-10 border rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-primary"
             required
           />
         </div>
-        <div className="mb-4">
+        <div className="relative mb-4">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <LockClosedIcon className="h-5 w-5 text-gray-400" />
+            </div>
           <input
             type="password"
             placeholder="Password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full p-3 border rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-primary"
+            className="w-full p-3 pl-10 border rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-primary"
             required
           />
         </div>

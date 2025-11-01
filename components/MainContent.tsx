@@ -60,7 +60,7 @@ const MainContent: React.FC<MainContentProps> = ({ currentUser, users, posts, st
   }, {} as Record<string, Story[]>);
 
   return (
-    <div className="p-2 sm:p-4 pb-16 md:pb-4 space-y-4 max-w-2xl mx-auto">
+    <div className="p-2 sm:p-4 pb-4 space-y-4 max-w-2xl mx-auto">
       {/* Stories */}
       <div className="bg-card rounded-lg shadow-sm p-4">
         <h2 className="font-bold text-lg mb-2">Stories</h2>

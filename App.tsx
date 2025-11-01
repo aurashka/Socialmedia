@@ -7,7 +7,6 @@ import Header from './components/Header';
 import SidebarLeft from './components/SidebarLeft';
 import MainContent from './components/MainContent';
 import SidebarRight from './components/SidebarRight';
-import BottomNav from './components/BottomNav';
 import Auth from './components/auth/Auth';
 import CompleteProfile from './components/auth/CompleteProfile';
 import LoadingSpinner from './components/LoadingSpinner';
@@ -167,7 +166,6 @@ const App: React.FC = () => {
         </div>
         <SidebarRight users={users} currentUser={currentUser}/>
       </main>
-      <BottomNav />
     </div>
   );
 };
