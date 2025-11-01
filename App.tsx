@@ -209,7 +209,11 @@ const App: React.FC = () => {
     const storiesRef = ref(db, 'stories/');
     const storiesUnsub = onValue(storiesRef, (snapshot) => {
       const storiesData = snapshot.val() || {};
-      setStories(Object.values(storiesData) as Story[]);
+      const twentyFourHoursAgo = Date.now() - 24 * 60 * 60 * 1000;
+      const recentStories = (Object.values(storiesData) as Story[]).filter(
+        (story) => story.timestamp > twentyFourHoursAgo
+      );
+      setStories(recentStories);
     });
     
     const communitiesRef = ref(db, 'communities/');

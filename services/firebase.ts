@@ -231,7 +231,7 @@ export const deleteUserConversations = async (userId: string): Promise<void> => 
 };
 
 
-// --- Post & Story Functions ---
+// --- Post Functions ---
 export const createPost = async (postData: Omit<Post, 'id' | 'commentCount' | 'timestamp'>, allUsers: Record<string, User>) => {
     const postsRef = ref(db, 'posts');
     const newPostRef = push(postsRef);
@@ -325,7 +325,7 @@ export const deletePost = async (postId: string) => {
     return remove(postRef);
 };
 
-
+// --- Story Functions ---
 export const createStory = async (storyData: Omit<Story, 'id' | 'timestamp'>) => {
     const storiesRef = ref(db, 'stories');
     const newStoryRef = push(storiesRef);
@@ -333,6 +333,18 @@ export const createStory = async (storyData: Omit<Story, 'id' | 'timestamp'>) =>
         ...storyData,
         id: newStoryRef.key,
         timestamp: Date.now()
+    });
+};
+
+export const viewStory = async (storyId: string, userId: string) => {
+    const viewRef = ref(db, `stories/${storyId}/views/${userId}`);
+    await set(viewRef, true);
+};
+
+export const toggleStoryLike = async (storyId: string, userId: string) => {
+    const likeRef = ref(db, `stories/${storyId}/likes/${userId}`);
+    await runTransaction(likeRef, (currentData) => {
+        return currentData ? null : true;
     });
 };
 

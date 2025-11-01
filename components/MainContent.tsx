@@ -79,6 +79,7 @@ const MainContent: React.FC<MainContentProps> = ({
           user={viewingStoriesOfUser}
           stories={userStoriesMap[viewingStoriesOfUser.id]}
           onClose={() => setViewingStoriesOfUser(null)}
+          currentUser={currentUser}
         />
       )}
     </div>

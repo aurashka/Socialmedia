@@ -58,7 +58,9 @@ export interface Story {
   id: string;
   userId: string;
   imageUrl: string;
-  timestamp: number; // Added timestamp for sorting stories
+  timestamp: number;
+  views?: Record<string, boolean>; // userIds who viewed
+  likes?: Record<string, boolean>; // userIds who liked
 }
 
 export interface Community {

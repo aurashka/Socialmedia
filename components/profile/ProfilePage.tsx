@@ -192,6 +192,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ currentUser, profileUserId, u
             stories={profileUserStories}
             initialIndex={storyViewerState.initialIndex}
             onClose={() => setStoryViewerState({ open: false, initialIndex: 0 })}
+            currentUser={currentUser}
           />
       )}
       {selectedPost && (
