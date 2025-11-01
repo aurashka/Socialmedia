@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import type { User, Post } from '../../types';
 import { DotsHorizontalIcon, ThumbUpIcon, ChatIcon, MessageIcon, TrashIcon, ChevronLeftIcon, ChevronRightIcon, PencilIcon, LockClosedIcon, XIcon } from '../Icons';
 import { parseContent } from '../../utils/textUtils';
+// FIX: updatePostPrivacy was missing from firebase services.
 import { updatePost, deletePost, updatePostPrivacy, toggleReaction } from '../../services/firebase';
 import { LikeReactionIcon, LoveReactionIcon, HahaReactionIcon, WowReactionIcon, SadReactionIcon, AngryReactionIcon } from '../ReactionIcons';
 
@@ -146,9 +147,10 @@ const PostViewer: React.FC<PostViewerProps> = ({ post: initialPost, user, curren
   };
 
   const handleTogglePrivacy = async () => {
-    const newIsPublic = !(post.isPublic ?? true);
-    await updatePostPrivacy(post.id, newIsPublic);
-    setPost(p => ({...p, isPublic: newIsPublic}));
+    // FIX: Use `privacy` field from Post type instead of non-existent `isPublic`.
+    const newPrivacy = (post.privacy ?? 'public') === 'public' ? 'private' : 'public';
+    await updatePostPrivacy(post.id, newPrivacy);
+    setPost(p => ({...p, privacy: newPrivacy}));
     setIsMenuOpen(false);
   };
   
@@ -203,7 +205,8 @@ const PostViewer: React.FC<PostViewerProps> = ({ post: initialPost, user, curren
               {isMenuOpen && (
                 <div className="absolute right-0 mt-2 w-48 bg-surface rounded-md shadow-lg py-1 z-10 border">
                   <button onClick={handleEdit} className="w-full text-left flex items-center space-x-2 px-4 py-2 text-sm hover:bg-gray-100"><PencilIcon className="w-4 h-4" /><span>Edit Post</span></button>
-                  <button onClick={handleTogglePrivacy} className="w-full text-left flex items-center space-x-2 px-4 py-2 text-sm hover:bg-gray-100"><LockClosedIcon className="w-4 h-4" /><span>Make {post.isPublic ? 'Private' : 'Public'}</span></button>
+                  {/* FIX: Use `privacy` field from Post type instead of non-existent `isPublic`. */}
+                  <button onClick={handleTogglePrivacy} className="w-full text-left flex items-center space-x-2 px-4 py-2 text-sm hover:bg-gray-100"><LockClosedIcon className="w-4 h-4" /><span>Make {(post.privacy ?? 'public') === 'public' ? 'Private' : 'Public'}</span></button>
                   <button onClick={handleDeletePost} className="w-full text-left flex items-center space-x-2 px-4 py-2 text-sm text-red-500 hover:bg-gray-100"><TrashIcon className="w-4 h-4" /><span>Delete Post</span></button>
                 </div>
               )}

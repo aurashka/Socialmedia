@@ -27,7 +27,8 @@ export interface Post {
   reactions?: Record<string, Record<string, boolean>>; // e.g. { like: { userId1: true } }
   commentCount: number;
   tag?: string;
-  isPublic?: boolean;
+  privacy: 'public' | 'friends' | 'private';
+  areCommentsDisabled?: boolean;
 }
 
 export interface Comment {

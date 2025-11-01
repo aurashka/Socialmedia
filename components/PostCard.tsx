@@ -1,11 +1,10 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import type { User, Post } from '../types';
-import { DotsHorizontalIcon, HeartIcon, HeartIconFilled, ChatIcon, MessageIcon, TrashIcon, ChevronLeftIcon, ChevronRightIcon, PencilIcon, LockClosedIcon, BookmarkIcon, BookmarkIconFilled } from './Icons';
+import { DotsHorizontalIcon, HeartIcon, HeartIconFilled, ChatIcon, MessageIcon, TrashIcon, ChevronLeftIcon, ChevronRightIcon, PencilIcon, BookmarkIcon, BookmarkIconFilled, GlobeIcon, UsersIcon, LockClosedIcon } from './Icons';
 import { parseContent } from '../utils/textUtils';
-import { updatePost, deletePost, updatePostPrivacy, toggleReaction, toggleBookmark } from '../services/firebase';
+import { updatePost, deletePost, toggleReaction, toggleBookmark } from '../services/firebase';
 import CommentSection from './comments/CommentSection';
 import AddCommentForm from './comments/AddCommentForm';
-// FIX: Import PostCardShimmer component.
 import PostCardShimmer from './shimmers/PostCardShimmer';
 
 interface PostCardProps {
@@ -104,15 +103,6 @@ const PostCard: React.FC<PostCardProps> = ({ post, user, currentUser, users }) =
         }
     }
   };
-
-  const handleTogglePrivacy = async () => {
-    setIsMenuOpen(false);
-    try {
-        await updatePostPrivacy(post.id, !(post.isPublic ?? true));
-    } catch (error) {
-        console.error("Failed to update post privacy:", error);
-    }
-  };
   
   const handlePrevImage = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -128,13 +118,23 @@ const PostCard: React.FC<PostCardProps> = ({ post, user, currentUser, users }) =
     const seconds = Math.floor((Date.now() - timestamp) / 1000);
     if (seconds < 60) return `Just now`;
     const minutes = Math.floor(seconds / 60);
-    if (minutes < 60) return `${minutes} minutes ago`;
+    if (minutes < 60) return `${minutes}m`;
     const hours = Math.floor(minutes / 60);
-    if (hours < 24) return `${hours} hours ago`;
+    if (hours < 24) return `${hours}h`;
     const days = Math.floor(hours / 24);
-    if (days < 7) return `${days} days ago`;
+    if (days < 7) return `${days}d`;
     return new Date(timestamp).toLocaleDateString("en-US");
   };
+
+  const PrivacyIcon = useMemo(() => {
+    switch(post.privacy) {
+        case 'friends': return UsersIcon;
+        case 'private': return LockClosedIcon;
+        case 'public':
+        default:
+            return GlobeIcon;
+    }
+  }, [post.privacy]);
 
   if (!user) {
     return <PostCardShimmer />;
@@ -150,6 +150,10 @@ const PostCard: React.FC<PostCardProps> = ({ post, user, currentUser, users }) =
           </a>
           <div>
             <a href={`#/profile/${user.id}`} className="font-bold hover:underline text-sm text-primary dark:text-gray-100">{user.name}</a>
+             <div className="flex items-center space-x-1.5 text-xs text-secondary dark:text-gray-400">
+                <span>{timeAgo(post.timestamp)}</span>
+                <PrivacyIcon className="w-3 h-3" strokeWidth={2}/>
+             </div>
           </div>
         </div>
         <div className="relative" ref={menuRef}>
@@ -163,10 +167,6 @@ const PostCard: React.FC<PostCardProps> = ({ post, user, currentUser, users }) =
                         <button onClick={handleEdit} className="w-full text-left flex items-center space-x-2 px-4 py-2 text-sm text-primary dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700">
                             <PencilIcon className="w-4 h-4" />
                             <span>Edit Post</span>
-                        </button>
-                        <button onClick={handleTogglePrivacy} className="w-full text-left flex items-center space-x-2 px-4 py-2 text-sm text-primary dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700">
-                            <LockClosedIcon className="w-4 h-4" />
-                            <span>Make {(post.isPublic ?? true) ? 'Private' : 'Public'}</span>
                         </button>
                         <button onClick={handleDeletePost} className="w-full text-left flex items-center space-x-2 px-4 py-2 text-sm text-red-500 hover:bg-gray-100 dark:hover:bg-gray-700">
                             <TrashIcon className="w-4 h-4" />
@@ -238,20 +238,24 @@ const PostCard: React.FC<PostCardProps> = ({ post, user, currentUser, users }) =
                 {parseContent(post.content, users)}
             </p>
         )}
-        {post.commentCount > 0 && (
+        {post.commentCount > 0 && !post.areCommentsDisabled && (
           <button onClick={() => setShowAllComments(prev => !prev)} className="text-sm text-secondary dark:text-gray-400 cursor-pointer hover:underline">
             {showAllComments ? 'Hide comments' : `View all ${post.commentCount} comments`}
           </button>
         )}
 
-        {showAllComments && <CommentSection postId={post.id} currentUser={currentUser} users={users} />}
-        
-        <p className="text-xs text-secondary dark:text-gray-400 uppercase">{timeAgo(post.timestamp)}</p>
+        {showAllComments && !post.areCommentsDisabled && <CommentSection postId={post.id} currentUser={currentUser} users={users} />}
       </div>
-
+      
+      {post.areCommentsDisabled ? (
+        <div className="px-3 pb-3 text-sm text-secondary dark:text-gray-400">
+            Comments are turned off for this post.
+        </div>
+      ) : (
        <div className="border-t border-divider dark:border-gray-700 px-3 py-2">
             <AddCommentForm postId={post.id} currentUser={currentUser} users={users} />
        </div>
+      )}
        <style>{`
             @keyframes heart-pop { 0% { transform: scale(1); } 50% { transform: scale(1.3); } 100% { transform: scale(1); } }
             .animate-heart-pop { animation: heart-pop 0.3s ease-out; }

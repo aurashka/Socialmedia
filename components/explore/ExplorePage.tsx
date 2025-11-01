@@ -22,13 +22,13 @@ const ExplorePage: React.FC<ExplorePageProps> = ({ currentUser, users, posts, fr
     const explorePosts = useMemo(() => {
         return posts
             .filter(post => {
-                const postUser = users[post.userId];
+                const privacy = post.privacy || 'public';
                 // Show public posts from other users that have media
-                return postUser?.isPublic && post.userId !== currentUser.id && post.mediaUrls && post.mediaUrls.length > 0;
+                return privacy === 'public' && post.userId !== currentUser.id && post.mediaUrls && post.mediaUrls.length > 0;
             })
             // Sort randomly to give a sense of discovery
             .sort(() => 0.5 - Math.random());
-    }, [posts, users, currentUser.id]);
+    }, [posts, currentUser.id]);
 
     const suggestedUsers = useMemo(() => {
         if (!users || !currentUser) return [];

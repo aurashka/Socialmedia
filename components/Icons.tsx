@@ -11,9 +11,9 @@ export const HomeIcon: React.FC<IconProps> = ({ className, strokeWidth = 2 }) =>
   </svg>
 );
 
-export const UsersIcon: React.FC<IconProps> = ({ className }) => (
+export const UsersIcon: React.FC<IconProps> = ({ className, strokeWidth = 2 }) => (
   <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M15 21a6 6 0 00-9-5.197M15 11a4 4 0 11-8 0 4 4 0 018 0z" />
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={strokeWidth} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M15 21a6 6 0 00-9-5.197M15 11a4 4 0 11-8 0 4 4 0 018 0z" />
   </svg>
 );
 
@@ -25,7 +25,7 @@ export const CommunityIcon: React.FC<IconProps> = ({ className, strokeWidth=1.5 
 
 export const ChannelIcon: React.FC<IconProps> = ({ className, strokeWidth=1.5 }) => (
     <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={strokeWidth} d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.144-6.363m7.553 0a5.467 5.467 0 01-2.924 4.962l-2.143 6.363m7.553-11.325a5.467 5.467 0 00-2.924-4.962L13 3.76M3 11.382l2.143-6.363m1.414 4.243a5.467 5.467 0 00-2.924 4.962l-2.143 6.363" />
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={strokeWidth} d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.144-6.363m7.553 0a5.467 5.467 0 01-2.294 4.962l-2.143 6.363m7.553-11.325a5.467 5.467 0 00-2.294-4.962L13 3.76M3 11.382l2.143-6.363m1.414 4.243a5.467 5.467 0 00-2.294 4.962l-2.143 6.363" />
     </svg>
 );
 
@@ -155,9 +155,9 @@ export const MailIcon: React.FC<IconProps> = ({ className }) => (
   </svg>
 );
 
-export const LockClosedIcon: React.FC<IconProps> = ({ className }) => (
+export const LockClosedIcon: React.FC<IconProps> = ({ className, strokeWidth = 2 }) => (
   <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={strokeWidth} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
   </svg>
 );
 
@@ -206,5 +206,11 @@ export const BookmarkIcon: React.FC<IconProps> = ({ className, strokeWidth = 2 }
 export const BookmarkIconFilled: React.FC<IconProps> = ({ className }) => (
     <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="currentColor" viewBox="0 0 24 24" stroke="currentColor">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+    </svg>
+);
+
+export const GlobeIcon: React.FC<IconProps> = ({ className, strokeWidth = 1.5 }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={strokeWidth} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2h1a2 2 0 002-2v-1a2 2 0 012-2h1.945M12 21a9 9 0 110-18 9 9 0 010 18z" />
     </svg>
 );

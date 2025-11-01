@@ -65,9 +65,16 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ currentUser, profileUserId, u
       .filter(post => post.userId === targetUserId)
       .filter(post => {
         if (isCurrentUser) return true; // Current user sees all their own posts
-        return post.isPublic !== false; // Others only see public posts
+        
+        const privacy = post.privacy || 'public';
+        if (privacy === 'public') return true;
+        if (privacy === 'friends') {
+            const isFriend = currentUser.friends && currentUser.friends[targetUserId];
+            return isFriend;
+        }
+        return false; // Private posts only visible to owner
       });
-  }, [posts, targetUserId, isCurrentUser]);
+  }, [posts, targetUserId, isCurrentUser, currentUser.friends]);
 
   const bookmarkedPosts = useMemo(() => {
     if (!currentUser.bookmarkedPosts) return [];

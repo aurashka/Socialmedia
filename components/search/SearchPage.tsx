@@ -70,7 +70,15 @@ const SearchPage: React.FC<SearchPageProps> = ({ query, currentUser, users, comm
         const filteredPosts = (posts as Post[])
             .filter(post => {
                 const postUser = users[post.userId];
-                return post.userId === currentUser.id || (postUser && postUser.isPublic && post.isPublic !== false);
+                if (!postUser) return false;
+                
+                if (post.userId === currentUser.id) return true; // Always include user's own posts
+
+                const privacy = post.privacy || 'public';
+                if (privacy === 'public') return true;
+                if (privacy === 'friends' && currentUser.friends?.[post.userId]) return true;
+
+                return false;
             })
             .map(post => {
                 const contentScore = getScore(post.content, lowerQuery);
@@ -87,7 +95,7 @@ const SearchPage: React.FC<SearchPageProps> = ({ query, currentUser, users, comm
             channels: filteredChannels,
             posts: filteredPosts,
         };
-    }, [query, users, communities, channels, posts, currentUser.id, showVerifiedOnly]);
+    }, [query, users, communities, channels, posts, currentUser, showVerifiedOnly]);
 
     const renderResults = () => {
         const noResults = searchResults.people.length === 0 && searchResults.communities.length === 0 && searchResults.channels.length === 0 && searchResults.posts.length === 0;

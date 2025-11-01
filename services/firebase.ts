@@ -146,7 +146,6 @@ export const createPost = async (postData: Omit<Post, 'id' | 'commentCount' | 't
         id: newPostRef.key,
         commentCount: 0,
         timestamp: Date.now(),
-        isPublic: true,
     });
 };
 
@@ -193,9 +192,10 @@ export const updatePost = async (postId: string, newContent: string) => {
     return update(postRef, { content: newContent });
 };
 
-export const updatePostPrivacy = async (postId: string, isPublic: boolean) => {
+// FIX: Add updatePostPrivacy function to update post privacy settings.
+export const updatePostPrivacy = async (postId: string, newPrivacy: Post['privacy']) => {
     const postRef = ref(db, `posts/${postId}`);
-    return update(postRef, { isPublic });
+    return update(postRef, { privacy: newPrivacy });
 };
 
 export const deletePost = async (postId: string) => {

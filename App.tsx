@@ -168,7 +168,7 @@ const App: React.FC = () => {
     }
   }, [currentUser]);
 
-  const handleCreatePost = async (content: string, imageFiles: File[]) => {
+  const handleCreatePost = async (content: string, imageFiles: File[], privacy: Post['privacy'], areCommentsDisabled: boolean) => {
     if (!currentUser) return;
 
     let mediaUrls: string[] = [];
@@ -187,6 +187,8 @@ const App: React.FC = () => {
       userId: currentUser.id,
       content,
       mediaUrls: mediaUrls.length > 0 ? mediaUrls : undefined,
+      privacy,
+      areCommentsDisabled,
     };
 
     try {
@@ -207,8 +209,36 @@ const App: React.FC = () => {
   }, [users, currentUser]);
 
   const filteredPosts = useMemo(() => {
-    if (!currentUser?.blocked) return posts;
-    return posts.filter(post => !currentUser.blocked![post.userId]);
+    if (!currentUser) return posts;
+    
+    const blockedUserIds = currentUser.blocked ? Object.keys(currentUser.blocked) : [];
+    const friendIds = currentUser.friends ? Object.keys(currentUser.friends) : [];
+    
+    return posts.filter(post => {
+      // Hide posts from users blocked by the current user
+      if (blockedUserIds.includes(post.userId)) {
+        return false;
+      }
+      
+      // Always show the current user's own posts
+      if (post.userId === currentUser.id) {
+        return true;
+      }
+
+      // Determine privacy, defaulting old posts to public
+      const privacy = post.privacy || 'public';
+      
+      switch (privacy) {
+        case 'public':
+          return true;
+        case 'friends':
+          return friendIds.includes(post.userId);
+        case 'private':
+          return false; // Only visible to owner, handled above
+        default:
+          return true;
+      }
+    });
   }, [posts, currentUser]);
 
   const filteredStories = useMemo(() => {
@@ -234,7 +264,7 @@ const App: React.FC = () => {
                         currentUser={currentUser}
                         profileUserId={route.id}
                         users={users}
-                        posts={posts} // Pass all posts to profile for bookmark lookup
+                        posts={posts} // Pass all posts to profile page for its own filtering
                         friendRequests={friendRequests}
                         stories={filteredStories}
                      />
@@ -248,7 +278,7 @@ const App: React.FC = () => {
                 return <ExplorePage
                          currentUser={currentUser}
                          users={users}
-                         posts={filteredPosts}
+                         posts={posts} // Pass all posts
                          friendRequests={friendRequests}
                          communities={communities}
                          channels={channels}
@@ -260,7 +290,7 @@ const App: React.FC = () => {
                         users={users}
                         communities={communities}
                         channels={channels}
-                        posts={filteredPosts}
+                        posts={posts} // Pass all posts
                      />
           case 'admin':
               if (currentUser.role !== 'admin') {
