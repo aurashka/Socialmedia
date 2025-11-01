@@ -37,8 +37,12 @@ export const uploadMedia = async (file: File): Promise<UploadedMedia> => {
         const formData = new FormData();
         formData.append('file', file);
         formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+        // FIX: Explicitly set resource_type to 'video' for both audio and video uploads,
+        // as required by Cloudinary for these file types.
+        formData.append('resource_type', 'video');
 
-        const response = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/video/upload`, {
+        // FIX: Use the generic '/upload' endpoint which is more robust when resource_type is specified.
+        const response = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/upload`, {
             method: 'POST',
             body: formData,
         });
