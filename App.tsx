@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { onValue, ref, query, limitToLast } from 'firebase/database';
-import { db, onAuthChange, createPost, fetchPosts } from './services/firebase';
+import { onValue, ref, query, limitToLast, orderByChild } from 'firebase/database';
+import { db, onAuthChange, createPost } from './services/firebase';
 import type { User, Post, Story, Community, Channel } from './types';
 import type { User as FirebaseUser } from 'firebase/auth';
 import Header from './components/Header';
@@ -57,7 +57,7 @@ const App: React.FC = () => {
   const [channels, setChannels] = useState<Record<string, Channel>>({});
   const [friendRequests, setFriendRequests] = useState<Record<string, any>>({});
   const [loading, setLoading] = useState(true);
-  const [initialPostLoad, setInitialPostLoad] = useState(false);
+  const [initialPostLoad, setInitialPostLoad] = useState(true);
   const [route, setRoute] = useState<Route>({ name: 'home' });
   const [isPostModalOpen, setIsPostModalOpen] = useState(false);
 
@@ -108,32 +108,28 @@ const App: React.FC = () => {
     };
   }, []);
   
-  const loadInitialPosts = useCallback(async () => {
-    setInitialPostLoad(true);
-    const initialPosts = await fetchPosts();
-    setPosts(initialPosts);
-    setInitialPostLoad(false);
-  }, []);
-  
   useEffect(() => {
-    if (!currentUser) return;
+    if (!currentUser) {
+        setPosts([]); // Clear posts on logout
+        return;
+    };
 
-    loadInitialPosts();
+    setInitialPostLoad(true); // Reset loading state for new user login
 
     const usersRef = ref(db, 'users/');
     const usersUnsub = onValue(usersRef, (snapshot) => setUsers(snapshot.val() || {}));
 
     const postsRef = ref(db, 'posts/');
-    const postsUnsub = onValue(query(postsRef, limitToLast(1)), (snapshot) => {
+    const postsQuery = query(postsRef, orderByChild('timestamp'), limitToLast(25));
+    const postsUnsub = onValue(postsQuery, (snapshot) => {
         if (snapshot.exists()) {
-            const newPostsData = snapshot.val();
-            const newPostsArray = Object.values(newPostsData) as Post[];
-            setPosts(prevPosts => {
-                const existingPostIds = new Set(prevPosts.map(p => p.id));
-                const uniqueNewPosts = newPostsArray.filter(p => !existingPostIds.has(p.id));
-                return [...uniqueNewPosts, ...prevPosts];
-            });
+            const postsData = snapshot.val();
+            const postsArray = Object.values(postsData) as Post[];
+            setPosts(postsArray.sort((a, b) => b.timestamp - a.timestamp));
+        } else {
+            setPosts([]);
         }
+        setInitialPostLoad(false);
     });
 
     const storiesRef = ref(db, 'stories/');
@@ -165,7 +161,7 @@ const App: React.FC = () => {
       communitiesUnsub();
       channelsUnsub();
     }
-  }, [currentUser, loadInitialPosts]);
+  }, [currentUser]);
 
   const handleCreatePost = async (content: string, imageFiles: File[]) => {
     if (!currentUser) return;

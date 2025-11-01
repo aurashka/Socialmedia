@@ -16,12 +16,24 @@ interface SearchPageProps {
 type FilterType = 'all' | 'people' | 'posts' | 'communities' | 'channels';
 
 const getScore = (text: string | undefined, query: string): number => {
-    if (!text) return 0;
+    if (!text || !query) return 0;
     const lowerText = text.toLowerCase();
     const lowerQuery = query.toLowerCase();
-    if (lowerText.startsWith(lowerQuery)) return 5;
-    if (lowerText.includes(lowerQuery)) return 2;
-    return 0;
+
+    if (lowerText.startsWith(lowerQuery)) return 10;
+    if (lowerText.includes(lowerQuery)) return 5;
+
+    const textWords = lowerText.split(/\s+/);
+    const queryWords = lowerQuery.split(/\s+/).filter(w => w.length > 0);
+    let score = 0;
+    
+    queryWords.forEach(qWord => {
+        if (textWords.some(tWord => tWord.startsWith(qWord))) {
+            score += 2;
+        }
+    });
+
+    return score;
 };
 
 
@@ -101,7 +113,7 @@ const SearchPage: React.FC<SearchPageProps> = ({ query, currentUser, users, comm
                         <h3 className="text-lg font-bold mb-3">Posts</h3>
                         <div className="space-y-4">
                             {searchResults.posts.map(post => (
-                                <PostCard key={post.id} post={post} user={users[post.userId]} currentUser={currentUser} />
+                                <PostCard key={post.id} post={post} user={users[post.userId]} currentUser={currentUser} users={users}/>
                             ))}
                         </div>
                     </section>

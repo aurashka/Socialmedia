@@ -130,20 +130,6 @@ export const setUserBadge = (userId: string, badgeUrl: string | null) => {
 
 
 // --- Post & Story Functions ---
-export const fetchPosts = async (): Promise<Post[]> => {
-    const postsRef = ref(db, 'posts');
-    const postsQuery = query(postsRef, orderByChild('timestamp'), limitToLast(25));
-    
-    const snapshot = await get(postsQuery);
-    if (snapshot.exists()) {
-        const postsData = snapshot.val();
-        const postsArray = Object.values(postsData) as Post[];
-        return postsArray.sort((a, b) => b.timestamp - a.timestamp);
-    }
-    return [];
-};
-
-
 export const createPost = async (postData: Omit<Post, 'id' | 'commentCount' | 'timestamp'>) => {
     const postsRef = ref(db, 'posts');
     const newPostRef = push(postsRef);

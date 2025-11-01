@@ -5,12 +5,24 @@ import { UserResultCard, CommunityResultCard, ChannelResultCard } from './Search
 import UserActionCard from '../friends/UserActionCard';
 
 const getScore = (text: string | undefined, query: string): number => {
-    if (!text) return 0;
+    if (!text || !query) return 0;
     const lowerText = text.toLowerCase();
     const lowerQuery = query.toLowerCase();
-    if (lowerText.startsWith(lowerQuery)) return 5;
-    if (lowerText.includes(lowerQuery)) return 2;
-    return 0;
+
+    if (lowerText.startsWith(lowerQuery)) return 10;
+    if (lowerText.includes(lowerQuery)) return 5;
+
+    const textWords = lowerText.split(/\s+/);
+    const queryWords = lowerQuery.split(/\s+/).filter(w => w.length > 0);
+    let score = 0;
+    
+    queryWords.forEach(qWord => {
+        if (textWords.some(tWord => tWord.startsWith(qWord))) {
+            score += 2;
+        }
+    });
+
+    return score;
 };
 
 interface SearchOverlayProps {
