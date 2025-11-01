@@ -57,15 +57,15 @@ const StoryCard: React.FC<StoryCardProps> = ({ story, user, isAddStory, currentU
         />
         <img src={currentUser.avatarUrl} alt="Add Story" className="w-full h-full object-cover" />
         <div className="absolute inset-0 bg-black bg-opacity-20"></div>
-        <div className="absolute bottom-0 left-0 right-0 h-1/3 bg-card flex flex-col items-center justify-end p-1">
-          <span className="text-xs font-semibold text-center">Create Story</span>
+        <div className="absolute bottom-0 left-0 right-0 h-1/3 bg-surface dark:bg-gray-800 flex flex-col items-center justify-end p-1">
+          <span className="text-xs font-semibold text-center text-primary dark:text-gray-100">Create Story</span>
         </div>
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-full transform border-4 border-card rounded-full bg-primary text-white p-1">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-full transform border-4 border-surface dark:border-gray-800 rounded-full bg-accent text-white p-1">
           <PlusIcon className="w-6 h-6" />
         </div>
         {isUploading && (
           <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center">
-            <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+            <div className="w-8 h-8 border-4 border-accent border-t-transparent rounded-full animate-spin"></div>
           </div>
         )}
       </div>
@@ -81,7 +81,7 @@ const StoryCard: React.FC<StoryCardProps> = ({ story, user, isAddStory, currentU
     >
       <img src={story.imageUrl} alt={user.name} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
       <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
-      <img src={user.avatarUrl} alt={user.name} className="absolute top-2 left-2 w-8 h-8 rounded-full border-2 border-primary" />
+      <img src={user.avatarUrl} alt={user.name} className="absolute top-2 left-2 w-8 h-8 rounded-full border-2 border-accent" />
       <p className="absolute bottom-2 left-2 right-2 text-white text-xs font-semibold truncate">{user.name}</p>
     </div>
   );

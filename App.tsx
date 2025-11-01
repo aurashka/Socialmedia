@@ -18,6 +18,8 @@ import ExplorePage from './components/explore/ExplorePage';
 import PostModal from './components/PostModal';
 import { uploadImage } from './services/imageUpload';
 import AdminPage from './components/admin/AdminPage';
+import { ThemeProvider } from './contexts/ThemeContext';
+import SettingsPage from './components/settings/SettingsPage';
 
 type Route = 
   | { name: 'home' }
@@ -25,7 +27,8 @@ type Route =
   | { name: 'friends' }
   | { name: 'explore' }
   | { name: 'search'; query?: string }
-  | { name: 'admin' };
+  | { name: 'admin' }
+  | { name: 'settings' };
 
 const parseHash = (): Route => {
     const hash = window.location.hash.substring(2);
@@ -42,6 +45,8 @@ const parseHash = (): Route => {
             return { name: 'search', query: param ? decodeURIComponent(param) : undefined };
         case 'admin':
             return { name: 'admin' };
+        case 'settings':
+            return { name: 'settings' };
         default:
             return { name: 'home' };
     }
@@ -259,11 +264,13 @@ const App: React.FC = () => {
                      />
           case 'admin':
               if (currentUser.role !== 'admin') {
-                  return <div className="p-8 text-center"><h1 className="text-2xl font-bold">Access Denied</h1><p>You do not have permission to view this page.</p></div>
+                  return <div className="p-8 text-center text-primary dark:text-gray-100"><h1 className="text-2xl font-bold">Access Denied</h1><p>You do not have permission to view this page.</p></div>
               }
               return <AdminPage users={users} />;
+          case 'settings':
+              return <SettingsPage />;
           default:
-              return <div>Page not found</div>
+              return <div className="text-primary dark:text-gray-100">Page not found</div>
       }
   }
 
@@ -282,27 +289,29 @@ const App: React.FC = () => {
   const isExplorePage = route.name === 'explore';
 
   return (
-    <div className="bg-background min-h-screen text-primary pb-20 md:pb-0">
-      <Header 
-        currentUser={currentUser} 
-        friendRequestCount={Object.keys(friendRequests).length}
-        users={users}
-        friendRequests={friendRequests}
-        communities={communities}
-        channels={channels}
-      />
-      <main className="pt-14">
-        {renderContent()}
-      </main>
-      <BottomNav onPostClick={() => setIsPostModalOpen(true)} currentUser={currentUser}/>
-      {isPostModalOpen && (
-        <PostModal
-          currentUser={currentUser}
-          onClose={() => setIsPostModalOpen(false)}
-          onSubmit={handleCreatePost}
+    <ThemeProvider>
+      <div className="bg-background dark:bg-black min-h-screen pb-20 md:pb-0">
+        <Header 
+          currentUser={currentUser} 
+          friendRequestCount={Object.keys(friendRequests).length}
+          users={users}
+          friendRequests={friendRequests}
+          communities={communities}
+          channels={channels}
         />
-      )}
-    </div>
+        <main className="pt-14">
+          {renderContent()}
+        </main>
+        <BottomNav onPostClick={() => setIsPostModalOpen(true)} currentUser={currentUser}/>
+        {isPostModalOpen && (
+          <PostModal
+            currentUser={currentUser}
+            onClose={() => setIsPostModalOpen(false)}
+            onSubmit={handleCreatePost}
+          />
+        )}
+      </div>
+    </ThemeProvider>
   );
 };
 

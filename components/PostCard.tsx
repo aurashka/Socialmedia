@@ -141,7 +141,7 @@ const PostCard: React.FC<PostCardProps> = ({ post, user, currentUser, users }) =
   }
   
   return (
-    <div className="bg-surface md:border-y border-divider">
+    <div className="bg-surface dark:bg-gray-900 md:border-y border-divider dark:border-gray-700">
       {/* Post Header */}
       <div className="p-3 flex justify-between items-center">
         <div className="flex items-center space-x-3">
@@ -149,39 +149,39 @@ const PostCard: React.FC<PostCardProps> = ({ post, user, currentUser, users }) =
             <img src={user.avatarUrl} alt={user.name} className="w-8 h-8 rounded-full" />
           </a>
           <div>
-            <a href={`#/profile/${user.id}`} className="font-bold hover:underline text-sm">{user.name}</a>
+            <a href={`#/profile/${user.id}`} className="font-bold hover:underline text-sm text-primary dark:text-gray-100">{user.name}</a>
           </div>
         </div>
         <div className="relative" ref={menuRef}>
-            <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="text-secondary hover:text-primary p-1">
+            <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="text-secondary dark:text-gray-400 hover:text-primary dark:hover:text-gray-100 p-1">
                 <DotsHorizontalIcon className="w-5 h-5" />
             </button>
             {isMenuOpen && (
-                <div className="absolute right-0 mt-2 w-48 bg-black rounded-md shadow-lg py-1 z-10 border border-divider">
+                <div className="absolute right-0 mt-2 w-48 bg-surface dark:bg-gray-800 rounded-md shadow-lg py-1 z-10 border border-divider dark:border-gray-700">
                     {isOwner && (
                         <>
-                        <button onClick={handleEdit} className="w-full text-left flex items-center space-x-2 px-4 py-2 text-sm text-primary hover:bg-gray-800">
+                        <button onClick={handleEdit} className="w-full text-left flex items-center space-x-2 px-4 py-2 text-sm text-primary dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700">
                             <PencilIcon className="w-4 h-4" />
                             <span>Edit Post</span>
                         </button>
-                        <button onClick={handleTogglePrivacy} className="w-full text-left flex items-center space-x-2 px-4 py-2 text-sm text-primary hover:bg-gray-800">
+                        <button onClick={handleTogglePrivacy} className="w-full text-left flex items-center space-x-2 px-4 py-2 text-sm text-primary dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700">
                             <LockClosedIcon className="w-4 h-4" />
                             <span>Make {(post.isPublic ?? true) ? 'Private' : 'Public'}</span>
                         </button>
-                        <button onClick={handleDeletePost} className="w-full text-left flex items-center space-x-2 px-4 py-2 text-sm text-red-500 hover:bg-gray-800">
+                        <button onClick={handleDeletePost} className="w-full text-left flex items-center space-x-2 px-4 py-2 text-sm text-red-500 hover:bg-gray-100 dark:hover:bg-gray-700">
                             <TrashIcon className="w-4 h-4" />
                             <span>Delete Post</span>
                         </button>
                         </>
                     )}
-                    {!isOwner && <button className="w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-gray-800">Report</button>}
+                    {!isOwner && <button className="w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-gray-100 dark:hover:bg-gray-700">Report</button>}
                 </div>
             )}
         </div>
       </div>
 
       {/* Post Media */}
-      <div className="relative group bg-black">
+      <div className="relative group bg-gray-100 dark:bg-black">
         {post.mediaUrls && post.mediaUrls.length > 0 && (
           <div className="relative aspect-square overflow-hidden">
             <img src={post.mediaUrls[currentImageIndex]} alt={`Post media ${currentImageIndex + 1}`} className="w-full h-full object-contain" onDoubleClick={() => handleReactionClick('like')} />
@@ -200,7 +200,7 @@ const PostCard: React.FC<PostCardProps> = ({ post, user, currentUser, users }) =
                 </button>
                 <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex space-x-1.5">
                     {post.mediaUrls.map((_, index) => (
-                        <div key={index} className={`w-1.5 h-1.5 rounded-full ${index === currentImageIndex ? 'bg-primary' : 'bg-gray-500'}`}></div>
+                        <div key={index} className={`w-1.5 h-1.5 rounded-full ${index === currentImageIndex ? 'bg-primary dark:bg-white' : 'bg-gray-500'}`}></div>
                     ))}
                 </div>
             </>
@@ -208,26 +208,26 @@ const PostCard: React.FC<PostCardProps> = ({ post, user, currentUser, users }) =
       </div>
       
       {/* Post Actions */}
-       <div className="p-3 flex justify-between items-center">
+       <div className="p-3 flex justify-between items-center text-primary dark:text-gray-100">
           <div className="flex space-x-4">
             <button onClick={() => handleReactionClick('like')}>
                 <HeartIconFilled className={`w-7 h-7 text-red-500 transition-transform ${animateLike ? 'animate-heart-pop' : ''} ${!isLiked && 'hidden'}`} />
-                <HeartIcon className={`w-7 h-7 text-primary ${isLiked && 'hidden'}`} />
+                <HeartIcon className={`w-7 h-7 ${isLiked && 'hidden'}`} />
             </button>
-            <button><ChatIcon className="w-7 h-7 text-primary"/></button>
-            <button><MessageIcon className="w-7 h-7 text-primary"/></button>
+            <button><ChatIcon className="w-7 h-7"/></button>
+            <button><MessageIcon className="w-7 h-7"/></button>
           </div>
           <button onClick={handleToggleBookmark}>
               {isBookmarked ? (
-                  <BookmarkIconFilled className="w-7 h-7 text-primary"/>
+                  <BookmarkIconFilled className="w-7 h-7"/>
               ) : (
-                  <BookmarkIcon className="w-7 h-7 text-primary"/>
+                  <BookmarkIcon className="w-7 h-7"/>
               )}
           </button>
        </div>
 
       {/* Post Stats & Content */}
-      <div className="px-3 pb-3 space-y-1.5 text-sm">
+      <div className="px-3 pb-3 space-y-1.5 text-sm text-primary dark:text-gray-100">
         {reactionsSummary.total > 0 && (
             <p className="font-bold">{reactionsSummary.total.toLocaleString()} {reactionsSummary.total === 1 ? 'like' : 'likes'}</p>
         )}
@@ -239,17 +239,17 @@ const PostCard: React.FC<PostCardProps> = ({ post, user, currentUser, users }) =
             </p>
         )}
         {post.commentCount > 0 && (
-          <button onClick={() => setShowAllComments(prev => !prev)} className="text-sm text-secondary cursor-pointer hover:underline">
+          <button onClick={() => setShowAllComments(prev => !prev)} className="text-sm text-secondary dark:text-gray-400 cursor-pointer hover:underline">
             {showAllComments ? 'Hide comments' : `View all ${post.commentCount} comments`}
           </button>
         )}
 
         {showAllComments && <CommentSection postId={post.id} currentUser={currentUser} users={users} />}
         
-        <p className="text-xs text-secondary uppercase">{timeAgo(post.timestamp)}</p>
+        <p className="text-xs text-secondary dark:text-gray-400 uppercase">{timeAgo(post.timestamp)}</p>
       </div>
 
-       <div className="border-t border-divider px-3 py-2">
+       <div className="border-t border-divider dark:border-gray-700 px-3 py-2">
             <AddCommentForm postId={post.id} currentUser={currentUser} users={users} />
        </div>
        <style>{`

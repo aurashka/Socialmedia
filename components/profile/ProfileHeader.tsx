@@ -101,7 +101,7 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({ profileUser, currentUser,
     if (isCurrentUser) {
       return (
         <>
-            <ActionButton primary>Edit Profile</ActionButton>
+            <ActionButton>Edit Profile</ActionButton>
             <ActionButton>Insights</ActionButton>
         </>
       )
@@ -143,8 +143,8 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({ profileUser, currentUser,
   };
 
   return (
-    <div className="bg-surface">
-      <div className="h-40 md:h-52 bg-gray-200 relative">
+    <div className="bg-surface dark:bg-gray-900 text-primary dark:text-gray-100">
+      <div className="h-40 md:h-52 bg-gray-200 dark:bg-gray-700 relative">
         <img
           src={profileUser.coverPhotoUrl || 'https://images.unsplash.com/photo-1519681393784-d120267933ba?ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&ixlib=rb-1.2.1&auto=format&fit=crop&w=1121&q=80'}
           alt={`${profileUser.name}'s cover`}
@@ -155,7 +155,7 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({ profileUser, currentUser,
         <div className="flex flex-col items-center -mt-16 relative">
           <div className="relative">
              <button 
-                className="w-32 h-32 rounded-full border-4 border-surface bg-gray-300 overflow-hidden flex-shrink-0 group disabled:cursor-default"
+                className="w-32 h-32 rounded-full border-4 border-surface dark:border-gray-900 bg-gray-300 overflow-hidden flex-shrink-0 group disabled:cursor-default"
                 onClick={onViewStories}
                 disabled={!hasStories}
                 aria-label={hasStories ? "View stories" : `${profileUser.name}'s profile picture`}
@@ -167,7 +167,7 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({ profileUser, currentUser,
                 />
              </button>
              {hasStories && (
-                <div className="absolute inset-0 rounded-full ring-2 ring-offset-2 ring-pink-500 ring-offset-surface pointer-events-none"></div>
+                <div className="absolute inset-0 rounded-full ring-2 ring-offset-2 ring-pink-500 ring-offset-surface dark:ring-offset-gray-900 pointer-events-none"></div>
              )}
           </div>
           <div className="text-center mt-4">
@@ -175,7 +175,7 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({ profileUser, currentUser,
               <span>{profileUser.name}</span>
               {profileUser.badgeUrl && <img src={profileUser.badgeUrl} alt="badge" className="w-6 h-6" />}
             </h2>
-            <p className="text-secondary text-sm">{profileUser.bio || 'Professional Model'}</p>
+            <p className="text-secondary dark:text-gray-400 text-sm">{profileUser.bio || 'Professional Model'}</p>
           </div>
           
           <div className="flex justify-around w-full max-w-sm my-6 text-center">
@@ -192,12 +192,12 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({ profileUser, currentUser,
                 {renderActionButtons()}
                  {!isCurrentUser && (
                   <div className="relative" ref={menuRef}>
-                    <button onClick={() => setMenuOpen(!menuOpen)} className="p-2 h-10 w-10 flex items-center justify-center rounded-md border border-divider hover:bg-gray-100" aria-label="More options">
-                      <DotsHorizontalIcon className="w-5 h-5 text-secondary" />
+                    <button onClick={() => setMenuOpen(!menuOpen)} className="p-2 h-10 w-10 flex items-center justify-center rounded-md border border-divider dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800" aria-label="More options">
+                      <DotsHorizontalIcon className="w-5 h-5 text-secondary dark:text-gray-400" />
                     </button>
                     {menuOpen && (
-                      <div className="absolute right-0 mt-2 w-48 bg-surface rounded-md shadow-lg py-1 z-20 border border-divider">
-                        <button onClick={handleBlock} disabled={loading} className="block w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-gray-100">Block @{profileUser.handle}</button>
+                      <div className="absolute right-0 mt-2 w-48 bg-surface dark:bg-gray-800 rounded-md shadow-lg py-1 z-20 border border-divider dark:border-gray-700">
+                        <button onClick={handleBlock} disabled={loading} className="block w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-gray-100 dark:hover:bg-gray-700">Block @{profileUser.handle}</button>
                       </div>
                     )}
                   </div>
@@ -216,15 +216,15 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({ profileUser, currentUser,
 
 const Stat: React.FC<{value: number; label: string}> = ({value, label}) => (
     <div>
-        <p className="font-bold text-lg">{Intl.NumberFormat('en-US', { notation: 'compact', maximumFractionDigits: 1 }).format(value)}</p>
-        <p className="text-sm text-secondary">{label}</p>
+        <p className="font-bold text-lg text-primary dark:text-gray-100">{Intl.NumberFormat('en-US', { notation: 'compact', maximumFractionDigits: 1 }).format(value)}</p>
+        <p className="text-sm text-secondary dark:text-gray-400">{label}</p>
     </div>
 );
 
 const ActionButton: React.FC<{primary?: boolean, danger?: boolean, fullWidth?: boolean, children: React.ReactNode, onClick?: () => void, disabled?: boolean}> = ({primary, danger, fullWidth, children, ...props}) => {
-    const baseClasses = "px-4 py-2 font-semibold rounded-md transition-colors text-sm h-10 flex-grow";
-    const primaryClasses = "bg-primary text-white hover:bg-black";
-    const secondaryClasses = "bg-gray-200 text-primary hover:bg-gray-300";
+    const baseClasses = "px-4 py-2 font-semibold rounded-md transition-colors text-sm h-10 flex-grow disabled:opacity-50";
+    const primaryClasses = "bg-accent text-white hover:bg-blue-700";
+    const secondaryClasses = "bg-gray-200 dark:bg-gray-700 text-primary dark:text-gray-100 hover:bg-gray-300 dark:hover:bg-gray-600";
     const dangerClasses = "bg-red-500 text-white hover:bg-red-600";
     
     const classes = `${baseClasses} ${fullWidth ? 'w-full' : ''} ${primary ? primaryClasses : (danger ? dangerClasses : secondaryClasses)}`;

@@ -44,12 +44,12 @@ const PostModal: React.FC<PostModalProps> = ({ currentUser, onClose, onSubmit })
   };
 
   return (
-    <div className="fixed inset-0 bg-gray-500 bg-opacity-75 z-50 flex items-center justify-center p-4 transition-opacity" aria-modal="true" role="dialog">
-      <div className="bg-card rounded-lg shadow-xl w-full max-w-lg transform transition-all">
-        <div className="p-4 border-b flex justify-between items-center">
+    <div className="fixed inset-0 bg-black bg-opacity-50 dark:bg-opacity-75 z-50 flex items-center justify-center p-4 transition-opacity" aria-modal="true" role="dialog">
+      <div className="bg-surface dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-lg transform transition-all text-primary dark:text-gray-100">
+        <div className="p-4 border-b border-divider dark:border-gray-700 flex justify-between items-center">
           <h2 className="text-xl font-bold">Create Post</h2>
-          <button onClick={onClose} className="p-2 rounded-full hover:bg-gray-200" aria-label="Close">
-            <XIcon className="w-6 h-6 text-text-secondary" />
+          <button onClick={onClose} className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700" aria-label="Close">
+            <XIcon className="w-6 h-6 text-secondary dark:text-gray-400" />
           </button>
         </div>
         <form onSubmit={handleSubmit}>
@@ -59,7 +59,7 @@ const PostModal: React.FC<PostModalProps> = ({ currentUser, onClose, onSubmit })
               <p className="font-semibold">{currentUser.name}</p>
             </div>
             <textarea
-              className="w-full mt-4 text-lg placeholder-text-secondary focus:outline-none resize-none bg-transparent"
+              className="w-full mt-4 text-lg placeholder-secondary dark:placeholder-gray-500 focus:outline-none resize-none bg-transparent"
               rows={5}
               placeholder={`What's on your mind, ${currentUser.name.split(' ')[0]}?`}
               value={content}
@@ -67,7 +67,7 @@ const PostModal: React.FC<PostModalProps> = ({ currentUser, onClose, onSubmit })
               autoFocus
             />
             {imagePreviews.length > 0 && (
-              <div className="mt-4 grid grid-cols-3 gap-2 border rounded-lg p-2">
+              <div className="mt-4 grid grid-cols-3 gap-2 border border-divider dark:border-gray-700 rounded-lg p-2">
                 {imagePreviews.map((preview, index) => (
                   <div key={index} className="relative">
                     <img src={preview} alt={`Preview ${index}`} className="rounded-lg h-24 w-full object-cover" />
@@ -84,12 +84,12 @@ const PostModal: React.FC<PostModalProps> = ({ currentUser, onClose, onSubmit })
               </div>
             )}
           </div>
-          <div className="p-4 border-t flex justify-between items-center">
+          <div className="p-4 border-t border-divider dark:border-gray-700 flex justify-between items-center">
              <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
                 disabled={imageFiles.length >= 5}
-                className="text-primary font-semibold hover:bg-blue-50 p-2 rounded-md disabled:opacity-50"
+                className="text-accent font-semibold hover:bg-blue-50 dark:hover:bg-gray-700 p-2 rounded-md disabled:opacity-50"
             >
                 Add Photos
             </button>
@@ -104,7 +104,7 @@ const PostModal: React.FC<PostModalProps> = ({ currentUser, onClose, onSubmit })
             <button
               type="submit"
               disabled={(!content.trim() && imageFiles.length === 0) || isSubmitting}
-              className="px-6 py-2 bg-primary text-white font-bold rounded-md disabled:bg-blue-300 disabled:cursor-not-allowed hover:bg-blue-700 transition-colors"
+              className="px-6 py-2 bg-accent text-white font-bold rounded-md disabled:bg-blue-300 disabled:cursor-not-allowed hover:bg-blue-700 transition-colors"
             >
               {isSubmitting ? 'Posting...' : 'Post'}
             </button>

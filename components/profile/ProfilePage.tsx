@@ -41,12 +41,12 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ currentUser, profileUserId, u
         await unblockUser(currentUser.id, targetUserId);
     };
     return (
-        <div className="p-8 text-center bg-surface rounded-lg shadow-sm max-w-2xl mx-auto mt-4">
-            <h2 className="text-xl font-bold">User Blocked</h2>
-            <p className="text-secondary mt-2">You can't see this profile because you've blocked this user.</p>
+        <div className="p-8 text-center bg-surface dark:bg-gray-800 rounded-lg shadow-sm max-w-2xl mx-auto mt-4">
+            <h2 className="text-xl font-bold text-primary dark:text-gray-100">User Blocked</h2>
+            <p className="text-secondary dark:text-gray-400 mt-2">You can't see this profile because you've blocked this user.</p>
             <button 
                 onClick={handleUnblock} 
-                className="mt-4 px-4 py-2 bg-primary text-white font-semibold rounded-md hover:bg-black transition-colors"
+                className="mt-4 px-4 py-2 bg-accent text-white font-semibold rounded-md hover:bg-blue-700 transition-colors"
             >
                 Unblock
             </button>
@@ -55,7 +55,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ currentUser, profileUserId, u
   }
   
   if (!profileUser) {
-    return <div className="p-4"><p>User not found or still loading...</p></div>;
+    return <div className="p-4 text-primary dark:text-gray-100"><p>User not found or still loading...</p></div>;
   }
   
   const isCurrentUser = targetUserId === currentUser.id;
@@ -85,7 +85,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ currentUser, profileUserId, u
     if (activeTab === 'posts') {
       if (userPosts.length === 0) {
         return (
-          <div className="bg-surface rounded-lg p-8 text-center text-secondary mt-1">
+          <div className="bg-surface dark:bg-gray-900 rounded-lg p-8 text-center text-secondary dark:text-gray-400 mt-1">
             <p>{isCurrentUser ? "You haven't" : `${profileUser.name} hasn't`} posted anything yet.</p>
           </div>
         );
@@ -94,7 +94,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ currentUser, profileUserId, u
         <div className="grid grid-cols-3 gap-1">
           {userPosts.map(post => (
             post.mediaUrls && post.mediaUrls.length > 0 ? (
-              <div key={post.id} className="aspect-square bg-gray-200 cursor-pointer" onClick={() => setSelectedPost(post)}>
+              <div key={post.id} className="aspect-square bg-gray-200 dark:bg-gray-800 cursor-pointer" onClick={() => setSelectedPost(post)}>
                 <img src={post.mediaUrls[0]} alt="post" className="w-full h-full object-cover" />
               </div>
             ) : null
@@ -106,7 +106,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ currentUser, profileUserId, u
     if (activeTab === 'stories') {
         if (profileUserStories.length === 0) {
             return (
-                <div className="bg-surface rounded-lg p-8 text-center text-secondary mt-1">
+                <div className="bg-surface dark:bg-gray-900 rounded-lg p-8 text-center text-secondary dark:text-gray-400 mt-1">
                     <p>{isCurrentUser ? "You don't" : `${profileUser.name} doesn't`} have any stories.</p>
                 </div>
             )
@@ -114,7 +114,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ currentUser, profileUserId, u
         return (
             <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-1 p-1">
                 {profileUserStories.map((story, index) => (
-                    <div key={story.id} className="aspect-square bg-gray-200 cursor-pointer group" onClick={() => setStoryViewerState({ open: true, initialIndex: index })}>
+                    <div key={story.id} className="aspect-square bg-gray-200 dark:bg-gray-800 cursor-pointer group" onClick={() => setStoryViewerState({ open: true, initialIndex: index })}>
                         <img src={story.imageUrl} alt="story thumbnail" className="w-full h-full object-cover group-hover:opacity-80 transition-opacity" />
                     </div>
                 ))}
@@ -125,7 +125,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ currentUser, profileUserId, u
     if (activeTab === 'bookmarked') {
       if (bookmarkedPosts.length === 0) {
         return (
-          <div className="bg-surface rounded-lg p-8 text-center text-secondary mt-1">
+          <div className="bg-surface dark:bg-gray-900 rounded-lg p-8 text-center text-secondary dark:text-gray-400 mt-1">
             <p>You haven't saved any posts yet.</p>
             <p className="text-xs mt-1">Only you can see what you've saved.</p>
           </div>
@@ -135,7 +135,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ currentUser, profileUserId, u
         <div className="grid grid-cols-3 gap-1">
           {bookmarkedPosts.map(post => (
             post.mediaUrls && post.mediaUrls.length > 0 ? (
-              <div key={post.id} className="aspect-square bg-gray-200 cursor-pointer" onClick={() => setSelectedPost(post)}>
+              <div key={post.id} className="aspect-square bg-gray-200 dark:bg-gray-800 cursor-pointer" onClick={() => setSelectedPost(post)}>
                 <img src={post.mediaUrls[0]} alt="post" className="w-full h-full object-cover" />
               </div>
             ) : null
@@ -160,7 +160,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ currentUser, profileUserId, u
         onViewStories={() => setStoryViewerState({ open: true, initialIndex: 0 })}
       />
       
-      <div className="border-t border-b border-divider flex justify-center">
+      <div className="border-t border-b border-divider dark:border-gray-700 flex justify-center bg-surface dark:bg-gray-900">
         <TabButton Icon={GridIcon} label="Posts" active={activeTab === 'posts'} onClick={() => setActiveTab('posts')} />
         <TabButton Icon={VideoCameraIcon} label="Stories" active={activeTab === 'stories'} onClick={() => setActiveTab('stories')} />
         {isCurrentUser && (
@@ -194,7 +194,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ currentUser, profileUserId, u
 };
 
 const TabButton: React.FC<{Icon: React.ElementType, label: string, active: boolean, onClick: () => void}> = ({ Icon, label, active, onClick }) => (
-    <button onClick={onClick} className={`flex items-center space-x-2 py-3 px-6 -mb-px border-b-2 ${active ? 'border-primary text-primary' : 'border-transparent text-secondary hover:bg-gray-100'}`}>
+    <button onClick={onClick} className={`flex items-center space-x-2 py-3 px-6 -mb-px border-b-2 ${active ? 'border-primary dark:border-gray-100 text-primary dark:text-gray-100' : 'border-transparent text-secondary dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'}`}>
         <Icon className={`w-6 h-6`} />
         <span className="font-semibold uppercase text-xs hidden sm:inline">{label}</span>
     </button>
