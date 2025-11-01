@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import type { User, Post } from '../../types';
-import PostDetailModal from './PostDetailModal';
+import PostDetailModal from './PostViewerModal';
 
 interface ExplorePageProps {
     currentUser: User;

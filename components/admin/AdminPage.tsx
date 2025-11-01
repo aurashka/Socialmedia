@@ -7,8 +7,8 @@ interface AdminPageProps {
 }
 
 const AdminPage: React.FC<AdminPageProps> = ({ users }) => {
-    // FIX: Explicitly type `a` and `b` as User to resolve TypeScript errors where they were inferred as `unknown`.
-    const usersArray = Object.values(users).sort((a: User, b: User) => (a.name || '').localeCompare(b.name || ''));
+    // FIX: Cast `Object.values(users)` to `User[]` to ensure correct type inference for `sort` and `map`.
+    const usersArray = (Object.values(users) as User[]).sort((a, b) => (a.name || '').localeCompare(b.name || ''));
 
     return (
         <div className="p-4 sm:p-6 max-w-4xl mx-auto">
