@@ -122,3 +122,9 @@ export interface Message {
     authorAvatar: string;
   };
 }
+
+export interface ApiKeys {
+  imgbb: string;
+  cloudinaryCloudName: string;
+  cloudinaryUploadPreset: string;
+}

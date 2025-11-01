@@ -30,7 +30,7 @@ import {
   onAuthStateChanged,
   type User as FirebaseUser
 } from 'firebase/auth';
-import type { Post, Story, User, Comment, Notification, Message, Conversation } from '../types';
+import type { Post, Story, User, Comment, Notification, Message, Conversation, ApiKeys } from '../types';
 import { findMentions } from '../utils/textUtils';
 
 const firebaseConfig = {
@@ -228,6 +228,17 @@ export const deleteUserConversations = async (userId: string): Promise<void> => 
     });
 
     await update(ref(db), updates);
+};
+
+export const getApiKeys = async (): Promise<ApiKeys | null> => {
+    const keysRef = ref(db, 'admin/apiKeys');
+    const snapshot = await get(keysRef);
+    return snapshot.exists() ? snapshot.val() as ApiKeys : null;
+};
+
+export const updateApiKeys = (keys: ApiKeys): Promise<void> => {
+    const keysRef = ref(db, 'admin/apiKeys');
+    return set(keysRef, keys);
 };
 
 
