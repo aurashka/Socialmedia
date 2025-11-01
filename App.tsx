@@ -54,11 +54,15 @@ const App: React.FC = () => {
   const [channels, setChannels] = useState<Record<string, Channel>>({});
   const [friendRequests, setFriendRequests] = useState<Record<string, any>>({});
   const [loading, setLoading] = useState(true);
-  const [route, setRoute] = useState<Route>(parseHash());
+  const [route, setRoute] = useState<Route>({ name: 'home' }); // Default to home
   const [isPostModalOpen, setIsPostModalOpen] = useState(false);
 
   useEffect(() => {
     const handleHashChange = () => setRoute(parseHash());
+
+    // Set the initial route from the hash after the component has mounted
+    handleHashChange();
+    
     window.addEventListener('hashchange', handleHashChange);
     return () => window.removeEventListener('hashchange', handleHashChange);
   }, []);
