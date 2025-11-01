@@ -15,11 +15,13 @@ import SearchPage from './components/search/SearchPage';
 import { signOut } from 'firebase/auth';
 import { auth } from './services/firebase';
 import BottomNav from './components/BottomNav';
+import ExplorePage from './components/explore/ExplorePage';
 
 type Route = 
   | { name: 'home' }
   | { name: 'profile'; id?: string }
   | { name: 'friends' }
+  | { name: 'explore' }
   | { name: 'search'; query?: string };
 
 const parseHash = (): Route => {
@@ -31,6 +33,8 @@ const parseHash = (): Route => {
             return { name: 'profile', id: param };
         case 'friends':
             return { name: 'friends' };
+        case 'explore':
+            return { name: 'explore' };
         case 'search':
             return { name: 'search', query: param ? decodeURIComponent(param) : undefined };
         default:
@@ -185,6 +189,12 @@ const App: React.FC = () => {
                         users={users}
                         friendRequests={friendRequests}
                      />
+           case 'explore':
+                return <ExplorePage
+                         currentUser={currentUser}
+                         users={users}
+                         posts={filteredPosts}
+                       />
           case 'search':
               return <SearchPage
                         query={route.query || ''}

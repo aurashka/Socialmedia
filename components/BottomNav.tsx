@@ -1,5 +1,5 @@
 import React from 'react';
-import { HomeIcon, SearchIcon, PlusSquareIcon, HeartIcon } from './Icons';
+import { HomeIcon, CompassIcon, PlusSquareIcon, HeartIcon } from './Icons';
 import type { User } from '../types';
 
 interface BottomNavProps {
@@ -11,7 +11,7 @@ const BottomNav: React.FC<BottomNavProps> = ({ onPostClick, currentUser }) => {
   return (
     <nav className="md:hidden fixed bottom-4 left-1/2 -translate-x-1/2 bg-surface/80 backdrop-blur-sm shadow-xl h-16 z-50 flex items-center justify-around rounded-full border border-divider w-[90%] max-w-sm">
       <BottomNavItem Icon={HomeIcon} href="/#" active />
-      <BottomNavItem Icon={SearchIcon} href="#/search" />
+      <BottomNavItem Icon={CompassIcon} href="#/explore" />
       <BottomNavItem Icon={PlusSquareIcon} onClick={onPostClick} />
       <BottomNavItem Icon={HeartIcon} />
       <BottomNavItem isProfile href={`#/profile/${currentUser.id}`} avatarUrl={currentUser.avatarUrl} />

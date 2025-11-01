@@ -1,6 +1,6 @@
 import React from 'react';
 import type { User } from '../types';
-import { HomeIcon, UsersIcon, CommunityIcon, ChannelIcon } from './Icons';
+import { HomeIcon, UsersIcon, CommunityIcon, ChannelIcon, CompassIcon } from './Icons';
 
 interface SidebarLeftProps {
   currentUser: User;
@@ -14,6 +14,7 @@ const SidebarLeft: React.FC<SidebarLeftProps> = ({ currentUser }) => {
           <SidebarLink href={`#/profile/${currentUser.id}`} icon={<img src={currentUser.avatarUrl} className="w-8 h-8 rounded-full" />} text={currentUser.name || 'Profile'} />
           <SidebarLink href="/#" icon={<HomeIcon className="w-8 h-8 text-primary" />} text="News Feed" active />
           <SidebarLink href="#/friends" icon={<UsersIcon className="w-8 h-8 text-blue-500" />} text="Friends" />
+          <SidebarLink href="#/explore" icon={<CompassIcon className="w-8 h-8 text-pink-500" />} text="Explore" />
           <SidebarLink href="#/communities" icon={<CommunityIcon className="w-8 h-8 text-purple-500" />} text="Communities" />
           <SidebarLink href="#/channels" icon={<ChannelIcon className="w-8 h-8 text-teal-500" />} text="Channels" />
           <SidebarLink icon={<svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-green-500" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd" /></svg>} text="Saved" />

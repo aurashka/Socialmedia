@@ -29,6 +29,15 @@ export const ChannelIcon: React.FC<IconProps> = ({ className, strokeWidth=1.5 })
     </svg>
 );
 
+export const CompassIcon: React.FC<IconProps> = ({ className, strokeWidth = 2 }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={strokeWidth} d="M12 21a9 9 0 110-18 9 9 0 010 18z" />
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={strokeWidth} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={strokeWidth} d="M12 5.5V3M12 21v-2.5m7.5-6.5H21M3 12h2.5m11.31-7.19l-1.76 1.77M7.45 16.55l-1.77 1.77m12.02 0l-1.77-1.77M7.45 7.45l-1.77-1.77" />
+    </svg>
+);
+
+
 export const ChatIcon: React.FC<IconProps> = ({ className }) => (
   <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
