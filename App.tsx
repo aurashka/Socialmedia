@@ -159,15 +159,20 @@ const App: React.FC = () => {
             signOut(auth);
           } else if (userProfile) {
             setCurrentUser(userProfile);
+            setLoading(false);
           } else {
             setCurrentUser({
               id: user.uid,
-              email: user.email!,
+              email: user.email || '',
               avatarUrl: `https://i.pravatar.cc/150?u=${user.uid}`,
               role: 'user',
             });
+            setLoading(false);
           }
-          setLoading(false);
+        }, (error) => {
+            console.error("Firebase profile read failed:", error);
+            alert("Could not load your profile due to a database error. Please try logging in again.");
+            signOut(auth);
         });
       } else {
         setAuthUser(null);
