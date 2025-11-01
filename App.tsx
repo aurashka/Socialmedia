@@ -51,34 +51,46 @@ const App: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    // No need to seed here anymore, it's done on demand in firebase.ts if DB is empty
-    const unsubscribe = onAuthChange(async (user) => {
+    let userProfileUnsubscribe: () => void = () => {};
+
+    const unsubscribeAuth = onAuthChange((user) => {
+      // Clean up old profile listener whenever auth state changes
+      userProfileUnsubscribe();
+
       if (user) {
         setAuthUser(user);
-        const userProfile = await getUserProfile(user.uid);
-        if(userProfile?.isBanned) {
+        
+        const userProfileRef = ref(db, `users/${user.uid}`);
+        userProfileUnsubscribe = onValue(userProfileRef, (snapshot) => {
+          const userProfile = snapshot.val();
+          if (userProfile?.isBanned) {
             alert("Your account has been banned.");
-            await signOut(auth);
-            setAuthUser(null);
-            setCurrentUser(null);
-        } else if (userProfile) {
-          setCurrentUser(userProfile);
-        } else {
-          setCurrentUser({
-            id: user.uid,
-            email: user.email!,
-            avatarUrl: `https://i.pravatar.cc/150?u=${user.uid}`,
-            role: 'user',
-          });
-        }
+            signOut(auth); // This will re-trigger onAuthChange with user=null
+          } else if (userProfile) {
+            setCurrentUser(userProfile);
+          } else {
+            // New user, not yet in DB. Set a temporary profile.
+            setCurrentUser({
+              id: user.uid,
+              email: user.email!,
+              avatarUrl: `https://i.pravatar.cc/150?u=${user.uid}`,
+              role: 'user',
+            });
+          }
+          setLoading(false);
+        });
       } else {
+        // User is signed out
         setAuthUser(null);
         setCurrentUser(null);
+        setLoading(false);
       }
-      setLoading(false);
     });
 
-    return () => unsubscribe();
+    return () => {
+      unsubscribeAuth();
+      userProfileUnsubscribe(); // Also cleanup on component unmount
+    };
   }, []);
   
   useEffect(() => {

@@ -54,11 +54,8 @@ const CompleteProfile: React.FC<CompleteProfileProps> = ({ user }) => {
       });
       // The state in App.tsx will update via the onValue listener,
       // which will cause a re-render and show the main app.
-      // We can force a reload if needed, but it's usually not necessary.
-      window.location.reload(); 
     } catch (err: any) {
       setError(err.message || 'Failed to update profile.');
-    } finally {
       setLoading(false);
     }
   };
