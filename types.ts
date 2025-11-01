@@ -11,6 +11,7 @@ export interface User {
   isPublic?: boolean;
   friends?: Record<string, boolean>; // Record of friend user IDs
   isBanned?: boolean;
+  blocked?: Record<string, boolean>; // Record of blocked user IDs
 }
 
 export interface Post {

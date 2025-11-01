@@ -100,6 +100,21 @@ export const removeFriend = async (currentUserId: string, friendId: string) => {
     await update(ref(db), updates);
 };
 
+// --- Block/Unblock Functions ---
+export const blockUser = async (blockerId: string, blockedId: string) => {
+    // First, ensure they are not friends
+    await removeFriend(blockerId, blockedId);
+    
+    // Then, add to the block list
+    const blockRef = ref(db, `users/${blockerId}/blocked/${blockedId}`);
+    return set(blockRef, true);
+};
+
+export const unblockUser = async (blockerId: string, blockedId: string) => {
+    const blockRef = ref(db, `users/${blockerId}/blocked/${blockedId}`);
+    return remove(blockRef);
+};
+
 // --- Admin Functions ---
 export const banUser = (userId: string) => {
     return update(ref(db, `users/${userId}`), { isBanned: true });

@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { onValue, ref } from 'firebase/database';
-import { db, onAuthChange, getUserProfile } from './services/firebase';
+import { db, onAuthChange } from './services/firebase';
 import type { User, Post, Story } from './types';
 import type { User as FirebaseUser } from 'firebase/auth';
 import Header from './components/Header';
@@ -11,14 +11,13 @@ import Auth from './components/auth/Auth';
 import CompleteProfile from './components/auth/CompleteProfile';
 import LoadingSpinner from './components/LoadingSpinner';
 import ProfilePage from './components/profile/ProfilePage';
-import SearchResultsPage from './components/search/SearchResultsPage';
+import SearchOverlay from './components/search/SearchOverlay';
 import { signOut } from 'firebase/auth';
 import { auth } from './services/firebase';
 
 type Route = 
   | { name: 'home' }
-  | { name: 'profile'; id?: string }
-  | { name: 'search'; query: string };
+  | { name: 'profile'; id?: string };
 
 const parseHash = (): Route => {
     const hash = window.location.hash.substring(2);
@@ -27,8 +26,6 @@ const parseHash = (): Route => {
     switch (path) {
         case 'profile':
             return { name: 'profile', id: param };
-        case 'search':
-            return { name: 'search', query: decodeURIComponent(param) };
         default:
             return { name: 'home' };
     }
@@ -43,6 +40,7 @@ const App: React.FC = () => {
   const [friendRequests, setFriendRequests] = useState<Record<string, any>>({});
   const [loading, setLoading] = useState(true);
   const [route, setRoute] = useState<Route>(parseHash());
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   useEffect(() => {
     const handleHashChange = () => setRoute(parseHash());
@@ -54,7 +52,6 @@ const App: React.FC = () => {
     let userProfileUnsubscribe: () => void = () => {};
 
     const unsubscribeAuth = onAuthChange((user) => {
-      // Clean up old profile listener whenever auth state changes
       userProfileUnsubscribe();
 
       if (user) {
@@ -65,11 +62,10 @@ const App: React.FC = () => {
           const userProfile = snapshot.val();
           if (userProfile?.isBanned) {
             alert("Your account has been banned.");
-            signOut(auth); // This will re-trigger onAuthChange with user=null
+            signOut(auth);
           } else if (userProfile) {
             setCurrentUser(userProfile);
           } else {
-            // New user, not yet in DB. Set a temporary profile.
             setCurrentUser({
               id: user.uid,
               email: user.email!,
@@ -80,7 +76,6 @@ const App: React.FC = () => {
           setLoading(false);
         });
       } else {
-        // User is signed out
         setAuthUser(null);
         setCurrentUser(null);
         setLoading(false);
@@ -89,7 +84,7 @@ const App: React.FC = () => {
 
     return () => {
       unsubscribeAuth();
-      userProfileUnsubscribe(); // Also cleanup on component unmount
+      userProfileUnsubscribe();
     };
   }, []);
   
@@ -125,6 +120,25 @@ const App: React.FC = () => {
     }
   }, [currentUser]);
   
+  const filteredUsers = useMemo(() => {
+    if (!currentUser?.blocked) return users;
+    const filtered = { ...users };
+    Object.keys(currentUser.blocked).forEach(blockedId => {
+      delete filtered[blockedId];
+    });
+    return filtered;
+  }, [users, currentUser]);
+
+  const filteredPosts = useMemo(() => {
+    if (!currentUser?.blocked) return posts;
+    return posts.filter(post => !currentUser.blocked![post.userId]);
+  }, [posts, currentUser]);
+
+  const filteredStories = useMemo(() => {
+    if (!currentUser?.blocked) return stories;
+    return stories.filter(story => !currentUser.blocked![story.userId]);
+  }, [stories, currentUser]);
+
   const renderContent = () => {
       if (!currentUser) return null;
 
@@ -132,29 +146,23 @@ const App: React.FC = () => {
           case 'home':
               return <MainContent
                         currentUser={currentUser}
-                        users={users}
-                        posts={posts}
-                        stories={stories}
+                        users={filteredUsers}
+                        posts={filteredPosts}
+                        stories={filteredStories}
                         loading={posts.length === 0}
                       />;
           case 'profile':
               return <ProfilePage
                         currentUser={currentUser}
                         profileUserId={route.id}
-                        users={users}
-                        posts={posts}
+                        users={users} // Pass all users to find profile, even if blocked
+                        posts={filteredPosts}
                         friendRequests={friendRequests}
-                     />
-          case 'search':
-              return <SearchResultsPage
-                        query={route.query}
-                        users={users}
                      />
           default:
               return <div>Page not found</div>
       }
   }
-
 
   if (loading) {
     return <LoadingSpinner />;
@@ -170,14 +178,21 @@ const App: React.FC = () => {
 
   return (
     <div className="bg-background min-h-screen text-text-primary">
-      <Header currentUser={currentUser} />
+      <Header currentUser={currentUser} onSearchClick={() => setIsSearchOpen(true)} />
       <main className="flex pt-14">
         <SidebarLeft currentUser={currentUser} />
         <div className="w-full lg:w-[calc(100%-560px)] md:w-[calc(100%-280px)] md:mx-auto lg:ml-72 lg:mr-72 xl:mr-96 transition-all duration-300">
           {renderContent()}
         </div>
-        <SidebarRight users={users} currentUser={currentUser}/>
+        <SidebarRight users={filteredUsers} currentUser={currentUser}/>
       </main>
+      {isSearchOpen && (
+        <SearchOverlay 
+          users={users} 
+          currentUser={currentUser} 
+          onClose={() => setIsSearchOpen(false)} 
+        />
+      )}
     </div>
   );
 };

@@ -6,11 +6,11 @@ import { signOut } from 'firebase/auth';
 
 interface HeaderProps {
   currentUser: User;
+  onSearchClick: () => void;
 }
 
-const Header: React.FC<HeaderProps> = ({ currentUser }) => {
+const Header: React.FC<HeaderProps> = ({ currentUser, onSearchClick }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
   const menuRef = useRef<HTMLDivElement>(null);
 
   const handleSignOut = async () => {
@@ -18,14 +18,6 @@ const Header: React.FC<HeaderProps> = ({ currentUser }) => {
       await signOut(auth);
     } catch (error) {
       console.error("Error signing out: ", error);
-    }
-  };
-
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (searchQuery.trim()) {
-      window.location.hash = `#/search/${encodeURIComponent(searchQuery.trim())}`;
-      setSearchQuery('');
     }
   };
 
@@ -50,18 +42,14 @@ const Header: React.FC<HeaderProps> = ({ currentUser }) => {
         <div className="md:hidden">
             <MenuIcon className="w-8 h-8 text-text-secondary" />
         </div>
-        <form onSubmit={handleSearch} className="relative hidden md:block">
+        <div onClick={onSearchClick} className="relative hidden md:flex items-center cursor-pointer group">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <SearchIcon className="h-5 w-5 text-gray-400" />
+            <SearchIcon className="h-5 w-5 text-gray-400 group-hover:text-text-primary" />
           </div>
-          <input
-            type="text"
-            placeholder="Search ConnectSphere"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="bg-background rounded-full py-2 pl-10 pr-4 focus:outline-none w-64"
-          />
-        </form>
+          <div className="bg-background rounded-full py-2 pl-10 pr-4 w-64 text-text-secondary group-hover:bg-gray-200 transition-colors">
+            Search ConnectSphere
+          </div>
+        </div>
       </div>
 
       {/* Center Section - Mobile/Tablet Nav */}
@@ -70,7 +58,7 @@ const Header: React.FC<HeaderProps> = ({ currentUser }) => {
         <HeaderIcon Icon={UsersIcon} badge={1} />
         <HeaderIcon Icon={ChatIcon} />
         <HeaderIcon Icon={BellIcon} badge={2} />
-        <HeaderIcon Icon={SearchIcon} />
+        <HeaderIcon Icon={SearchIcon} onClick={onSearchClick} />
       </div>
       
       {/* Center Section - Desktop Nav */}
@@ -126,9 +114,10 @@ interface HeaderIconProps {
     badge?: number;
     active?: boolean;
     href?: string;
+    onClick?: () => void;
 }
 
-const HeaderIcon: React.FC<HeaderIconProps> = ({ Icon, badge, active, href }) => {
+const HeaderIcon: React.FC<HeaderIconProps> = ({ Icon, badge, active, href, onClick }) => {
     const content = (
         <div className="relative p-2 rounded-lg cursor-pointer hover:bg-gray-100">
             <Icon className={`h-6 w-6 ${active ? 'text-primary' : 'text-text-secondary'}`} />
@@ -137,7 +126,7 @@ const HeaderIcon: React.FC<HeaderIconProps> = ({ Icon, badge, active, href }) =>
             )}
         </div>
     );
-    return href ? <a href={href}>{content}</a> : content;
+    return href ? <a href={href}>{content}</a> : <div onClick={onClick}>{content}</div>;
 }
 
 

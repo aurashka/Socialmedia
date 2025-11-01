@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import type { User } from '../../types';
-import { sendFriendRequest, cancelFriendRequest, removeFriend, handleFriendRequest, banUser } from '../../services/firebase';
+import { sendFriendRequest, cancelFriendRequest, removeFriend, handleFriendRequest, banUser, blockUser, unblockUser } from '../../services/firebase';
+import { DotsHorizontalIcon } from '../Icons';
 
 interface ProfileHeaderProps {
   profileUser: User;
@@ -11,9 +12,22 @@ interface ProfileHeaderProps {
 
 const ProfileHeader: React.FC<ProfileHeaderProps> = ({ profileUser, currentUser, isFriendRequestSent, isFriendRequestReceived }) => {
   const [loading, setLoading] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
   
   const isCurrentUser = profileUser.id === currentUser.id;
   const isFriend = currentUser.friends && currentUser.friends[profileUser.id];
+  const isBlocked = currentUser.blocked && currentUser.blocked[profileUser.id];
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const handleAddFriend = async () => {
     setLoading(true);
@@ -40,6 +54,22 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({ profileUser, currentUser,
       await handleFriendRequest(currentUser.id, profileUser.id, accept);
       setLoading(false);
   }
+
+  const handleBlock = async () => {
+    if (window.confirm(`Are you sure you want to block ${profileUser.name}? You will no longer see their posts or profile.`)) {
+        setLoading(true);
+        setMenuOpen(false);
+        await blockUser(currentUser.id, profileUser.id);
+        setLoading(false);
+    }
+  };
+
+  const handleUnblock = async () => {
+    setLoading(true);
+    setMenuOpen(false);
+    await unblockUser(currentUser.id, profileUser.id);
+    setLoading(false);
+  };
   
   const handleBanUser = async () => {
      if (window.confirm(`Are you sure you want to BAN ${profileUser.name}? This action is irreversible.`)) {
@@ -103,7 +133,23 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({ profileUser, currentUser,
                 <p className="text-text-secondary">@{profileUser.handle}</p>
              </div>
              <div className="mt-4 sm:mt-0 flex items-center space-x-2">
-                {renderActionButtons()}
+                {!isBlocked && renderActionButtons()}
+                 {!isCurrentUser && (
+                  <div className="relative" ref={menuRef}>
+                    <button onClick={() => setMenuOpen(!menuOpen)} className="p-2 rounded-full hover:bg-gray-200" aria-label="More options">
+                      <DotsHorizontalIcon className="w-6 h-6 text-text-secondary" />
+                    </button>
+                    {menuOpen && (
+                      <div className="absolute right-0 mt-2 w-48 bg-card rounded-md shadow-lg py-1 z-20">
+                        {isBlocked ? (
+                          <button onClick={handleUnblock} disabled={loading} className="block w-full text-left px-4 py-2 text-sm text-text-primary hover:bg-gray-100">Unblock @{profileUser.handle}</button>
+                        ) : (
+                          <button onClick={handleBlock} disabled={loading} className="block w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-gray-100">Block @{profileUser.handle}</button>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
                 {currentUser.role === 'admin' && !isCurrentUser && (
                     <button onClick={handleBanUser} className="px-4 py-2 bg-red-500 text-white font-semibold rounded-md hover:bg-red-700">Ban User</button>
                 )}

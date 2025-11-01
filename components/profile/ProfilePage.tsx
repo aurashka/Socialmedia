@@ -5,8 +5,7 @@ import PostCard from '../PostCard';
 import CreatePost from '../CreatePost';
 import PostModal from '../PostModal';
 import { onValue, ref } from 'firebase/database';
-// FIX: The 'uploadImage' function is exported from 'imageUpload.ts', not 'firebase.ts'.
-import { db, createPost } from '../../services/firebase';
+import { db, createPost, unblockUser } from '../../services/firebase';
 import { uploadImage } from '../../services/imageUpload';
 
 interface ProfilePageProps {
@@ -19,21 +18,40 @@ interface ProfilePageProps {
 
 const ProfilePage: React.FC<ProfilePageProps> = ({ currentUser, profileUserId, users, posts, friendRequests }) => {
   const targetUserId = profileUserId || currentUser.id;
-  const profileUser = users[targetUserId];
   const [isPostModalOpen, setIsPostModalOpen] = useState(false);
   const [isFriendRequestSent, setIsFriendRequestSent] = useState(false);
 
   useEffect(() => {
-    if (!profileUser || !currentUser || profileUser.id === currentUser.id) return;
+    if (!users[targetUserId] || !currentUser || targetUserId === currentUser.id) return;
     
     // Check if the current user has sent a request to the profile user
-    const sentRequestRef = ref(db, `friendRequests/${profileUser.id}/${currentUser.id}`);
+    const sentRequestRef = ref(db, `friendRequests/${targetUserId}/${currentUser.id}`);
     const unsubscribe = onValue(sentRequestRef, (snapshot) => {
         setIsFriendRequestSent(snapshot.exists());
     });
     return () => unsubscribe();
-  }, [profileUser, currentUser]);
+  }, [targetUserId, users, currentUser]);
 
+  const profileUser = users[targetUserId];
+
+  if (currentUser.blocked?.[targetUserId]) {
+    const handleUnblock = async () => {
+        await unblockUser(currentUser.id, targetUserId);
+    };
+    return (
+        <div className="p-8 text-center bg-card rounded-lg shadow-sm max-w-2xl mx-auto mt-4">
+            <h2 className="text-xl font-bold">User Blocked</h2>
+            <p className="text-text-secondary mt-2">You can't see this profile because you've blocked this user.</p>
+            <button 
+                onClick={handleUnblock} 
+                className="mt-4 px-4 py-2 bg-primary text-white font-semibold rounded-md hover:bg-blue-700 transition-colors"
+            >
+                Unblock
+            </button>
+        </div>
+    );
+  }
+  
   if (!profileUser) {
     return <div className="p-4"><p>User not found or still loading...</p></div>;
   }
@@ -68,7 +86,6 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ currentUser, profileUserId, u
       alert("Error creating post. Please try again.");
     }
   };
-
 
   return (
     <div className="space-y-4 pb-4">
