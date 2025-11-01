@@ -45,11 +45,30 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ currentUser, profileUserId, u
   const handleCreatePost = async (content: string, imageFiles: File[]) => {
     let mediaUrls: string[] = [];
     if (imageFiles.length > 0) {
-      const uploadPromises = imageFiles.map(file => uploadImage(file));
-      mediaUrls = await Promise.all(uploadPromises);
+      try {
+        const uploadPromises = imageFiles.map(file => uploadImage(file));
+        mediaUrls = await Promise.all(uploadPromises);
+      } catch (error) {
+        console.error("Failed to upload one or more images:", error);
+        alert("Error uploading images. Please try again.");
+        return;
+      }
     }
-    await createPost({ userId: currentUser.id, content, mediaUrls });
+
+    const newPost: Omit<Post, 'id' | 'likes' | 'comments' | 'timestamp'> = {
+      userId: currentUser.id,
+      content,
+      mediaUrls: mediaUrls.length > 0 ? mediaUrls : undefined,
+    };
+
+    try {
+      await createPost(newPost);
+    } catch (error) {
+      console.error("Failed to create post:", error);
+      alert("Error creating post. Please try again.");
+    }
   };
+
 
   return (
     <div className="space-y-4 pb-4">
