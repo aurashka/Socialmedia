@@ -39,7 +39,7 @@ const FriendsPage: React.FC<FriendsPageProps> = ({ currentUser, users, friendReq
     return (
         <div className="p-2 sm:p-4 pb-4 space-y-6 max-w-5xl mx-auto">
             <div>
-                <h1 className="text-2xl font-bold mb-4">Friend Requests</h1>
+                <h1 className="text-2xl font-bold mb-4 text-primary dark:text-gray-100">Friend Requests</h1>
                 <div className="space-y-3">
                     {requestSenderIds.length > 0 ? (
                         requestSenderIds.map(senderId => (
@@ -52,7 +52,7 @@ const FriendsPage: React.FC<FriendsPageProps> = ({ currentUser, users, friendReq
                             />
                         ))
                     ) : (
-                        <div className="bg-card rounded-lg p-6 text-center text-text-secondary border border-divider">
+                        <div className="bg-surface dark:bg-gray-900 rounded-lg p-6 text-center text-secondary dark:text-gray-400 border border-divider dark:border-gray-800">
                             <p>You have no new friend requests.</p>
                         </div>
                     )}
@@ -60,7 +60,7 @@ const FriendsPage: React.FC<FriendsPageProps> = ({ currentUser, users, friendReq
             </div>
 
              <div>
-                <h1 className="text-2xl font-bold mb-4">People You May Know</h1>
+                <h1 className="text-2xl font-bold mb-4 text-primary dark:text-gray-100">People You May Know</h1>
                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
                     {suggestedUsers.slice(0, 15).map(user => (
                         <UserActionCard 

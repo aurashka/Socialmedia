@@ -70,31 +70,31 @@ const CompleteProfile: React.FC<CompleteProfileProps> = ({ user }) => {
   }
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
+    <div className="min-h-screen bg-background dark:bg-black flex items-center justify-center p-4">
       <div className="w-full max-w-md">
-        <div className="bg-card p-8 rounded-lg shadow-lg">
+        <div className="bg-surface dark:bg-gray-900 p-8 rounded-lg shadow-lg">
           <div className="text-center mb-6">
-            <h1 className="text-3xl font-bold text-primary">One Last Step</h1>
-            <p className="text-text-secondary mt-2">Complete your profile to join ConnectSphere.</p>
+            <h1 className="text-3xl font-bold text-primary dark:text-gray-100">One Last Step</h1>
+            <p className="text-secondary dark:text-gray-400 mt-2">Complete your profile to join ConnectSphere.</p>
           </div>
           {error && <p className="mb-4 text-red-500 bg-red-100 p-2 rounded-md text-center">{error}</p>}
           <form onSubmit={handleSubmit}>
             <div className="mb-4">
-              <label htmlFor="name" className="block text-sm font-bold mb-2 text-text-secondary">Full Name</label>
+              <label htmlFor="name" className="block text-sm font-bold mb-2 text-secondary dark:text-gray-400">Full Name</label>
               <input
                 id="name"
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="e.g., Jane Doe"
-                className="w-full p-3 border rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-primary"
+                className="w-full p-3 border dark:border-gray-700 rounded-md bg-background dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-primary"
                 required
               />
             </div>
             <div className="mb-6">
-                <label htmlFor="handle" className="block text-sm font-bold mb-2 text-text-secondary">Unique Handle</label>
-                <div className="flex items-center border rounded-md bg-background focus-within:ring-2 focus-within:ring-primary">
-                    <span className="pl-3 text-text-secondary">@</span>
+                <label htmlFor="handle" className="block text-sm font-bold mb-2 text-secondary dark:text-gray-400">Unique Handle</label>
+                <div className="flex items-center border dark:border-gray-700 rounded-md bg-background dark:bg-gray-800 focus-within:ring-2 focus-within:ring-primary">
+                    <span className="pl-3 text-secondary dark:text-gray-400">@</span>
                     <input
                         id="handle"
                         type="text"
@@ -106,12 +106,12 @@ const CompleteProfile: React.FC<CompleteProfileProps> = ({ user }) => {
                         minLength={3}
                     />
                 </div>
-                <p className="text-xs text-text-secondary mt-1 h-4">{getHandleMessage()}</p>
+                <p className="text-xs text-secondary dark:text-gray-500 mt-1 h-4">{getHandleMessage()}</p>
             </div>
             <button
               type="submit"
               disabled={loading || handleStatus !== 'available'}
-              className="w-full bg-primary text-white p-3 rounded-md font-bold hover:bg-blue-700 disabled:bg-blue-300 transition-colors"
+              className="w-full bg-accent text-white p-3 rounded-md font-bold hover:bg-blue-700 disabled:bg-blue-300 transition-colors"
             >
               {loading ? 'Saving...' : 'Complete Profile'}
             </button>

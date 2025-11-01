@@ -39,19 +39,19 @@ const UserActionCard: React.FC<UserActionCardProps> = ({ cardUser, currentUser, 
     
     if (isVertical) {
         return (
-            <div className="bg-card rounded-lg shadow-sm overflow-hidden border border-divider">
+            <div className="bg-surface dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden border border-divider dark:border-gray-700">
                 <a href={`#/profile/${cardUser.id}`} onClick={(e) => e.stopPropagation()}>
                     <img src={cardUser.avatarUrl} alt={cardUser.name} className="w-full h-40 object-cover"/>
                 </a>
                 <div className="p-3">
-                    <a href={`#/profile/${cardUser.id}`} onClick={(e) => e.stopPropagation()} className="font-bold text-text-primary hover:underline block">
+                    <a href={`#/profile/${cardUser.id}`} onClick={(e) => e.stopPropagation()} className="font-bold text-primary dark:text-gray-100 hover:underline block">
                         <div className="flex items-center gap-1.5 truncate">
                             <span className="truncate">{cardUser.name}</span>
                             {cardUser.badgeUrl && <img src={cardUser.badgeUrl} alt="badge" className="w-4 h-4 flex-shrink-0" />}
                         </div>
                     </a>
                     <div className="mt-3 flex flex-col gap-2">
-                        <button onClick={handleAddFriend} disabled={loading || actionText === 'Request Sent'} className="w-full px-3 py-2 text-sm bg-primary text-white font-semibold rounded-md hover:bg-black disabled:bg-gray-300 disabled:text-gray-500 whitespace-nowrap">
+                        <button onClick={handleAddFriend} disabled={loading || actionText === 'Request Sent'} className="w-full px-3 py-2 text-sm bg-accent text-white font-semibold rounded-md hover:bg-blue-700 disabled:bg-gray-300 dark:disabled:bg-gray-600 disabled:text-gray-500 whitespace-nowrap">
                             {loading ? '...' : actionText}
                         </button>
                     </div>
@@ -62,26 +62,26 @@ const UserActionCard: React.FC<UserActionCardProps> = ({ cardUser, currentUser, 
 
     // Horizontal card for requests/search results
     return (
-        <div className="bg-surface rounded-lg p-3 flex items-center justify-between transition-shadow hover:bg-gray-50 w-full">
+        <div className="bg-surface dark:bg-gray-800 rounded-lg p-3 flex items-center justify-between transition-shadow hover:bg-gray-50 dark:hover:bg-gray-700 w-full">
             <a href={`#/profile/${cardUser.id}`} className="flex items-center space-x-3 flex-grow min-w-0">
                 <img src={cardUser.avatarUrl} alt={cardUser.name} className="w-12 h-12 rounded-full object-cover"/>
                 <div>
-                    <div className="font-bold text-primary hover:underline flex items-center gap-1.5 truncate">
+                    <div className="font-bold text-primary dark:text-gray-100 hover:underline flex items-center gap-1.5 truncate">
                       <span className="truncate">{cardUser.name}</span>
                       {cardUser.badgeUrl && <img src={cardUser.badgeUrl} alt="badge" className="w-4 h-4 flex-shrink-0" />}
                     </div>
-                    <p className="text-sm text-secondary truncate">@{cardUser.handle}</p>
+                    <p className="text-sm text-secondary dark:text-gray-400 truncate">@{cardUser.handle}</p>
                 </div>
             </a>
             <div className="flex flex-col sm:flex-row gap-2 flex-shrink-0 ml-2">
                 {type === 'request' && (
                     <>
-                        <button onClick={handleAccept} disabled={loading} className="px-4 py-1.5 text-sm bg-primary text-white font-semibold rounded-md hover:bg-black disabled:bg-opacity-50 whitespace-nowrap">Confirm</button>
-                        <button onClick={handleDecline} disabled={loading} className="px-4 py-1.5 text-sm bg-gray-200 text-primary font-semibold rounded-md hover:bg-gray-300 disabled:opacity-50 whitespace-nowrap">Delete</button>
+                        <button onClick={handleAccept} disabled={loading} className="px-4 py-1.5 text-sm bg-accent text-white font-semibold rounded-md hover:bg-blue-700 disabled:bg-opacity-50 whitespace-nowrap">Confirm</button>
+                        <button onClick={handleDecline} disabled={loading} className="px-4 py-1.5 text-sm bg-gray-200 dark:bg-gray-600 text-primary dark:text-gray-100 font-semibold rounded-md hover:bg-gray-300 dark:hover:bg-gray-500 disabled:opacity-50 whitespace-nowrap">Delete</button>
                     </>
                 )}
                  {type === 'suggestion' && (
-                     <button onClick={handleAddFriend} disabled={loading || actionText === 'Request Sent'} className="px-4 py-1.5 text-sm bg-blue-100 text-primary font-semibold rounded-md hover:bg-blue-200 disabled:bg-gray-200 disabled:text-secondary whitespace-nowrap">
+                     <button onClick={handleAddFriend} disabled={loading || actionText === 'Request Sent'} className="px-4 py-1.5 text-sm bg-blue-100 dark:bg-blue-900/50 text-accent dark:text-blue-300 font-semibold rounded-md hover:bg-blue-200 dark:hover:bg-blue-900/70 disabled:bg-gray-200 dark:disabled:bg-gray-600 disabled:text-secondary dark:disabled:text-gray-400 whitespace-nowrap">
                         {loading ? '...' : actionText}
                     </button>
                  )}

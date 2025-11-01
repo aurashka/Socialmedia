@@ -186,7 +186,7 @@ const PostCard: React.FC<PostCardProps> = ({ post, user, currentUser, users }) =
           <div className="relative aspect-square overflow-hidden">
             <img src={post.mediaUrls[currentImageIndex]} alt={`Post media ${currentImageIndex + 1}`} className="w-full h-full object-contain" onDoubleClick={() => handleReactionClick('like')} />
             {animateLike && (
-                 <HeartIconFilled className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-white/90 animate-heart-pop-large" style={{ width: '100px', height: '100px' }}/>
+                 <HeartIconFilled className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-red-500/90 drop-shadow-lg animate-heart-pop-large" style={{ width: '100px', height: '100px' }}/>
             )}
           </div>
         )}

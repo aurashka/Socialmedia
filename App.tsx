@@ -67,10 +67,22 @@ const App: React.FC = () => {
   const [isPostModalOpen, setIsPostModalOpen] = useState(false);
 
   useEffect(() => {
-    const handleHashChange = () => setRoute(parseHash());
-    handleHashChange();
-    window.addEventListener('hashchange', handleHashChange);
-    return () => window.removeEventListener('hashchange', handleHashChange);
+    const handleHashChange = (event?: HashChangeEvent) => {
+        if (event && event.oldURL.includes('#/') && !event.newURL.includes('#/')) {
+            const confirmed = window.confirm("Are you sure you want to exit ConnectSphere?");
+            if (!confirmed) {
+                // Prevent navigation by restoring the old hash
+                window.location.hash = new URL(event.oldURL).hash || '/';
+                return; 
+            }
+        }
+        setRoute(parseHash());
+    };
+    
+    setRoute(parseHash()); // Initial call
+    
+    window.addEventListener('hashchange', handleHashChange as EventListener);
+    return () => window.removeEventListener('hashchange', handleHashChange as EventListener);
   }, []);
 
   useEffect(() => {
@@ -320,7 +332,7 @@ const App: React.FC = () => {
 
   return (
     <ThemeProvider>
-      <div className="bg-background dark:bg-black min-h-screen pb-20 md:pb-0">
+      <div className="bg-background dark:bg-black min-h-screen pb-20 md:pb-0 text-primary dark:text-gray-100">
         <Header 
           currentUser={currentUser} 
           friendRequestCount={Object.keys(friendRequests).length}

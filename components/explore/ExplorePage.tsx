@@ -51,16 +51,16 @@ const ExplorePage: React.FC<ExplorePageProps> = ({ currentUser, users, posts, fr
 
 
     return (
-        <div className="bg-background min-h-screen">
+        <div className="bg-background dark:bg-black min-h-screen">
             <main className="max-w-5xl mx-auto py-4 px-2 space-y-6">
-                <div onClick={() => setIsSearchOpen(true)} className="flex items-center bg-divider rounded-md h-10 px-4 cursor-text">
-                    <SearchIcon className="h-5 w-5 text-secondary" />
-                    <span className="ml-3 text-secondary">Search</span>
+                <div onClick={() => setIsSearchOpen(true)} className="flex items-center bg-gray-200 dark:bg-gray-800 rounded-md h-10 px-4 cursor-text">
+                    <SearchIcon className="h-5 w-5 text-secondary dark:text-gray-400" />
+                    <span className="ml-3 text-secondary dark:text-gray-400">Search</span>
                 </div>
 
                 {suggestedUsers.length > 0 && (
                     <div>
-                        <h2 className="text-lg font-bold text-primary mb-3">Suggested for you</h2>
+                        <h2 className="text-lg font-bold text-primary dark:text-gray-100 mb-3">Suggested for you</h2>
                         <div className="flex space-x-4 overflow-x-auto pb-2 -mx-2 px-2">
                             {suggestedUsers.map(user => (
                                 <div key={user.id} className="w-40 flex-shrink-0">
@@ -82,7 +82,7 @@ const ExplorePage: React.FC<ExplorePageProps> = ({ currentUser, users, posts, fr
                     {explorePosts.map((post) => (
                         <div 
                             key={post.id} 
-                            className="aspect-square bg-divider cursor-pointer group relative"
+                            className="aspect-square bg-divider dark:bg-gray-800 cursor-pointer group relative"
                             onClick={() => setSelectedPost(post)}
                         >
                             {post.mediaUrls && post.mediaUrls.length > 0 && (
