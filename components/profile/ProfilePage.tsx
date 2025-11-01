@@ -154,6 +154,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ currentUser, profileUserId, u
           post={selectedPost}
           user={users[selectedPost.userId]}
           currentUser={currentUser}
+          users={users}
           onClose={() => setSelectedPost(null)}
         />
       )}

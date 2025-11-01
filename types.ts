@@ -24,10 +24,33 @@ export interface Post {
   mediaType?: 'video'; // Only used for the legacy video post
   timestamp: number;
   reactions?: Record<string, Record<string, boolean>>; // e.g. { like: { userId1: true } }
-  comments: number;
+  commentCount: number;
   tag?: string;
   isPublic?: boolean;
 }
+
+export interface Comment {
+  id: string;
+  postId: string;
+  userId: string;
+  content: string;
+  timestamp: number;
+  parentCommentId?: string; // for replies
+  reactions?: Record<string, Record<string, boolean>>; // { like: { userId1: true } }
+  replyCount?: number;
+}
+
+export interface Notification {
+  id: string;
+  recipientId: string;
+  senderId: string;
+  type: 'like' | 'comment' | 'reply' | 'mention' | 'friend_request';
+  postId?: string;
+  commentId?: string;
+  read: boolean;
+  timestamp: number;
+}
+
 
 export interface Story {
   id: string;

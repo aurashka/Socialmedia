@@ -10,7 +10,10 @@ import {
   equalTo,
   update,
   remove,
-  runTransaction
+  runTransaction,
+  limitToLast,
+  endBefore,
+  orderByKey
 } from 'firebase/database';
 import { 
   getAuth, 
@@ -20,7 +23,7 @@ import {
   onAuthStateChanged,
   type User as FirebaseUser
 } from 'firebase/auth';
-import type { Post, Story, User } from '../types';
+import type { Post, Story, User, Comment, Notification } from '../types';
 
 const firebaseConfig = {
   apiKey: "AIzaSyAPPZgVrZF9SEaS42xx8RcsnM2i8EpenUQ",
@@ -127,8 +130,26 @@ export const setUserBadge = (userId: string, badgeUrl: string | null) => {
 
 
 // --- Post & Story Functions ---
+export const POSTS_PER_PAGE = 5;
 
-export const createPost = async (postData: Omit<Post, 'id' | 'comments' | 'timestamp'>) => {
+export const fetchPosts = async (lastPostTimestamp?: number): Promise<Post[]> => {
+    const postsRef = ref(db, 'posts');
+    const postsQuery = lastPostTimestamp
+        ? query(postsRef, orderByChild('timestamp'), endBefore(lastPostTimestamp), limitToLast(POSTS_PER_PAGE))
+        : query(postsRef, orderByChild('timestamp'), limitToLast(POSTS_PER_PAGE));
+    
+    const snapshot = await get(postsQuery);
+    if (snapshot.exists()) {
+        const postsData = snapshot.val();
+        const postsArray = Object.values(postsData) as Post[];
+        // Firebase returns them in ascending order when using limitToLast, so we reverse
+        return postsArray.sort((a, b) => b.timestamp - a.timestamp);
+    }
+    return [];
+};
+
+
+export const createPost = async (postData: Omit<Post, 'id' | 'commentCount' | 'timestamp'>) => {
     const postsRef = ref(db, 'posts');
     const newPostRef = push(postsRef);
 
@@ -138,12 +159,12 @@ export const createPost = async (postData: Omit<Post, 'id' | 'comments' | 'times
             (acc as any)[key] = value;
         }
         return acc;
-    }, {} as Omit<Post, 'id' | 'comments' | 'timestamp'>);
+    }, {} as Omit<Post, 'id' | 'commentCount' | 'timestamp'>);
 
     await set(newPostRef, {
         ...cleanPostData,
         id: newPostRef.key,
-        comments: 0,
+        commentCount: 0,
         timestamp: Date.now(),
         isPublic: true,
     });
@@ -206,6 +227,70 @@ export const createStory = async (storyData: Omit<Story, 'id' | 'timestamp'>) =>
         timestamp: Date.now()
     });
 };
+
+// --- Comment Functions ---
+export const COMMENTS_PER_PAGE = 3;
+
+export const addComment = async (commentData: Omit<Comment, 'id' | 'timestamp'>) => {
+    const commentsRef = ref(db, 'comments');
+    const newCommentRef = push(commentsRef);
+    
+    const newComment: Comment = {
+        ...commentData,
+        id: newCommentRef.key!,
+        timestamp: Date.now(),
+    };
+    
+    await set(newCommentRef, newComment);
+    
+    // Use a transaction to increment the post's comment count
+    const postCommentCountRef = ref(db, `posts/${commentData.postId}/commentCount`);
+    await runTransaction(postCommentCountRef, (currentCount) => (currentCount || 0) + 1);
+
+    if (commentData.parentCommentId) {
+        const parentCommentReplyCountRef = ref(db, `comments/${commentData.parentCommentId}/replyCount`);
+        await runTransaction(parentCommentReplyCountRef, (currentCount) => (currentCount || 0) + 1);
+    }
+};
+
+export const fetchComments = async (postId: string, lastCommentTimestamp?: number): Promise<Comment[]> => {
+    const commentsRef = ref(db, 'comments');
+    const commentsQuery = query(
+        commentsRef, 
+        orderByChild('postId'), 
+        equalTo(postId)
+    );
+    
+    const snapshot = await get(commentsQuery);
+    if (!snapshot.exists()) return [];
+    
+    let allComments = Object.values(snapshot.val()) as Comment[];
+    // Filter for top-level comments only
+    allComments = allComments.filter(c => !c.parentCommentId);
+    
+    // Sort by timestamp descending
+    allComments.sort((a, b) => b.timestamp - a.timestamp);
+    
+    let startIndex = 0;
+    if (lastCommentTimestamp) {
+        startIndex = allComments.findIndex(c => c.timestamp === lastCommentTimestamp) + 1;
+    }
+    
+    return allComments.slice(startIndex, startIndex + COMMENTS_PER_PAGE);
+};
+
+
+export const fetchReplies = async (commentId: string): Promise<Comment[]> => {
+    const repliesRef = ref(db, 'comments');
+    const repliesQuery = query(repliesRef, orderByChild('parentCommentId'), equalTo(commentId));
+    
+    const snapshot = await get(repliesQuery);
+    if (!snapshot.exists()) return [];
+    
+    const replies = Object.values(snapshot.val()) as Comment[];
+    return replies.sort((a, b) => a.timestamp - b.timestamp); // Show replies oldest to newest
+};
+
 
 export const seedDatabase = async () => {
   const usersRef = ref(db, 'users');

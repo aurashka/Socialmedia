@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { onValue, ref } from 'firebase/database';
-import { db, onAuthChange, createPost } from './services/firebase';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
+// FIX: Import 'query' and 'limitToLast' from 'firebase/database'
+import { onValue, ref, query, limitToLast } from 'firebase/database';
+import { db, onAuthChange, createPost, fetchPosts, POSTS_PER_PAGE } from './services/firebase';
 import type { User, Post, Story, Community, Channel } from './types';
 import type { User as FirebaseUser } from 'firebase/auth';
 import Header from './components/Header';
@@ -60,6 +61,8 @@ const App: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [route, setRoute] = useState<Route>({ name: 'home' }); // Default to home
   const [isPostModalOpen, setIsPostModalOpen] = useState(false);
+  const [isFetchingPosts, setIsFetchingPosts] = useState(false);
+  const [hasMorePosts, setHasMorePosts] = useState(true);
 
   useEffect(() => {
     const handleHashChange = () => setRoute(parseHash());
@@ -111,17 +114,36 @@ const App: React.FC = () => {
     };
   }, []);
   
+  const loadInitialPosts = useCallback(async () => {
+    if (isFetchingPosts) return;
+    setIsFetchingPosts(true);
+    const initialPosts = await fetchPosts();
+    setPosts(initialPosts);
+    setHasMorePosts(initialPosts.length === POSTS_PER_PAGE);
+    setIsFetchingPosts(false);
+  }, [isFetchingPosts]);
+  
   useEffect(() => {
     if (!currentUser) return;
+
+    loadInitialPosts();
 
     const usersRef = ref(db, 'users/');
     const usersUnsub = onValue(usersRef, (snapshot) => setUsers(snapshot.val() || {}));
 
+    // Listener for real-time post updates (new posts, reactions, comments)
     const postsRef = ref(db, 'posts/');
-    const postsUnsub = onValue(postsRef, (snapshot) => {
-      const postsData = snapshot.val() || {};
-      const postsArray = Object.values(postsData) as Post[];
-      setPosts(postsArray.sort((a, b) => b.timestamp - a.timestamp));
+    const postsUnsub = onValue(query(postsRef, limitToLast(1)), (snapshot) => {
+       // A simple listener to add new posts to the top of the feed in real-time
+        if (snapshot.exists()) {
+            const newPostsData = snapshot.val();
+            const newPostsArray = Object.values(newPostsData) as Post[];
+            setPosts(prevPosts => {
+                const existingPostIds = new Set(prevPosts.map(p => p.id));
+                const uniqueNewPosts = newPostsArray.filter(p => !existingPostIds.has(p.id));
+                return [...uniqueNewPosts, ...prevPosts];
+            });
+        }
     });
 
     const storiesRef = ref(db, 'stories/');
@@ -153,7 +175,20 @@ const App: React.FC = () => {
       communitiesUnsub();
       channelsUnsub();
     }
-  }, [currentUser]);
+  }, [currentUser, loadInitialPosts]);
+
+  const loadMorePosts = useCallback(async () => {
+    if (isFetchingPosts || !hasMorePosts || posts.length === 0) return;
+    
+    setIsFetchingPosts(true);
+    const lastPost = posts[posts.length - 1];
+    const newPosts = await fetchPosts(lastPost.timestamp);
+    
+    setPosts(prevPosts => [...prevPosts, ...newPosts]);
+    setHasMorePosts(newPosts.length === POSTS_PER_PAGE);
+    setIsFetchingPosts(false);
+  }, [isFetchingPosts, hasMorePosts, posts]);
+
 
   const handleCreatePost = async (content: string, imageFiles: File[]) => {
     if (!currentUser) return;
@@ -170,7 +205,7 @@ const App: React.FC = () => {
       }
     }
 
-    const newPost: Omit<Post, 'id' | 'comments' | 'timestamp'> = {
+    const newPost: Omit<Post, 'id' | 'commentCount' | 'timestamp'> = {
       userId: currentUser.id,
       content,
       mediaUrls: mediaUrls.length > 0 ? mediaUrls : undefined,
@@ -213,8 +248,11 @@ const App: React.FC = () => {
                         users={filteredUsers}
                         posts={filteredPosts}
                         stories={filteredStories}
-                        loading={posts.length === 0}
+                        loading={posts.length === 0 && isFetchingPosts}
                         onOpenPostModal={() => setIsPostModalOpen(true)}
+                        loadMorePosts={loadMorePosts}
+                        hasMorePosts={hasMorePosts}
+                        isFetchingPosts={isFetchingPosts}
                       />;
           case 'profile':
               return <ProfilePage

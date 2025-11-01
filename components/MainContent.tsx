@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import type { User, Post, Story } from '../types';
 import StoryCard from './StoryCard';
 import CreatePost from './CreatePost';
 import PostCard from './PostCard';
 import StoryViewer from './StoryViewer';
+import PostCardShimmer from './shimmers/PostCardShimmer';
+import { useIntersectionObserver } from '../hooks/useIntersectionObserver';
 
 interface MainContentProps {
   currentUser: User;
@@ -12,11 +14,32 @@ interface MainContentProps {
   stories: Story[];
   loading: boolean;
   onOpenPostModal: () => void;
+  loadMorePosts: () => void;
+  hasMorePosts: boolean;
+  isFetchingPosts: boolean;
 }
 
-const MainContent: React.FC<MainContentProps> = ({ currentUser, users, posts, stories, loading, onOpenPostModal }) => {
+const MainContent: React.FC<MainContentProps> = ({ 
+  currentUser, 
+  users, 
+  posts, 
+  stories, 
+  loading, 
+  onOpenPostModal,
+  loadMorePosts,
+  hasMorePosts,
+  isFetchingPosts
+}) => {
   const [viewingStoriesOfUser, setViewingStoriesOfUser] = useState<User | null>(null);
   
+  const loadMoreRef = useRef<HTMLDivElement>(null);
+
+  useIntersectionObserver({
+    target: loadMoreRef,
+    onIntersect: loadMorePosts,
+    enabled: hasMorePosts && !isFetchingPosts,
+  });
+
   const userStoriesMap = stories.reduce((acc, story) => {
     if (!acc[story.userId]) {
         acc[story.userId] = [];
@@ -60,12 +83,19 @@ const MainContent: React.FC<MainContentProps> = ({ currentUser, users, posts, st
       {/* Feed */}
       <div className="space-y-4">
         {loading ? (
-          <p>Loading posts...</p>
+          <>
+            <PostCardShimmer />
+            <PostCardShimmer />
+          </>
         ) : (
           posts.map(post => (
-            <PostCard key={post.id} post={post} user={users[post.userId]} currentUser={currentUser} />
+            <PostCard key={post.id} post={post} user={users[post.userId]} currentUser={currentUser} users={users} />
           ))
         )}
+        <div ref={loadMoreRef} className="h-10">
+          {isFetchingPosts && !loading && <PostCardShimmer />}
+          {!hasMorePosts && posts.length > 0 && <p className="text-center text-secondary">You've reached the end.</p>}
+        </div>
       </div>
 
       {viewingStoriesOfUser && (

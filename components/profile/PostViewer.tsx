@@ -10,6 +10,8 @@ interface PostViewerProps {
   user?: User;
   currentUser: User;
   onClose: () => void;
+  // FIX: Add 'users' to props to parse mentions in content.
+  users: Record<string, User>;
 }
 
 const REACTION_TYPES = ['like', 'love', 'haha', 'wow', 'sad', 'angry'];
@@ -41,7 +43,7 @@ const ReactionTextColors: { [key: string]: string } = {
   angry: 'text-red-600',
 };
 
-const PostViewer: React.FC<PostViewerProps> = ({ post: initialPost, user, currentUser, onClose }) => {
+const PostViewer: React.FC<PostViewerProps> = ({ post: initialPost, user, currentUser, onClose, users }) => {
   const [post, setPost] = useState(initialPost);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -220,7 +222,7 @@ const PostViewer: React.FC<PostViewerProps> = ({ post: initialPost, user, curren
                 </div>
               </div>
             ) : (
-              post.content && <p className="whitespace-pre-wrap text-sm">{parseContent(post.content)}</p>
+              post.content && <p className="whitespace-pre-wrap text-sm">{parseContent(post.content, users)}</p>
             )}
              {/* Placeholder for comments */}
             <div className="text-center text-secondary py-10">Comments section coming soon.</div>
