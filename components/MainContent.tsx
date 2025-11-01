@@ -62,16 +62,9 @@ const MainContent: React.FC<MainContentProps> = ({
       
       {/* Feed */}
       <div className="space-y-8">
-        {loading ? (
-          <>
-            <PostCardShimmer />
-            <PostCardShimmer />
-          </>
-        ) : (
-          posts.map(post => (
-            <PostCard key={post.id} post={post} user={users[post.userId]} currentUser={currentUser} users={users} onOpenCommentSheet={onOpenCommentSheet} />
-          ))
-        )}
+        {posts.map(post => (
+          <PostCard key={post.id} post={post} user={users[post.userId]} currentUser={currentUser} users={users} onOpenCommentSheet={onOpenCommentSheet} />
+        ))}
       </div>
 
       {viewingStoriesOfUser && (

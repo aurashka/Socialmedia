@@ -477,10 +477,6 @@ const App: React.FC = () => {
   if (!authUser) {
     return <Auth />;
   }
-
-  if (!currentUser) {
-    return <LoadingSpinner />;
-  }
   
   if (currentUser && (!currentUser.handle || !currentUser.name)) {
     return <CompleteProfile user={currentUser} />;
@@ -504,10 +500,10 @@ const App: React.FC = () => {
           notifications={notifications}
         />
         <main className={`pt-14 ${isMessagesPage ? 'h-screen' : ''} ${isAdminPage ? 'h-[calc(100vh-56px)] overflow-y-auto' : ''}`}>
-          {renderContent()}
+          {currentUser && renderContent()}
         </main>
-        {!isMessagesPage && !isAdminPage && <BottomNav onPostClick={() => setIsPostModalOpen(true)} currentUser={currentUser}/>}
-        {isPostModalOpen && (
+        {currentUser && !isMessagesPage && !isAdminPage && <BottomNav onPostClick={() => setIsPostModalOpen(true)} currentUser={currentUser}/>}
+        {isPostModalOpen && currentUser && (
           <PostModal
             currentUser={currentUser}
             onClose={() => setIsPostModalOpen(false)}
