@@ -221,19 +221,23 @@ const App: React.FC = () => {
     return <CompleteProfile user={currentUser!} />;
   }
 
+  const isExplorePage = route.name === 'explore';
+
   return (
     <div className="bg-background min-h-screen text-primary pb-20 md:pb-0">
-      <Header 
-        currentUser={currentUser} 
-        friendRequestCount={Object.keys(friendRequests).length}
-        users={users}
-        friendRequests={friendRequests}
-        communities={communities}
-        channels={channels}
-      />
-      <main className="flex pt-14 max-w-7xl mx-auto">
-        <SidebarLeft currentUser={currentUser} />
-        <div className="w-full md:ml-72 transition-all duration-300">
+      {!isExplorePage && (
+        <Header 
+          currentUser={currentUser} 
+          friendRequestCount={Object.keys(friendRequests).length}
+          users={users}
+          friendRequests={friendRequests}
+          communities={communities}
+          channels={channels}
+        />
+      )}
+      <main className={!isExplorePage ? "flex pt-14 max-w-7xl mx-auto" : ""}>
+        {!isExplorePage && <SidebarLeft currentUser={currentUser} />}
+        <div className={!isExplorePage ? "w-full md:ml-72 transition-all duration-300" : "w-full"}>
           {renderContent()}
         </div>
       </main>

@@ -9,7 +9,8 @@ import {
   orderByChild, 
   equalTo,
   update,
-  remove
+  remove,
+  runTransaction
 } from 'firebase/database';
 import { 
   getAuth, 
@@ -123,7 +124,7 @@ export const banUser = (userId: string) => {
 
 // --- Post & Story Functions ---
 
-export const createPost = async (postData: Omit<Post, 'id' | 'likes' | 'comments' | 'timestamp'>) => {
+export const createPost = async (postData: Omit<Post, 'id' | 'comments' | 'timestamp'>) => {
     const postsRef = ref(db, 'posts');
     const newPostRef = push(postsRef);
 
@@ -133,15 +134,46 @@ export const createPost = async (postData: Omit<Post, 'id' | 'likes' | 'comments
             (acc as any)[key] = value;
         }
         return acc;
-    }, {} as Omit<Post, 'id' | 'likes' | 'comments' | 'timestamp'>);
+    }, {} as Omit<Post, 'id' | 'comments' | 'timestamp'>);
 
     await set(newPostRef, {
         ...cleanPostData,
         id: newPostRef.key,
-        likes: 0,
         comments: 0,
         timestamp: Date.now(),
         isPublic: true,
+    });
+};
+
+export const toggleReaction = async (postId: string, userId: string, reactionType: string) => {
+    const postReactionsRef = ref(db, `posts/${postId}/reactions`);
+    
+    await runTransaction(postReactionsRef, (currentData) => {
+        const reactions = currentData || {};
+        let userPreviousReaction: string | null = null;
+        
+        // Find and remove any existing reaction from the user
+        for (const type in reactions) {
+            if (reactions[type] && reactions[type][userId]) {
+                userPreviousReaction = type;
+                delete reactions[type][userId];
+                // If a reaction type becomes empty after removing the user, delete the type key
+                if (Object.keys(reactions[type]).length === 0) {
+                    delete reactions[type];
+                }
+                break; // A user can only have one reaction, so we can stop
+            }
+        }
+        
+        // If the toggled reaction is different from the previous one (or if there was none), add the new one
+        if (userPreviousReaction !== reactionType) {
+            if (!reactions[reactionType]) {
+                reactions[reactionType] = {};
+            }
+            reactions[reactionType][userId] = true;
+        }
+
+        return reactions;
     });
 };
 

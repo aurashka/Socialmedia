@@ -22,7 +22,7 @@ export interface Post {
   mediaUrls?: string[]; // Changed from mediaUrl to support multiple images
   mediaType?: 'video'; // Only used for the legacy video post
   timestamp: number;
-  likes: number;
+  reactions?: Record<string, Record<string, boolean>>; // e.g. { like: { userId1: true } }
   comments: number;
   tag?: string;
   isPublic?: boolean;
@@ -48,7 +48,7 @@ export interface Community {
 }
 
 export interface Channel {
-  id: string;
+  id:string;
   name: string;
   description: string;
   avatarUrl: string;

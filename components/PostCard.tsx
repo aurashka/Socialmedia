@@ -1,15 +1,46 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import type { User, Post } from '../types';
-import { DotsHorizontalIcon, HeartIcon, ChatIcon, MessageIcon, TrashIcon, ChevronLeftIcon, ChevronRightIcon, PencilIcon, LockClosedIcon } from './Icons';
+import { DotsHorizontalIcon, ThumbUpIcon, ChatIcon, MessageIcon, TrashIcon, ChevronLeftIcon, ChevronRightIcon, PencilIcon, LockClosedIcon } from './Icons';
 import { parseContent } from '../utils/textUtils';
 import ImageLightbox from './ImageLightbox';
-import { updatePost, deletePost, updatePostPrivacy } from '../services/firebase';
+import { updatePost, deletePost, updatePostPrivacy, toggleReaction } from '../services/firebase';
+import { LikeReactionIcon, LoveReactionIcon, HahaReactionIcon, WowReactionIcon, SadReactionIcon, AngryReactionIcon } from './ReactionIcons';
 
 interface PostCardProps {
   post: Post;
   user?: User;
   currentUser: User;
 }
+
+const REACTION_TYPES = ['like', 'love', 'haha', 'wow', 'sad', 'angry'];
+
+const ReactionComponents: { [key: string]: React.FC<any> } = {
+  like: LikeReactionIcon,
+  love: LoveReactionIcon,
+  haha: HahaReactionIcon,
+  wow: WowReactionIcon,
+  sad: SadReactionIcon,
+  angry: AngryReactionIcon,
+};
+
+const ReactionDisplayComponents: { [key: string]: React.FC<any> } = {
+  like: (props) => <LikeReactionIcon {...props} className="w-5 h-5" />,
+  love: (props) => <LoveReactionIcon {...props} className="w-5 h-5" />,
+  haha: (props) => <HahaReactionIcon {...props} className="w-5 h-5" />,
+  wow: (props) => <WowReactionIcon {...props} className="w-5 h-5" />,
+  sad: (props) => <SadReactionIcon {...props} className="w-5 h-5" />,
+  angry: (props) => <AngryReactionIcon {...props} className="w-5 h-5" />,
+};
+
+const ReactionTextColors: { [key: string]: string } = {
+  like: 'text-blue-500',
+  love: 'text-red-500',
+  haha: 'text-yellow-500',
+  wow: 'text-yellow-500',
+  sad: 'text-yellow-500',
+  angry: 'text-red-600',
+};
+
 
 const PostCard: React.FC<PostCardProps> = ({ post, user, currentUser }) => {
   const [lightboxImage, setLightboxImage] = useState<string | null>(null);
@@ -18,9 +49,39 @@ const PostCard: React.FC<PostCardProps> = ({ post, user, currentUser }) => {
   const [editedContent, setEditedContent] = useState(post.content);
   const [isSaving, setIsSaving] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [showReactions, setShowReactions] = useState(false);
+  const reactionTimerRef = useRef<number>();
   
   const menuRef = useRef<HTMLDivElement>(null);
   const isOwner = currentUser?.id === post.userId;
+
+  const reactionsSummary = useMemo(() => {
+    if (!post.reactions) {
+        return { total: 0, top: [], userReaction: null };
+    }
+    
+    let total = 0;
+    const counts: { [key: string]: number } = {};
+    let userReaction: string | null = null;
+
+    for (const type in post.reactions) {
+        const reactors = post.reactions[type];
+        if (reactors) {
+            const count = Object.keys(reactors).length;
+            if (count > 0) {
+                counts[type] = count;
+                total += count;
+                if (!userReaction && reactors[currentUser.id]) {
+                    userReaction = type;
+                }
+            }
+        }
+    }
+    
+    const top = Object.keys(counts).sort((a, b) => counts[b] - counts[a]).slice(0, 3);
+    
+    return { total, top, userReaction };
+  }, [post.reactions, currentUser.id]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -33,6 +94,27 @@ const PostCard: React.FC<PostCardProps> = ({ post, user, currentUser }) => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
+
+  const handleReactionClick = async (reactionType: string) => {
+    setShowReactions(false);
+    try {
+        await toggleReaction(post.id, currentUser.id, reactionType);
+    } catch (error) {
+        console.error("Failed to react:", error);
+        alert("Could not save reaction. Please try again.");
+    }
+  };
+
+  const handleShowReactions = () => {
+    clearTimeout(reactionTimerRef.current);
+    setShowReactions(true);
+  };
+  
+  const handleHideReactions = () => {
+    reactionTimerRef.current = window.setTimeout(() => {
+        setShowReactions(false);
+    }, 300);
+  };
   
   const handleEdit = () => {
     setIsEditing(true);
@@ -126,7 +208,7 @@ const PostCard: React.FC<PostCardProps> = ({ post, user, currentUser }) => {
     return (
         <div className="relative group bg-gray-100 mt-3 rounded-lg overflow-hidden border-b border-divider">
             <div className="relative aspect-square overflow-hidden flex justify-center items-center">
-                 <img src={images[currentImageIndex]} alt={`Post media ${currentImageIndex + 1}`} className="max-h-full max-w-full object-contain transition-transform duration-300" onDoubleClick={() => console.log('double click like')} />
+                 <img src={images[currentImageIndex]} alt={`Post media ${currentImageIndex + 1}`} className="max-h-full max-w-full object-contain transition-transform duration-300" onDoubleClick={() => handleReactionClick(reactionsSummary.userReaction ? reactionsSummary.userReaction : 'like')} />
             </div>
             
             {images.length > 1 && (
@@ -207,15 +289,46 @@ const PostCard: React.FC<PostCardProps> = ({ post, user, currentUser }) => {
       {/* Post Actions */}
        <div className="p-2 flex justify-between items-center">
           <div className="flex space-x-2">
-              <ActionButton Icon={HeartIcon} />
-              <ActionButton Icon={ChatIcon} />
-              <ActionButton Icon={MessageIcon} />
+            <div className="relative" onMouseEnter={handleShowReactions} onMouseLeave={handleHideReactions}>
+                {showReactions && (
+                    <div className="absolute bottom-full mb-2 flex space-x-1 bg-white shadow-lg rounded-full p-1 border">
+                        {REACTION_TYPES.map(type => {
+                            const Icon = ReactionComponents[type];
+                            return (
+                                <button key={type} onClick={() => handleReactionClick(type)} className="transform hover:scale-125 transition-transform duration-150">
+                                    <Icon />
+                                </button>
+                            )
+                        })}
+                    </div>
+                )}
+                <button
+                  className={`flex justify-center items-center p-2 rounded-md transition-colors duration-200 font-semibold space-x-2 ${reactionsSummary.userReaction ? ReactionTextColors[reactionsSummary.userReaction] : 'text-primary hover:bg-gray-100'}`}
+                  onClick={() => handleReactionClick(reactionsSummary.userReaction || 'like')}
+                >
+                  {reactionsSummary.userReaction ? React.createElement(ReactionDisplayComponents[reactionsSummary.userReaction], {className: 'w-6 h-6 !bg-transparent !border-none !p-0'}) : <ThumbUpIcon className="w-6 h-6" />}
+                  <span className="capitalize">{reactionsSummary.userReaction || 'Like'}</span>
+                </button>
+            </div>
+            <ActionButton Icon={ChatIcon} text="Comment" />
+            <ActionButton Icon={MessageIcon} text="Share" />
           </div>
        </div>
 
       {/* Post Stats & Content */}
-      <div className="px-4 pb-4 space-y-1">
-        <span className="font-bold text-primary text-sm">{post.likes} likes</span>
+      <div className="px-4 pb-4 space-y-2">
+        {reactionsSummary.total > 0 && (
+            <div className="flex items-center space-x-2">
+                <div className="flex items-center">
+                    {reactionsSummary.top.map(type => {
+                        const Icon = ReactionDisplayComponents[type];
+                        return <Icon key={type} className="w-5 h-5 -mr-1" />;
+                    })}
+                </div>
+                <span className="text-sm text-secondary hover:underline cursor-pointer">{reactionsSummary.total}</span>
+            </div>
+        )}
+        
         {isEditing ? (
             <div>
               <textarea
@@ -254,11 +367,13 @@ const PostCard: React.FC<PostCardProps> = ({ post, user, currentUser }) => {
 
 interface ActionButtonProps {
     Icon: React.ElementType;
+    text: string;
 }
 
-const ActionButton: React.FC<ActionButtonProps> = ({ Icon }) => (
-    <button className="flex justify-center items-center p-2 text-primary hover:bg-gray-100 rounded-md transition-colors duration-200">
+const ActionButton: React.FC<ActionButtonProps> = ({ Icon, text }) => (
+    <button className="flex justify-center items-center p-2 text-primary hover:bg-gray-100 rounded-md transition-colors duration-200 font-semibold space-x-2">
         <Icon className="w-6 h-6" />
+        <span>{text}</span>
     </button>
 )
 
