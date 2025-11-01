@@ -9,14 +9,16 @@ export interface User {
   coverPhotoUrl?: string;
   bio?: string;
   isPublic?: boolean;
+  friends?: Record<string, boolean>; // Record of friend user IDs
+  isBanned?: boolean;
 }
 
 export interface Post {
   id: string;
   userId: string;
   content: string;
-  mediaUrl?: string;
-  mediaType?: 'image' | 'video'; // Keep video for seeded data, but user posts will be 'image'
+  mediaUrls?: string[]; // Changed from mediaUrl to support multiple images
+  mediaType?: 'video'; // Only used for the legacy video post
   timestamp: number;
   likes: number;
   comments: number;
@@ -27,4 +29,5 @@ export interface Story {
   id: string;
   userId: string;
   imageUrl: string;
+  timestamp: number; // Added timestamp for sorting stories
 }

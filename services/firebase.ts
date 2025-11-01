@@ -7,7 +7,9 @@ import {
   push, 
   query, 
   orderByChild, 
-  equalTo 
+  equalTo,
+  update,
+  remove
 } from 'firebase/database';
 import { 
   getAuth, 
@@ -47,6 +49,7 @@ export const getUserProfile = async (userId: string): Promise<User | null> => {
 
 export const updateUserProfile = async (userId: string, data: Partial<User>): Promise<void> => {
     const userRef = ref(db, `users/${userId}`);
+    // Use update instead of set to avoid overwriting the whole object
     const snapshot = await get(userRef);
     const existingProfile = snapshot.exists() ? snapshot.val() : {};
     return set(userRef, { ...existingProfile, ...data, id: userId });
@@ -59,13 +62,47 @@ export const isHandleUnique = async (handle: string, currentUserId?: string): Pr
     if (!snapshot.exists()) {
         return true;
     }
-    // If handle exists, check if it belongs to the current user
     if (currentUserId) {
         const users = snapshot.val();
         const userId = Object.keys(users)[0];
         return userId === currentUserId;
     }
     return false;
+};
+
+// --- Friend Request and Management Functions ---
+export const sendFriendRequest = (fromId: string, toId: string) => {
+    const requestRef = ref(db, `friendRequests/${toId}/${fromId}`);
+    return set(requestRef, { timestamp: Date.now() });
+};
+
+export const cancelFriendRequest = (fromId: string, toId: string) => {
+    const requestRef = ref(db, `friendRequests/${toId}/${fromId}`);
+    return remove(requestRef);
+};
+
+export const handleFriendRequest = async (currentUserId: string, senderId: string, accept: boolean) => {
+    const requestRef = ref(db, `friendRequests/${currentUserId}/${senderId}`);
+    await remove(requestRef);
+
+    if (accept) {
+        const updates: Record<string, any> = {};
+        updates[`users/${currentUserId}/friends/${senderId}`] = true;
+        updates[`users/${senderId}/friends/${currentUserId}`] = true;
+        await update(ref(db), updates);
+    }
+};
+
+export const removeFriend = async (currentUserId: string, friendId: string) => {
+    const updates: Record<string, any> = {};
+    updates[`users/${currentUserId}/friends/${friendId}`] = null;
+    updates[`users/${friendId}/friends/${currentUserId}`] = null;
+    await update(ref(db), updates);
+};
+
+// --- Admin Functions ---
+export const banUser = (userId: string) => {
+    return update(ref(db, `users/${userId}`), { isBanned: true });
 };
 
 
@@ -83,49 +120,39 @@ export const createPost = async (postData: Omit<Post, 'id' | 'likes' | 'comments
     });
 };
 
-export const createStory = async (storyData: Omit<Story, 'id'>) => {
+export const createStory = async (storyData: Omit<Story, 'id' | 'timestamp'>) => {
     const storiesRef = ref(db, 'stories');
     const newStoryRef = push(storiesRef);
     await set(newStoryRef, {
         ...storyData,
         id: newStoryRef.key,
+        timestamp: Date.now()
     });
 };
 
 export const seedDatabase = async () => {
-  // We no longer seed users, as they are created through sign-up.
-  // We can still seed posts and stories if the database is completely empty.
-
   const postsRef = ref(db, 'posts');
   const postsSnapshot = await get(postsRef);
   if (!postsSnapshot.exists()) {
-    console.log('Posts collection empty. Seeding posts...');
-    const posts = {
-      post1: { id: 'post1', userId: 'user2', content: 'Added a new video about modern architecture. Check it out!', mediaUrl: `https://picsum.photos/seed/post1/600/400`, mediaType: 'video', timestamp: Date.now() - 86400000 * 15, likes: 125, comments: 23, tag: 'General' },
-      post2: { id: 'post2', userId: 'user4', content: 'What a beautiful sunset today! Feeling blessed.', mediaUrl: `https://picsum.photos/seed/post2/600/400`, mediaType: 'image', timestamp: Date.now() - 3600000 * 5, likes: 210, comments: 45 },
-      post3: { id: 'post3', userId: 'user5', content: 'Just launched my new portfolio website. Let me know what you think! #webdev #portfolio', timestamp: Date.now() - 3600000 * 2, likes: 78, comments: 12 },
-    };
-     // We also need dummy users for these posts to resolve correctly.
+    console.log('Seeding database...');
+    // We need dummy users for posts to resolve correctly.
     const users = {
       user2: { id: 'user2', name: 'Krishna Vinjam', avatarUrl: 'https://i.pravatar.cc/150?u=user2', role: 'user', email: 'krishna@demo.com', handle: 'krishna', coverPhotoUrl: 'https://picsum.photos/seed/cover2/1000/300', bio: 'Frontend Developer | React Enthusiast', isPublic: true },
       user3: { id: 'user3', name: 'Habib Habib', avatarUrl: 'https://i.pravatar.cc/150?u=user3', role: 'user', email: 'habib@demo.com', handle: 'habib', coverPhotoUrl: 'https://picsum.photos/seed/cover3/1000/300', bio: 'Loves hiking and photography.', isPublic: true },
-      user4: { id: 'user4', name: 'Ahmad Raza', avatarUrl: 'https://i.pravatar.cc/150?u=user4', role: 'user', email: 'ahmad@demo.com', handle: 'ahmad', coverPhotoUrl: 'https://picsum.photos/seed/cover4/1000/300', bio: 'UX/UI Designer creating beautiful and intuitive interfaces.', isPublic: true },
-      user5: { id: 'user5', name: 'Jane Doe', avatarUrl: 'https://i.pravatar.cc/150?u=user5', role: 'user', email: 'jane@demo.com', handle: 'jane', coverPhotoUrl: 'https://picsum.photos/seed/cover5/1000/300', bio: 'Coffee lover and world traveler.', isPublic: false }, // This user is private
     };
     await set(ref(db, 'users'), users);
-    await set(postsRef, posts);
-  }
 
-  const storiesRef = ref(db, 'stories');
-  const storiesSnapshot = await get(storiesRef);
-  if (!storiesSnapshot.exists()) {
-    console.log('Stories collection empty. Seeding stories...');
-    const stories = {
-      story1: { id: 'story1', userId: 'user2', imageUrl: 'https://i.pravatar.cc/300?u=story1' },
-      story2: { id: 'story2', userId: 'user3', imageUrl: 'https://i.pravatar.cc/300?u=story2' },
-      story3: { id: 'story3', userId: 'user4', imageUrl: 'https://i.pravatar.cc/300?u=story3' },
-      story4: { id: 'story4', userId: 'user5', imageUrl: 'https://i.pravatar.cc/300?u=story4' },
+    const posts = {
+      post1: { id: 'post1', userId: 'user2', content: 'Exploring the serene beauty of nature. #nature #travel', mediaUrls: [`https://picsum.photos/seed/postA/600/400`, `https://picsum.photos/seed/postB/600/400`], timestamp: Date.now() - 86400000 * 2, likes: 125, comments: 23 },
+      post2: { id: 'post2', userId: 'user3', content: 'What a beautiful sunset today! Feeling blessed.', mediaUrls: [`https://picsum.photos/seed/post2/600/400`], timestamp: Date.now() - 3600000 * 5, likes: 210, comments: 45 },
     };
-    await set(storiesRef, stories);
+    await set(postsRef, posts);
+    
+    const stories = {
+      story1: { id: 'story1', userId: 'user2', imageUrl: 'https://i.pravatar.cc/300?u=story1', timestamp: Date.now() - 3600000 * 3 },
+      story2: { id: 'story2', userId: 'user3', imageUrl: 'https://i.pravatar.cc/300?u=story2', timestamp: Date.now() - 3600000 * 2 },
+      story3: { id: 'story3', userId: 'user2', imageUrl: 'https://i.pravatar.cc/300?u=story3', timestamp: Date.now() - 3600000 * 1 },
+    };
+    await set(ref(db, 'stories'), stories);
   }
 };

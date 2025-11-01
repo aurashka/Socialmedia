@@ -1,6 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import type { User, Post } from '../types';
 import { ChevronDownIcon, ThumbUpIcon, ChatAltIcon, ShareIcon } from './Icons';
+import { parseContent } from '../utils/textUtils';
+import ImageLightbox from './ImageLightbox';
 
 interface PostCardProps {
   post: Post;
@@ -8,6 +10,8 @@ interface PostCardProps {
 }
 
 const PostCard: React.FC<PostCardProps> = ({ post, user }) => {
+  const [lightboxImage, setLightboxImage] = useState<string | null>(null);
+
   if (!user) {
     return (
       <div className="bg-card rounded-lg shadow-sm p-4 animate-pulse">
@@ -32,8 +36,55 @@ const PostCard: React.FC<PostCardProps> = ({ post, user }) => {
     const days = Math.floor(hours / 24);
     return `${days}d ago`;
   };
+  
+  const renderMedia = () => {
+    if (post.mediaType === 'video') {
+      return (
+         <div className="relative aspect-video cursor-pointer" onClick={() => alert('Video player not implemented yet!')}>
+             <img src={post.mediaUrls?.[0]} alt="Post media" className="w-full h-full object-cover" />
+             <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-40">
+                <div className="w-16 h-16 bg-white bg-opacity-50 rounded-full flex items-center justify-center text-white hover:bg-opacity-75 transition-opacity">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 ml-1" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
+                    </svg>
+                </div>
+             </div>
+         </div>
+      )
+    }
+
+    if (!post.mediaUrls || post.mediaUrls.length === 0) return null;
+
+    const images = post.mediaUrls;
+    const gridClasses = [
+        "", // 0 images
+        "grid-cols-1", // 1 image
+        "grid-cols-2", // 2 images
+        "grid-cols-2", // 3 images
+        "grid-cols-2", // 4 images
+        "grid-cols-2" // 5 images
+    ];
+
+    return (
+        <div className={`grid ${gridClasses[images.length]} gap-1`}>
+            {images.map((url, index) => {
+                let spanClass = "";
+                if (images.length === 3 && index === 0) spanClass = "row-span-2";
+                if (images.length === 5 && index < 2) spanClass = "col-span-1";
+                if (images.length === 5 && index >= 2) spanClass = "col-span-2";
+
+                return (
+                    <div key={index} className={`relative cursor-pointer ${spanClass}`} onClick={() => setLightboxImage(url)}>
+                         <img src={url} alt={`Post media ${index + 1}`} className="w-full h-full object-cover" />
+                    </div>
+                )
+            })}
+        </div>
+    );
+  };
 
   return (
+    <>
     <div className="bg-card rounded-lg shadow-sm">
       {/* Post Header */}
       <div className="p-4 flex justify-between items-start">
@@ -60,27 +111,12 @@ const PostCard: React.FC<PostCardProps> = ({ post, user }) => {
       </div>
 
       {/* Post Content */}
-      <p className="px-4 pb-2 whitespace-pre-wrap">{post.content}</p>
+      <p className="px-4 pb-2 whitespace-pre-wrap text-text-primary">{parseContent(post.content)}</p>
 
       {/* Post Media */}
-      {post.mediaUrl && (
-        <div className="bg-gray-100">
-          {post.mediaType === 'video' ? (
-             <div className="relative aspect-video">
-                 <img src={post.mediaUrl} alt="Post media" className="w-full h-full object-cover" />
-                 <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-40">
-                    <button className="w-16 h-16 bg-white bg-opacity-50 rounded-full flex items-center justify-center text-white hover:bg-opacity-75 transition-opacity">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 ml-1" viewBox="0 0 20 20" fill="currentColor">
-                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
-                        </svg>
-                    </button>
-                 </div>
-             </div>
-          ) : (
-            <img src={post.mediaUrl} alt="Post media" className="w-full max-h-[500px] object-contain" />
-          )}
-        </div>
-      )}
+      <div className="bg-gray-100 max-h-[600px] overflow-hidden">
+        {renderMedia()}
+      </div>
 
       {/* Post Stats */}
       <div className="px-4 py-2 flex justify-between items-center text-sm text-text-secondary">
@@ -100,6 +136,8 @@ const PostCard: React.FC<PostCardProps> = ({ post, user }) => {
         <ActionButton Icon={ShareIcon} text="Share" />
       </div>
     </div>
+    {lightboxImage && <ImageLightbox imageUrl={lightboxImage} onClose={() => setLightboxImage(null)} />}
+    </>
   );
 };
 

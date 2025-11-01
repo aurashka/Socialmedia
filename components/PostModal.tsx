@@ -5,39 +5,41 @@ import { XIcon } from './Icons';
 interface PostModalProps {
   currentUser: User;
   onClose: () => void;
-  onSubmit: (content: string, imageFile?: File) => Promise<void>;
+  onSubmit: (content: string, imageFiles: File[]) => Promise<void>;
 }
 
 const PostModal: React.FC<PostModalProps> = ({ currentUser, onClose, onSubmit }) => {
   const [content, setContent] = useState('');
-  const [imageFile, setImageFile] = useState<File | undefined>();
-  const [imagePreview, setImagePreview] = useState<string | undefined>();
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
+  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      setImageFile(file);
-      setImagePreview(URL.createObjectURL(file));
+    if (e.target.files) {
+      const files = Array.from(e.target.files);
+      const newFiles = [...imageFiles, ...files].slice(0, 5); // Limit to 5 images
+      setImageFiles(newFiles);
+
+      const newPreviews = newFiles.map(file => URL.createObjectURL(file));
+      setImagePreviews(newPreviews);
     }
   };
 
-  const handleRemoveImage = () => {
-    setImageFile(undefined);
-    setImagePreview(undefined);
-    if(fileInputRef.current) {
+  const handleRemoveImage = (indexToRemove: number) => {
+    setImageFiles(prev => prev.filter((_, index) => index !== indexToRemove));
+    setImagePreviews(prev => prev.filter((_, index) => index !== indexToRemove));
+    if (fileInputRef.current) {
         fileInputRef.current.value = "";
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!content.trim() && !imageFile) return;
+    if (!content.trim() && imageFiles.length === 0) return;
 
     setIsSubmitting(true);
-    await onSubmit(content, imageFile);
-    // Don't set isSubmitting to false here, as the component will unmount
+    await onSubmit(content, imageFiles);
     onClose();
   };
 
@@ -64,17 +66,21 @@ const PostModal: React.FC<PostModalProps> = ({ currentUser, onClose, onSubmit })
               onChange={(e) => setContent(e.target.value)}
               autoFocus
             />
-            {imagePreview && (
-              <div className="mt-4 relative border rounded-lg p-2">
-                <img src={imagePreview} alt="Preview" className="rounded-lg max-h-80 w-full object-contain" />
-                <button
-                  type="button"
-                  onClick={handleRemoveImage}
-                  className="absolute top-2 right-2 bg-black bg-opacity-50 text-white p-1 rounded-full hover:bg-opacity-75"
-                  aria-label="Remove image"
-                >
-                  <XIcon className="w-5 h-5" />
-                </button>
+            {imagePreviews.length > 0 && (
+              <div className="mt-4 grid grid-cols-3 gap-2 border rounded-lg p-2">
+                {imagePreviews.map((preview, index) => (
+                  <div key={index} className="relative">
+                    <img src={preview} alt={`Preview ${index}`} className="rounded-lg h-24 w-full object-cover" />
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveImage(index)}
+                      className="absolute top-1 right-1 bg-black bg-opacity-50 text-white p-0.5 rounded-full hover:bg-opacity-75"
+                      aria-label="Remove image"
+                    >
+                      <XIcon className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))}
               </div>
             )}
           </div>
@@ -82,20 +88,22 @@ const PostModal: React.FC<PostModalProps> = ({ currentUser, onClose, onSubmit })
              <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="text-primary font-semibold hover:bg-blue-50 p-2 rounded-md"
+                disabled={imageFiles.length >= 5}
+                className="text-primary font-semibold hover:bg-blue-50 p-2 rounded-md disabled:opacity-50"
             >
-                Add Photo
+                Add Photos
             </button>
             <input
                 type="file"
                 ref={fileInputRef}
                 className="hidden"
                 accept="image/*"
+                multiple
                 onChange={handleImageChange}
             />
             <button
               type="submit"
-              disabled={(!content.trim() && !imageFile) || isSubmitting}
+              disabled={(!content.trim() && imageFiles.length === 0) || isSubmitting}
               className="px-6 py-2 bg-primary text-white font-bold rounded-md disabled:bg-blue-300 disabled:cursor-not-allowed hover:bg-blue-700 transition-colors"
             >
               {isSubmitting ? 'Posting...' : 'Post'}

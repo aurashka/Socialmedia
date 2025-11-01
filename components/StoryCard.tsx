@@ -9,9 +9,10 @@ interface StoryCardProps {
   user?: User;
   isAddStory?: boolean;
   currentUser?: User;
+  onViewStories?: () => void;
 }
 
-const StoryCard: React.FC<StoryCardProps> = ({ story, user, isAddStory, currentUser }) => {
+const StoryCard: React.FC<StoryCardProps> = ({ story, user, isAddStory, currentUser, onViewStories }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isUploading, setIsUploading] = useState(false);
 
@@ -74,7 +75,10 @@ const StoryCard: React.FC<StoryCardProps> = ({ story, user, isAddStory, currentU
   if (!story || !user) return null;
 
   return (
-    <div className="flex-shrink-0 w-28 h-48 rounded-lg shadow-md overflow-hidden relative cursor-pointer group">
+    <div 
+        className="flex-shrink-0 w-28 h-48 rounded-lg shadow-md overflow-hidden relative cursor-pointer group"
+        onClick={onViewStories}
+    >
       <img src={story.imageUrl} alt={user.name} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
       <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
       <img src={user.avatarUrl} alt={user.name} className="absolute top-2 left-2 w-8 h-8 rounded-full border-2 border-primary" />

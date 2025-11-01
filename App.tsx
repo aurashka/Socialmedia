@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { onValue, ref } from 'firebase/database';
-import { db, seedDatabase, onAuthChange, getUserProfile } from './services/firebase';
+import { db, onAuthChange, getUserProfile } from './services/firebase';
 import type { User, Post, Story } from './types';
 import type { User as FirebaseUser } from 'firebase/auth';
 import Header from './components/Header';
@@ -13,6 +13,8 @@ import CompleteProfile from './components/auth/CompleteProfile';
 import LoadingSpinner from './components/LoadingSpinner';
 import ProfilePage from './components/profile/ProfilePage';
 import SearchResultsPage from './components/search/SearchResultsPage';
+import { signOut } from 'firebase/auth';
+import { auth } from './services/firebase';
 
 type Route = 
   | { name: 'home' }
@@ -20,7 +22,7 @@ type Route =
   | { name: 'search'; query: string };
 
 const parseHash = (): Route => {
-    const hash = window.location.hash.substring(2); // remove #/
+    const hash = window.location.hash.substring(2);
     const [path, param] = hash.split('/');
 
     switch (path) {
@@ -39,28 +41,30 @@ const App: React.FC = () => {
   const [users, setUsers] = useState<Record<string, User>>({});
   const [posts, setPosts] = useState<Post[]>([]);
   const [stories, setStories] = useState<Story[]>([]);
+  const [friendRequests, setFriendRequests] = useState<Record<string, any>>({});
   const [loading, setLoading] = useState(true);
   const [route, setRoute] = useState<Route>(parseHash());
 
   useEffect(() => {
-    const handleHashChange = () => {
-        setRoute(parseHash());
-    };
+    const handleHashChange = () => setRoute(parseHash());
     window.addEventListener('hashchange', handleHashChange);
     return () => window.removeEventListener('hashchange', handleHashChange);
   }, []);
 
   useEffect(() => {
-    seedDatabase();
-
+    // No need to seed here anymore, it's done on demand in firebase.ts if DB is empty
     const unsubscribe = onAuthChange(async (user) => {
       if (user) {
         setAuthUser(user);
         const userProfile = await getUserProfile(user.uid);
-        if (userProfile) {
+        if(userProfile?.isBanned) {
+            alert("Your account has been banned.");
+            await signOut(auth);
+            setAuthUser(null);
+            setCurrentUser(null);
+        } else if (userProfile) {
           setCurrentUser(userProfile);
         } else {
-          // This is a new user who needs to complete their profile
           setCurrentUser({
             id: user.uid,
             email: user.email!,
@@ -81,11 +85,8 @@ const App: React.FC = () => {
   useEffect(() => {
     if (!currentUser) return;
 
-    // Fetch all data once we have a logged-in user
     const usersRef = ref(db, 'users/');
-    const usersUnsub = onValue(usersRef, (snapshot) => {
-      setUsers(snapshot.val() || {});
-    });
+    const usersUnsub = onValue(usersRef, (snapshot) => setUsers(snapshot.val() || {}));
 
     const postsRef = ref(db, 'posts/');
     const postsUnsub = onValue(postsRef, (snapshot) => {
@@ -99,11 +100,17 @@ const App: React.FC = () => {
       const storiesData = snapshot.val() || {};
       setStories(Object.values(storiesData) as Story[]);
     });
+
+    const requestsRef = ref(db, `friendRequests/${currentUser.id}`);
+    const requestsUnsub = onValue(requestsRef, (snapshot) => {
+        setFriendRequests(snapshot.val() || {});
+    });
     
     return () => {
       usersUnsub();
       postsUnsub();
       storiesUnsub();
+      requestsUnsub();
     }
   }, [currentUser]);
   
@@ -121,10 +128,11 @@ const App: React.FC = () => {
                       />;
           case 'profile':
               return <ProfilePage
-                        currentUserId={currentUser.id}
+                        currentUser={currentUser}
                         profileUserId={route.id}
                         users={users}
                         posts={posts}
+                        friendRequests={friendRequests}
                      />
           case 'search':
               return <SearchResultsPage
