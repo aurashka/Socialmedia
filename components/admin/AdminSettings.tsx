@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { getApiKeys, updateApiKeys } from '../../services/firebase';
 import type { ApiKeys } from '../../types';
+import { defaultApiKeys } from '../../services/mediaUpload';
 
 const AdminSettings: React.FC = () => {
     const [keys, setKeys] = useState<Partial<ApiKeys>>({
@@ -16,6 +17,8 @@ const AdminSettings: React.FC = () => {
             const fetchedKeys = await getApiKeys();
             if (fetchedKeys) {
                 setKeys(fetchedKeys);
+            } else {
+                setKeys(defaultApiKeys);
             }
             setStatus('idle');
         };

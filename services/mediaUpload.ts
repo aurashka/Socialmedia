@@ -3,6 +3,12 @@ import type { ApiKeys } from '../types';
 
 let apiKeysCache: ApiKeys | null = null;
 
+export const defaultApiKeys: ApiKeys = {
+    imgbb: '5fd2a4346ac2e5485a916a5d734d508b',
+    cloudinaryCloudName: 'creadit-loan-5203b',
+    cloudinaryUploadPreset: 'connectsphere_preset'
+};
+
 const fetchAndCacheApiKeys = async (): Promise<ApiKeys> => {
     if (apiKeysCache) {
         return apiKeysCache;
@@ -10,13 +16,8 @@ const fetchAndCacheApiKeys = async (): Promise<ApiKeys> => {
     const keys = await getApiKeys();
     if (!keys || !keys.imgbb || !keys.cloudinaryCloudName || !keys.cloudinaryUploadPreset) {
         console.warn("API keys for media upload are not configured in the admin panel. Using fallback keys. Please configure them for proper functionality.");
-        const fallbackKeys: ApiKeys = {
-            imgbb: '5fd2a4346ac2e5485a916a5d734d508b',
-            cloudinaryCloudName: 'creadit-loan-5203b',
-            cloudinaryUploadPreset: 'connectsphere_preset'
-        };
-        apiKeysCache = fallbackKeys;
-        return fallbackKeys;
+        apiKeysCache = defaultApiKeys;
+        return defaultApiKeys;
     }
     apiKeysCache = keys;
     return keys;
