@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import type { User, Post } from '../types';
-import { DotsHorizontalIcon, ThumbUpIcon, ChatAltIcon, ShareIcon, PencilIcon, TrashIcon, ChevronLeftIcon, ChevronRightIcon } from './Icons';
+import { DotsHorizontalIcon, HeartIcon, ChatIcon, MessageIcon, TrashIcon, ChevronLeftIcon, ChevronRightIcon, PencilIcon } from './Icons';
 import { parseContent } from '../utils/textUtils';
 import ImageLightbox from './ImageLightbox';
 import { updatePost, deletePost } from '../services/firebase';
@@ -85,21 +85,21 @@ const PostCard: React.FC<PostCardProps> = ({ post, user, currentUser }) => {
 
   if (!user) {
     return (
-      <div className="bg-card rounded-lg shadow-sm p-4 animate-pulse">
+      <div className="bg-surface rounded-lg p-4 animate-pulse border border-divider">
         <div className="flex items-center space-x-3">
           <div className="w-10 h-10 bg-gray-300 rounded-full"></div>
           <div className="flex-1 space-y-2">
             <div className="h-4 bg-gray-300 rounded w-3/4"></div>
-            <div className="h-3 bg-gray-300 rounded w-1/4"></div>
           </div>
         </div>
+        <div className="mt-4 h-64 bg-gray-300 rounded"></div>
       </div>
     );
   }
 
   const timeAgo = (timestamp: number): string => {
     const seconds = Math.floor((Date.now() - timestamp) / 1000);
-    if (seconds < 60) return `${seconds}s ago`;
+    if (seconds < 60) return `Just now`;
     const minutes = Math.floor(seconds / 60);
     if (minutes < 60) return `${minutes}m ago`;
     const hours = Math.floor(minutes / 60);
@@ -113,39 +113,34 @@ const PostCard: React.FC<PostCardProps> = ({ post, user, currentUser }) => {
 
     const images = post.mediaUrls;
     
-    if (images.length === 1) {
-        return (
-            <div className="bg-black flex justify-center items-center">
-                <img src={images[0]} alt="Post media" className="max-h-[70vh] w-auto object-contain cursor-pointer" onClick={() => setLightboxImage(images[0])}/>
-            </div>
-        )
-    }
-
     return (
-        <div className="relative group bg-black">
+        <div className="relative group bg-gray-100 mt-3 rounded-lg overflow-hidden border-b border-divider">
             <div className="relative aspect-square overflow-hidden flex justify-center items-center">
-                 <img src={images[currentImageIndex]} alt={`Post media ${currentImageIndex + 1}`} className="max-h-full max-w-full object-contain transition-transform duration-300" />
+                 <img src={images[currentImageIndex]} alt={`Post media ${currentImageIndex + 1}`} className="max-h-full max-w-full object-contain transition-transform duration-300" onDoubleClick={() => console.log('double click like')} />
             </div>
             
-            <button onClick={handlePrevImage} className="absolute top-1/2 left-2 -translate-y-1/2 bg-black bg-opacity-40 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                <ChevronLeftIcon className="w-6 h-6" />
-            </button>
-            <button onClick={handleNextImage} className="absolute top-1/2 right-2 -translate-y-1/2 bg-black bg-opacity-40 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                <ChevronRightIcon className="w-6 h-6" />
-            </button>
-            
-            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex space-x-1.5">
-                {images.map((_, index) => (
-                    <div key={index} className={`w-1.5 h-1.5 rounded-full ${index === currentImageIndex ? 'bg-primary' : 'bg-gray-400'}`}></div>
-                ))}
-            </div>
+            {images.length > 1 && (
+                <>
+                    <button onClick={handlePrevImage} className="absolute top-1/2 left-2 -translate-y-1/2 bg-black bg-opacity-40 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                        <ChevronLeftIcon className="w-5 h-5" />
+                    </button>
+                    <button onClick={handleNextImage} className="absolute top-1/2 right-2 -translate-y-1/2 bg-black bg-opacity-40 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                        <ChevronRightIcon className="w-5 h-5" />
+                    </button>
+                    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex space-x-1.5">
+                        {images.map((_, index) => (
+                            <div key={index} className={`w-1.5 h-1.5 rounded-full ${index === currentImageIndex ? 'bg-primary' : 'bg-gray-400'}`}></div>
+                        ))}
+                    </div>
+                </>
+            )}
         </div>
     );
   };
 
   return (
     <>
-    <div className="bg-card rounded-lg shadow-sm border border-divider">
+    <div className="bg-surface rounded-lg">
       {/* Post Header */}
       <div className="p-3 flex justify-between items-center">
         <div className="flex items-center space-x-3">
@@ -154,28 +149,35 @@ const PostCard: React.FC<PostCardProps> = ({ post, user, currentUser }) => {
           </a>
           <div>
             <a href={`#/profile/${user.id}`} className="font-bold hover:underline text-sm">{user.name}</a>
-             {post.tag && <p className="text-xs text-text-secondary">{post.tag}</p>}
+             <p className="text-xs text-secondary">{timeAgo(post.timestamp)}</p>
           </div>
         </div>
-        {isOwner && (
-          <div className="relative" ref={menuRef}>
-            <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="text-text-secondary hover:text-text-primary p-1">
-              <DotsHorizontalIcon className="w-5 h-5" />
-            </button>
-            {isMenuOpen && (
-              <div className="absolute right-0 mt-2 w-48 bg-card rounded-md shadow-lg py-1 z-10">
-                  <button onClick={handleEdit} className="w-full text-left flex items-center space-x-2 px-4 py-2 text-sm text-text-primary hover:bg-gray-100">
-                      <PencilIcon className="w-4 h-4" />
-                      <span>Edit Post</span>
-                  </button>
-                  <button onClick={handleDeletePost} className="w-full text-left flex items-center space-x-2 px-4 py-2 text-sm text-red-500 hover:bg-gray-100">
-                      <TrashIcon className="w-4 h-4" />
-                      <span>Delete Post</span>
-                  </button>
-              </div>
-            )}
-          </div>
-        )}
+        
+        <div className="relative" ref={menuRef}>
+          <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="text-secondary hover:text-primary p-1">
+            <DotsHorizontalIcon className="w-5 h-5" />
+          </button>
+          {isMenuOpen && (
+            <div className="absolute right-0 mt-2 w-48 bg-surface rounded-md shadow-lg py-1 z-10 border border-divider">
+                {isOwner && (
+                    <>
+                    <button onClick={handleEdit} className="w-full text-left flex items-center space-x-2 px-4 py-2 text-sm text-primary hover:bg-gray-100">
+                        <PencilIcon className="w-4 h-4" />
+                        <span>Edit Post</span>
+                    </button>
+                    <button onClick={handleDeletePost} className="w-full text-left flex items-center space-x-2 px-4 py-2 text-sm text-red-500 hover:bg-gray-100">
+                        <TrashIcon className="w-4 h-4" />
+                        <span>Delete Post</span>
+                    </button>
+                    </>
+                )}
+                {!isOwner && (
+                    <button className="w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-gray-100">Report</button>
+                )}
+            </div>
+          )}
+        </div>
+        
       </div>
 
       {/* Post Media */}
@@ -183,54 +185,46 @@ const PostCard: React.FC<PostCardProps> = ({ post, user, currentUser }) => {
       
       {/* Post Actions */}
        <div className="p-2 flex justify-between items-center">
-          <div className="flex space-x-1">
-              <ActionButton Icon={ThumbUpIcon} />
-              <ActionButton Icon={ChatAltIcon} />
-              <ActionButton Icon={ShareIcon} />
+          <div className="flex space-x-2">
+              <ActionButton Icon={HeartIcon} />
+              <ActionButton Icon={ChatIcon} />
+              <ActionButton Icon={MessageIcon} />
           </div>
        </div>
 
-      {/* Post Stats */}
-      <div className="px-4 pb-1 text-sm">
-        <span className="font-semibold text-text-primary">{post.likes} likes</span>
-      </div>
-
-      {/* Post Content */}
-      <div className="px-4 pb-2">
+      {/* Post Stats & Content */}
+      <div className="px-4 pb-4 space-y-1">
+        <span className="font-bold text-primary text-sm">{post.likes} likes</span>
         {isEditing ? (
-          <div>
+            <div>
               <textarea
                   value={editedContent}
                   onChange={(e) => setEditedContent(e.target.value)}
-                  className="w-full p-2 border rounded-md resize-y bg-background focus:outline-none focus:ring-2 focus:ring-primary text-sm"
-                  rows={3}
+                  className="w-full p-2 border rounded-md resize-y bg-background focus:outline-none focus:ring-2 focus:ring-accent text-sm"
+                  rows={2}
                   autoFocus
               />
               <div className="flex justify-end space-x-2 mt-2">
-                  <button onClick={handleCancelEdit} className="px-3 py-1 bg-gray-200 text-text-primary font-semibold rounded-md hover:bg-gray-300 text-xs">Cancel</button>
-                  <button onClick={handleUpdatePost} disabled={isSaving} className="px-3 py-1 bg-primary text-white font-semibold rounded-md hover:bg-blue-700 disabled:bg-blue-300 text-xs">
+                  <button onClick={handleCancelEdit} className="px-3 py-1 bg-gray-200 text-primary font-semibold rounded-md hover:bg-gray-300 text-xs">Cancel</button>
+                  <button onClick={handleUpdatePost} disabled={isSaving} className="px-3 py-1 bg-accent text-white font-semibold rounded-md hover:bg-blue-700 disabled:bg-blue-300 text-xs">
                       {isSaving ? 'Saving...' : 'Save'}
                   </button>
               </div>
-          </div>
+            </div>
         ) : (
-          post.content && (
-            <p className="whitespace-pre-wrap text-text-primary text-sm">
-              <a href={`#/profile/${user.id}`} className="font-bold hover:underline mr-1.5">{user.handle}</a>
-              {parseContent(post.content)}
-            </p>
-          )
+            post.content && (
+              <p className="whitespace-pre-wrap text-primary text-sm">
+                <a href={`#/profile/${user.id}`} className="font-bold hover:underline mr-1.5">{user.handle}</a>
+                {parseContent(post.content)}
+              </p>
+            )
+        )}
+        {post.comments > 0 && (
+          <a href="#" className="text-sm text-secondary cursor-pointer hover:underline">
+            View all {post.comments} comments
+          </a>
         )}
       </div>
-
-      {/* Comments and Timestamp */}
-      {post.comments > 0 && (
-        <a href="#" className="px-4 pb-2 text-sm text-text-secondary cursor-pointer hover:underline">
-          View all {post.comments} comments
-        </a>
-      )}
-      <p className="px-4 pb-3 text-xs text-text-secondary uppercase">{timeAgo(post.timestamp)}</p>
-
     </div>
     {lightboxImage && <ImageLightbox imageUrl={lightboxImage} onClose={() => setLightboxImage(null)} />}
     </>
@@ -242,7 +236,7 @@ interface ActionButtonProps {
 }
 
 const ActionButton: React.FC<ActionButtonProps> = ({ Icon }) => (
-    <button className="flex justify-center items-center p-2 text-text-secondary hover:text-text-primary rounded-md transition-colors duration-200">
+    <button className="flex justify-center items-center p-2 text-primary hover:bg-gray-100 rounded-md transition-colors duration-200">
         <Icon className="w-6 h-6" />
     </button>
 )

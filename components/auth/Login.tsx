@@ -2,7 +2,11 @@ import React, { useState } from 'react';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../../services/firebase';
 
-const Login: React.FC = () => {
+interface LoginProps {
+  onSwitchToRegister: () => void;
+}
+
+const Login: React.FC<LoginProps> = ({ onSwitchToRegister }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -15,9 +19,7 @@ const Login: React.FC = () => {
 
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      // The onAuthChange listener in App.tsx will handle the redirect.
     } catch (err: any) {
-      // Provide a user-friendly error message similar to Instagram
       setError('Sorry, your password was incorrect. Please double-check your password.');
     } finally {
       setLoading(false);
@@ -26,33 +28,29 @@ const Login: React.FC = () => {
 
   return (
     <div className="flex flex-col items-center">
-      <h1 className="text-5xl text-text-primary mb-8" style={{ fontFamily: "'Cookie', cursive" }}>ConnectSphere</h1>
+      <h1 className="text-4xl text-primary mb-6" style={{ fontFamily: "'Cookie', cursive" }}>ConnectSphere</h1>
       
       <form onSubmit={handleLogin} className="w-full space-y-2">
           <input
             type="email"
-            aria-label="Email address"
             placeholder="Email address"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full px-3 py-2 border rounded-md bg-gray-50 text-text-secondary focus:outline-none focus:border-gray-400 text-sm"
+            className="w-full px-3 py-2 border rounded-md bg-background text-primary focus:outline-none focus:border-secondary text-sm"
             required
-            autoCapitalize="off"
-            autoCorrect="off"
           />
           <input
             type="password"
-            aria-label="Password"
             placeholder="Password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full px-3 py-2 border rounded-md bg-gray-50 text-text-secondary focus:outline-none focus:border-gray-400 text-sm"
+            className="w-full px-3 py-2 border rounded-md bg-background text-primary focus:outline-none focus:border-secondary text-sm"
             required
           />
           <button
             type="submit"
             disabled={loading || !email || !password}
-            className="w-full bg-primary text-white p-2 mt-2 rounded-lg font-semibold hover:bg-blue-700 disabled:opacity-50 transition-colors text-sm"
+            className="w-full bg-primary text-white p-2 mt-4 rounded-lg font-semibold hover:bg-black disabled:opacity-50 transition-colors text-sm"
           >
             {loading ? 'Logging in...' : 'Log In'}
           </button>
@@ -60,9 +58,12 @@ const Login: React.FC = () => {
 
       {error && <p className="mt-4 text-red-500 text-center text-sm">{error}</p>}
       
-      <a href="#" className="text-xs text-primary hover:underline mt-8">
-          Forgot password?
-      </a>
+      <p className="text-sm mt-6 text-secondary">
+        Don't have an account?{' '}
+        <button onClick={onSwitchToRegister} className="font-semibold text-accent hover:underline">
+          Sign up
+        </button>
+      </p>
     </div>
   );
 };

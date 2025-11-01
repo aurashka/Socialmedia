@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import type { User } from '../../types';
 import { sendFriendRequest, cancelFriendRequest, removeFriend, handleFriendRequest, banUser, blockUser, unblockUser } from '../../services/firebase';
 import { DotsHorizontalIcon } from '../Icons';
@@ -6,11 +6,13 @@ import { DotsHorizontalIcon } from '../Icons';
 interface ProfileHeaderProps {
   profileUser: User;
   currentUser: User;
+  users: Record<string, User>;
   isFriendRequestSent: boolean;
   isFriendRequestReceived: boolean;
+  postCount: number;
 }
 
-const ProfileHeader: React.FC<ProfileHeaderProps> = ({ profileUser, currentUser, isFriendRequestSent, isFriendRequestReceived }) => {
+const ProfileHeader: React.FC<ProfileHeaderProps> = ({ profileUser, currentUser, users, isFriendRequestSent, isFriendRequestReceived, postCount }) => {
   const [loading, setLoading] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -18,6 +20,16 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({ profileUser, currentUser,
   const isCurrentUser = profileUser.id === currentUser.id;
   const isFriend = currentUser.friends && currentUser.friends[profileUser.id];
   const isBlocked = currentUser.blocked && currentUser.blocked[profileUser.id];
+
+  const followerCount = useMemo(() => {
+    // This is a mock value. A real implementation would need a different DB structure.
+    return 567000;
+  }, [profileUser.id]);
+
+  const followingCount = useMemo(() => {
+    return profileUser.friends ? Object.keys(profileUser.friends).length : 0;
+  }, [profileUser.friends]);
+
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -84,92 +96,124 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({ profileUser, currentUser,
 
   const renderActionButtons = () => {
     if (isCurrentUser) {
-      return <button className="px-4 py-2 bg-primary text-white font-semibold rounded-md hover:bg-blue-700 transition-colors">Edit Profile</button>;
+      return (
+        <>
+            <ActionButton primary>Edit Profile</ActionButton>
+            <ActionButton>Insights</ActionButton>
+        </>
+      )
     }
     
     if (isFriendRequestReceived) {
         return (
-            <div className="flex space-x-2">
-                <button onClick={() => handleRequestResponse(true)} disabled={loading} className="px-4 py-2 bg-primary text-white font-semibold rounded-md hover:bg-blue-700 disabled:bg-blue-300">Accept</button>
-                <button onClick={() => handleRequestResponse(false)} disabled={loading} className="px-4 py-2 bg-gray-200 text-text-primary font-semibold rounded-md hover:bg-gray-300 disabled:bg-gray-100">Decline</button>
-            </div>
+            <>
+                <ActionButton primary onClick={() => handleRequestResponse(true)} disabled={loading}>Accept</ActionButton>
+                <ActionButton onClick={() => handleRequestResponse(false)} disabled={loading}>Decline</ActionButton>
+            </>
         );
     }
 
     if (isFriend) {
-      return <button onClick={handleRemoveFriend} disabled={loading} className="px-4 py-2 bg-gray-200 text-text-primary font-semibold rounded-md hover:bg-gray-300 disabled:bg-gray-100">Friends</button>;
+      return (
+        <>
+            <ActionButton primary onClick={handleRemoveFriend} disabled={loading}>Following</ActionButton>
+            <ActionButton>Message</ActionButton>
+        </>
+      )
     }
     
     if (isFriendRequestSent) {
-      return <button onClick={handleCancelRequest} disabled={loading} className="px-4 py-2 bg-gray-200 text-text-primary font-semibold rounded-md hover:bg-gray-300 disabled:bg-gray-100">Request Sent</button>;
+      return (
+        <>
+            <ActionButton primary onClick={handleCancelRequest} disabled={loading}>Request Sent</ActionButton>
+            <ActionButton>Message</ActionButton>
+        </>
+      )
     }
 
-    return <button onClick={handleAddFriend} disabled={loading} className="px-4 py-2 bg-primary text-white font-semibold rounded-md hover:bg-blue-700 disabled:bg-blue-300">Add Friend</button>;
+    return (
+        <>
+            <ActionButton primary onClick={handleAddFriend} disabled={loading}>Follow</ActionButton>
+            <ActionButton>Message</ActionButton>
+        </>
+    );
   };
 
   return (
-    <div className="bg-card rounded-b-lg shadow-sm -mx-2 sm:-mx-4">
-      <div className="h-48 md:h-64 bg-gray-200 rounded-t-lg relative">
-        {profileUser.coverPhotoUrl && (
-          <img
-            src={profileUser.coverPhotoUrl}
-            alt={`${profileUser.name}'s cover`}
-            className="w-full h-full object-cover rounded-t-lg"
-          />
-        )}
+    <div className="bg-surface">
+      <div className="h-40 md:h-52 bg-gray-200 relative">
+        <img
+          src={profileUser.coverPhotoUrl || 'https://images.unsplash.com/photo-1519681393784-d120267933ba?ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&ixlib=rb-1.2.1&auto=format&fit=crop&w=1121&q=80'}
+          alt={`${profileUser.name}'s cover`}
+          className="w-full h-full object-cover"
+        />
       </div>
       <div className="p-4 pt-0">
-        <div className="flex flex-col sm:flex-row items-center sm:items-end -mt-16 sm:space-x-4 relative">
-          <div className="w-32 h-32 md:w-40 md:h-40 rounded-full border-4 border-card bg-gray-300 overflow-hidden flex-shrink-0">
+        <div className="flex flex-col items-center -mt-16 relative">
+          <div className="w-32 h-32 rounded-full border-4 border-surface bg-gray-300 overflow-hidden flex-shrink-0">
              <img
                 src={profileUser.avatarUrl}
                 alt={profileUser.name}
                 className="w-full h-full object-cover"
              />
           </div>
-          <div className="flex-1 mt-4 sm:mt-0 w-full flex flex-col sm:flex-row justify-center sm:justify-between items-center sm:pb-4">
-             <div className="text-center sm:text-left">
-                <h2 className="text-2xl md:text-3xl font-bold">{profileUser.name}</h2>
-                <p className="text-text-secondary">@{profileUser.handle}</p>
-             </div>
-             <div className="mt-4 sm:mt-0 flex items-center space-x-2">
-                {!isBlocked && renderActionButtons()}
+          <div className="text-center mt-4">
+            <h2 className="text-2xl font-bold">{profileUser.name}</h2>
+            <p className="text-secondary text-sm">{profileUser.bio || 'Professional Model'}</p>
+          </div>
+          
+          <div className="flex justify-around w-full max-w-sm my-6 text-center">
+            <Stat value={followerCount} label="Followers"/>
+            <Stat value={followingCount} label="Following"/>
+            <Stat value={postCount} label="Posts"/>
+          </div>
+
+          <div className="flex items-center space-x-2 w-full max-w-sm">
+             {isBlocked ? (
+                <ActionButton danger fullWidth onClick={handleUnblock} disabled={loading}>Unblock</ActionButton>
+             ) : (
+                <>
+                {renderActionButtons()}
                  {!isCurrentUser && (
                   <div className="relative" ref={menuRef}>
-                    <button onClick={() => setMenuOpen(!menuOpen)} className="p-2 rounded-full hover:bg-gray-200" aria-label="More options">
-                      <DotsHorizontalIcon className="w-6 h-6 text-text-secondary" />
+                    <button onClick={() => setMenuOpen(!menuOpen)} className="p-2 h-10 w-10 flex items-center justify-center rounded-md border border-divider hover:bg-gray-100" aria-label="More options">
+                      <DotsHorizontalIcon className="w-5 h-5 text-secondary" />
                     </button>
                     {menuOpen && (
-                      <div className="absolute right-0 mt-2 w-48 bg-card rounded-md shadow-lg py-1 z-20">
-                        {isBlocked ? (
-                          <button onClick={handleUnblock} disabled={loading} className="block w-full text-left px-4 py-2 text-sm text-text-primary hover:bg-gray-100">Unblock @{profileUser.handle}</button>
-                        ) : (
-                          <button onClick={handleBlock} disabled={loading} className="block w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-gray-100">Block @{profileUser.handle}</button>
-                        )}
+                      <div className="absolute right-0 mt-2 w-48 bg-surface rounded-md shadow-lg py-1 z-20 border border-divider">
+                        <button onClick={handleBlock} disabled={loading} className="block w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-gray-100">Block @{profileUser.handle}</button>
                       </div>
                     )}
                   </div>
-                )}
-                {currentUser.role === 'admin' && !isCurrentUser && (
-                    <button onClick={handleBanUser} className="px-4 py-2 bg-red-500 text-white font-semibold rounded-md hover:bg-red-700">Ban User</button>
-                )}
-             </div>
+                 )}
+                </>
+             )}
           </div>
+           {currentUser.role === 'admin' && !isCurrentUser && (
+                <button onClick={handleBanUser} className="mt-2 text-xs text-red-500 hover:underline">Ban User</button>
+            )}
         </div>
-        
-        {profileUser.bio && (
-            <p className="mt-4 text-text-secondary text-center sm:text-left">{profileUser.bio}</p>
-        )}
       </div>
-       <div className="border-t mx-4">
-            <nav className="flex space-x-4">
-                <a href="#" className="py-3 px-2 font-semibold text-primary border-b-2 border-primary">Posts</a>
-                <a href="#" className="py-3 px-2 font-semibold text-text-secondary hover:bg-gray-100 rounded-md">About</a>
-                <a href="#" className="py-3 px-2 font-semibold text-text-secondary hover:bg-gray-100 rounded-md">Friends</a>
-            </nav>
-        </div>
     </div>
   );
 };
+
+const Stat: React.FC<{value: number; label: string}> = ({value, label}) => (
+    <div>
+        <p className="font-bold text-lg">{Intl.NumberFormat('en-US', { notation: 'compact', maximumFractionDigits: 1 }).format(value)}</p>
+        <p className="text-sm text-secondary">{label}</p>
+    </div>
+);
+
+const ActionButton: React.FC<{primary?: boolean, danger?: boolean, fullWidth?: boolean, children: React.ReactNode, onClick?: () => void, disabled?: boolean}> = ({primary, danger, fullWidth, children, ...props}) => {
+    const baseClasses = "px-4 py-2 font-semibold rounded-md transition-colors text-sm h-10 flex-grow";
+    const primaryClasses = "bg-primary text-white hover:bg-black";
+    const secondaryClasses = "bg-gray-200 text-primary hover:bg-gray-300";
+    const dangerClasses = "bg-red-500 text-white hover:bg-red-600";
+    
+    const classes = `${baseClasses} ${fullWidth ? 'w-full' : ''} ${primary ? primaryClasses : (danger ? dangerClasses : secondaryClasses)}`;
+
+    return <button className={classes} {...props}>{children}</button>
+}
 
 export default ProfileHeader;

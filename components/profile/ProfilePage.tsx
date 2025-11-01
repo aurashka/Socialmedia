@@ -7,6 +7,7 @@ import PostModal from '../PostModal';
 import { onValue, ref } from 'firebase/database';
 import { db, createPost, unblockUser } from '../../services/firebase';
 import { uploadImage } from '../../services/imageUpload';
+import { GridIcon } from '../Icons';
 
 interface ProfilePageProps {
   currentUser: User;
@@ -20,6 +21,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ currentUser, profileUserId, u
   const targetUserId = profileUserId || currentUser.id;
   const [isPostModalOpen, setIsPostModalOpen] = useState(false);
   const [isFriendRequestSent, setIsFriendRequestSent] = useState(false);
+  const [activeTab, setActiveTab] = useState('posts');
 
   useEffect(() => {
     if (!users[targetUserId] || !currentUser || targetUserId === currentUser.id) return;
@@ -39,12 +41,12 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ currentUser, profileUserId, u
         await unblockUser(currentUser.id, targetUserId);
     };
     return (
-        <div className="p-8 text-center bg-card rounded-lg shadow-sm max-w-2xl mx-auto mt-4">
+        <div className="p-8 text-center bg-surface rounded-lg shadow-sm max-w-2xl mx-auto mt-4">
             <h2 className="text-xl font-bold">User Blocked</h2>
-            <p className="text-text-secondary mt-2">You can't see this profile because you've blocked this user.</p>
+            <p className="text-secondary mt-2">You can't see this profile because you've blocked this user.</p>
             <button 
                 onClick={handleUnblock} 
-                className="mt-4 px-4 py-2 bg-primary text-white font-semibold rounded-md hover:bg-blue-700 transition-colors"
+                className="mt-4 px-4 py-2 bg-primary text-white font-semibold rounded-md hover:bg-black transition-colors"
             >
                 Unblock
             </button>
@@ -86,31 +88,55 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ currentUser, profileUserId, u
       alert("Error creating post. Please try again.");
     }
   };
+  
+  const renderContent = () => {
+    switch(activeTab) {
+      case 'posts':
+        return (
+          <div className="grid grid-cols-3 gap-1">
+            {userPosts.map(post => (
+              post.mediaUrls && post.mediaUrls.length > 0 ? (
+                <div key={post.id} className="aspect-square bg-gray-200">
+                  <img src={post.mediaUrls[0]} alt="post" className="w-full h-full object-cover" />
+                </div>
+              ) : null
+            ))}
+          </div>
+        );
+      default:
+        return (
+          <div className="bg-surface rounded-lg p-8 text-center text-secondary">
+            <p>Content not available.</p>
+          </div>
+        )
+    }
+  }
 
   return (
-    <div className="space-y-4 pb-4">
+    <div className="pb-4 max-w-4xl mx-auto">
       <ProfileHeader 
         profileUser={profileUser} 
         currentUser={currentUser}
+        users={users}
         isFriendRequestSent={isFriendRequestSent}
         isFriendRequestReceived={!!isFriendRequestReceived}
+        postCount={userPosts.length}
       />
       
-      <div className="p-2 sm:p-0">
-          <div className="max-w-2xl mx-auto space-y-4">
-              {isCurrentUser && <CreatePost currentUser={profileUser} onOpen={() => setIsPostModalOpen(true)} />}
-
-              {userPosts.length > 0 ? (
-                  userPosts.map(post => (
-                    <PostCard key={post.id} post={post} user={profileUser} currentUser={currentUser} />
-                  ))
-              ) : (
-                  <div className="bg-card rounded-lg shadow-sm p-8 text-center text-text-secondary">
-                      <p>{isCurrentUser ? "You haven't" : `${profileUser.name} hasn't`} posted anything yet.</p>
-                  </div>
-              )}
-          </div>
+      <div className="border-t border-b border-divider flex justify-center">
+        <TabButton Icon={GridIcon} active={activeTab === 'posts'} onClick={() => setActiveTab('posts')} />
       </div>
+
+      <div className="pt-1">
+          {userPosts.length > 0 ? (
+              renderContent()
+          ) : (
+              <div className="bg-surface rounded-lg p-8 text-center text-secondary">
+                  <p>{isCurrentUser ? "You haven't" : `${profileUser.name} hasn't`} posted anything yet.</p>
+              </div>
+          )}
+      </div>
+
       {isPostModalOpen && (
         <PostModal
           currentUser={currentUser}
@@ -121,5 +147,11 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ currentUser, profileUserId, u
     </div>
   );
 };
+
+const TabButton: React.FC<{Icon: React.ElementType, active: boolean, onClick: () => void}> = ({ Icon, active, onClick }) => (
+    <button onClick={onClick} className={`py-3 px-6 -mb-px border-b-2 ${active ? 'border-primary' : 'border-transparent'}`}>
+        <Icon className={`w-6 h-6 ${active ? 'text-primary' : 'text-secondary'}`} />
+    </button>
+)
 
 export default ProfilePage;

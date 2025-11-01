@@ -6,18 +6,20 @@ import type { User as FirebaseUser } from 'firebase/auth';
 import Header from './components/Header';
 import SidebarLeft from './components/SidebarLeft';
 import MainContent from './components/MainContent';
-import SidebarRight from './components/SidebarRight';
 import Auth from './components/auth/Auth';
 import CompleteProfile from './components/auth/CompleteProfile';
 import LoadingSpinner from './components/LoadingSpinner';
 import ProfilePage from './components/profile/ProfilePage';
+import FriendsPage from './components/friends/FriendsPage';
 import SearchOverlay from './components/search/SearchOverlay';
 import { signOut } from 'firebase/auth';
 import { auth } from './services/firebase';
+import BottomNav from './components/BottomNav';
 
 type Route = 
   | { name: 'home' }
-  | { name: 'profile'; id?: string };
+  | { name: 'profile'; id?: string }
+  | { name: 'friends' };
 
 const parseHash = (): Route => {
     const hash = window.location.hash.substring(2);
@@ -26,6 +28,8 @@ const parseHash = (): Route => {
     switch (path) {
         case 'profile':
             return { name: 'profile', id: param };
+        case 'friends':
+            return { name: 'friends' };
         default:
             return { name: 'home' };
     }
@@ -159,6 +163,12 @@ const App: React.FC = () => {
                         posts={filteredPosts}
                         friendRequests={friendRequests}
                      />
+          case 'friends':
+              return <FriendsPage
+                        currentUser={currentUser}
+                        users={users}
+                        friendRequests={friendRequests}
+                     />
           default:
               return <div>Page not found</div>
       }
@@ -177,15 +187,19 @@ const App: React.FC = () => {
   }
 
   return (
-    <div className="bg-background min-h-screen text-text-primary">
-      <Header currentUser={currentUser} onSearchClick={() => setIsSearchOpen(true)} />
-      <main className="flex pt-14">
+    <div className="bg-background min-h-screen text-primary pb-20 md:pb-0">
+      <Header 
+        currentUser={currentUser} 
+        friendRequestCount={Object.keys(friendRequests).length} 
+        onSearchClick={() => setIsSearchOpen(true)} 
+      />
+      <main className="flex pt-14 max-w-7xl mx-auto">
         <SidebarLeft currentUser={currentUser} />
-        <div className="w-full lg:w-[calc(100%-560px)] md:w-[calc(100%-280px)] md:mx-auto lg:ml-72 lg:mr-72 xl:mr-96 transition-all duration-300">
+        <div className="w-full md:ml-72 transition-all duration-300">
           {renderContent()}
         </div>
-        <SidebarRight users={filteredUsers} currentUser={currentUser}/>
       </main>
+      <BottomNav onPostClick={() => { /* Logic to open post modal */ }} />
       {isSearchOpen && (
         <SearchOverlay 
           users={users} 
