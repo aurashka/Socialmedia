@@ -242,6 +242,7 @@ const PostCard: React.FC<PostCardProps> = ({ post, user, currentUser }) => {
           <div>
             <div className="flex items-center space-x-1.5">
                 <a href={`#/profile/${user.id}`} className="font-bold hover:underline text-sm">{user.name}</a>
+                {user.badgeUrl && <img src={user.badgeUrl} alt="badge" className="w-4 h-4" />}
                 {isOwner && (post.isPublic === false) && (
                     <div title="This post is private">
                         <LockClosedIcon className="w-3 h-3 text-secondary" />

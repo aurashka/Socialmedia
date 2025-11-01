@@ -121,6 +121,10 @@ export const banUser = (userId: string) => {
     return update(ref(db, `users/${userId}`), { isBanned: true });
 };
 
+export const setUserBadge = (userId: string, badgeUrl: string | null) => {
+    return update(ref(db, `users/${userId}`), { badgeUrl });
+};
+
 
 // --- Post & Story Functions ---
 

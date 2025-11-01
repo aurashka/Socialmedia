@@ -171,7 +171,10 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({ profileUser, currentUser,
              )}
           </div>
           <div className="text-center mt-4">
-            <h2 className="text-2xl font-bold">{profileUser.name}</h2>
+            <h2 className="text-2xl font-bold flex items-center justify-center gap-2">
+              <span>{profileUser.name}</span>
+              {profileUser.badgeUrl && <img src={profileUser.badgeUrl} alt="badge" className="w-6 h-6" />}
+            </h2>
             <p className="text-secondary text-sm">{profileUser.bio || 'Professional Model'}</p>
           </div>
           

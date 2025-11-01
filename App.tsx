@@ -18,13 +18,15 @@ import BottomNav from './components/BottomNav';
 import ExplorePage from './components/explore/ExplorePage';
 import PostModal from './components/PostModal';
 import { uploadImage } from './services/imageUpload';
+import AdminPage from './components/admin/AdminPage';
 
 type Route = 
   | { name: 'home' }
   | { name: 'profile'; id?: string }
   | { name: 'friends' }
   | { name: 'explore' }
-  | { name: 'search'; query?: string };
+  | { name: 'search'; query?: string }
+  | { name: 'admin' };
 
 const parseHash = (): Route => {
     const hash = window.location.hash.substring(2);
@@ -39,6 +41,8 @@ const parseHash = (): Route => {
             return { name: 'explore' };
         case 'search':
             return { name: 'search', query: param ? decodeURIComponent(param) : undefined };
+        case 'admin':
+            return { name: 'admin' };
         default:
             return { name: 'home' };
     }
@@ -242,6 +246,11 @@ const App: React.FC = () => {
                         channels={channels}
                         posts={filteredPosts}
                      />
+          case 'admin':
+              if (currentUser.role !== 'admin') {
+                  return <div className="p-8 text-center"><h1 className="text-2xl font-bold">Access Denied</h1><p>You do not have permission to view this page.</p></div>
+              }
+              return <AdminPage users={users} />;
           default:
               return <div>Page not found</div>
       }
@@ -260,6 +269,7 @@ const App: React.FC = () => {
   }
 
   const isExplorePage = route.name === 'explore';
+  const isAdminPage = route.name === 'admin';
 
   return (
     <div className="bg-background min-h-screen text-primary pb-20 md:pb-0">
@@ -274,9 +284,11 @@ const App: React.FC = () => {
         />
       )}
       <main className={!isExplorePage ? "flex pt-14 max-w-7xl mx-auto" : ""}>
-        {!isExplorePage && <SidebarLeft currentUser={currentUser} />}
-        <div className={!isExplorePage ? "w-full md:ml-72 transition-all duration-300" : "w-full"}>
-          {renderContent()}
+        {!isExplorePage && !isAdminPage && <SidebarLeft currentUser={currentUser} />}
+        <div className={!isExplorePage && !isAdminPage ? "w-full md:ml-72 transition-all duration-300" : "w-full"}>
+           <div className={isAdminPage ? "pt-14" : ""}>
+             {renderContent()}
+           </div>
         </div>
       </main>
       <BottomNav onPostClick={() => setIsPostModalOpen(true)} currentUser={currentUser}/>

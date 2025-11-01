@@ -78,7 +78,7 @@ const Header: React.FC<HeaderProps> = ({ currentUser, friendRequestCount, users,
                     Profile
                   </a>
                   {currentUser.role === 'admin' && (
-                    <a href="#" className="block px-4 py-2 text-sm text-primary hover:bg-gray-100">
+                    <a href="#/admin" className="block px-4 py-2 text-sm text-primary hover:bg-gray-100" onClick={() => setIsMenuOpen(false)}>
                       Admin Panel
                     </a>
                   )}

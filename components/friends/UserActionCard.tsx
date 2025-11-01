@@ -44,7 +44,12 @@ const UserActionCard: React.FC<UserActionCardProps> = ({ cardUser, currentUser, 
                     <img src={cardUser.avatarUrl} alt={cardUser.name} className="w-full h-40 object-cover"/>
                 </a>
                 <div className="p-3">
-                    <a href={`#/profile/${cardUser.id}`} onClick={(e) => e.stopPropagation()} className="font-bold text-text-primary hover:underline truncate block">{cardUser.name}</a>
+                    <a href={`#/profile/${cardUser.id}`} onClick={(e) => e.stopPropagation()} className="font-bold text-text-primary hover:underline block">
+                        <div className="flex items-center gap-1.5 truncate">
+                            <span className="truncate">{cardUser.name}</span>
+                            {cardUser.badgeUrl && <img src={cardUser.badgeUrl} alt="badge" className="w-4 h-4 flex-shrink-0" />}
+                        </div>
+                    </a>
                     <div className="mt-3 flex flex-col gap-2">
                         <button onClick={handleAddFriend} disabled={loading || actionText === 'Request Sent'} className="w-full px-3 py-2 text-sm bg-primary text-white font-semibold rounded-md hover:bg-black disabled:bg-gray-300 disabled:text-gray-500 whitespace-nowrap">
                             {loading ? '...' : actionText}
@@ -61,7 +66,10 @@ const UserActionCard: React.FC<UserActionCardProps> = ({ cardUser, currentUser, 
             <a href={`#/profile/${cardUser.id}`} className="flex items-center space-x-3 flex-grow min-w-0">
                 <img src={cardUser.avatarUrl} alt={cardUser.name} className="w-12 h-12 rounded-full object-cover"/>
                 <div>
-                    <p className="font-bold text-primary hover:underline truncate">{cardUser.name}</p>
+                    <div className="font-bold text-primary hover:underline flex items-center gap-1.5 truncate">
+                      <span className="truncate">{cardUser.name}</span>
+                      {cardUser.badgeUrl && <img src={cardUser.badgeUrl} alt="badge" className="w-4 h-4 flex-shrink-0" />}
+                    </div>
                     <p className="text-sm text-secondary truncate">@{cardUser.handle}</p>
                 </div>
             </a>

@@ -11,7 +11,7 @@ const SidebarLeft: React.FC<SidebarLeftProps> = ({ currentUser }) => {
     <aside className="hidden md:block fixed top-14 left-0 w-72 h-[calc(100vh-56px)] bg-background p-4 overflow-y-auto">
       <nav>
         <ul>
-          <SidebarLink href={`#/profile/${currentUser.id}`} icon={<img src={currentUser.avatarUrl} className="w-8 h-8 rounded-full" />} text={currentUser.name || 'Profile'} />
+          <SidebarLink href={`#/profile/${currentUser.id}`} icon={<img src={currentUser.avatarUrl} className="w-8 h-8 rounded-full" />} text={currentUser.name || 'Profile'} user={currentUser} />
           <SidebarLink href="/#" icon={<HomeIcon className="w-8 h-8 text-primary" />} text="News Feed" active />
           <SidebarLink href="#/friends" icon={<UsersIcon className="w-8 h-8 text-blue-500" />} text="Friends" />
           <SidebarLink href="#/explore" icon={<CompassIcon className="w-8 h-8 text-pink-500" />} text="Explore" />
@@ -42,13 +42,17 @@ interface SidebarLinkProps {
   text: string;
   active?: boolean;
   href?: string;
+  user?: User;
 }
 
-const SidebarLink: React.FC<SidebarLinkProps> = ({ icon, text, active, href }) => {
+const SidebarLink: React.FC<SidebarLinkProps> = ({ icon, text, active, href, user }) => {
     const content = (
         <li className={`flex items-center space-x-3 p-2 rounded-lg cursor-pointer ${active ? 'bg-gray-200' : 'hover:bg-gray-100'}`}>
             {icon}
-            <span className="font-semibold text-text-primary">{text}</span>
+            <span className="font-semibold text-text-primary flex items-center gap-1.5">
+              <span>{text}</span>
+              {user?.badgeUrl && <img src={user.badgeUrl} alt="badge" className="w-4 h-4" />}
+            </span>
         </li>
     );
     return href ? <a href={href}>{content}</a> : content;

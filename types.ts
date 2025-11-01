@@ -13,6 +13,7 @@ export interface User {
   isBanned?: boolean;
   blocked?: Record<string, boolean>; // Record of blocked user IDs
   isVerified?: boolean;
+  badgeUrl?: string;
 }
 
 export interface Post {
