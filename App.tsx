@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { onValue, ref } from 'firebase/database';
-import { db, onAuthChange } from './services/firebase';
+import { db, onAuthChange, createPost } from './services/firebase';
 import type { User, Post, Story, Community, Channel } from './types';
 import type { User as FirebaseUser } from 'firebase/auth';
 import Header from './components/Header';
@@ -16,6 +16,8 @@ import { signOut } from 'firebase/auth';
 import { auth } from './services/firebase';
 import BottomNav from './components/BottomNav';
 import ExplorePage from './components/explore/ExplorePage';
+import PostModal from './components/PostModal';
+import { uploadImage } from './services/imageUpload';
 
 type Route = 
   | { name: 'home' }
@@ -53,6 +55,7 @@ const App: React.FC = () => {
   const [friendRequests, setFriendRequests] = useState<Record<string, any>>({});
   const [loading, setLoading] = useState(true);
   const [route, setRoute] = useState<Route>(parseHash());
+  const [isPostModalOpen, setIsPostModalOpen] = useState(false);
 
   useEffect(() => {
     const handleHashChange = () => setRoute(parseHash());
@@ -143,6 +146,35 @@ const App: React.FC = () => {
       channelsUnsub();
     }
   }, [currentUser]);
+
+  const handleCreatePost = async (content: string, imageFiles: File[]) => {
+    if (!currentUser) return;
+
+    let mediaUrls: string[] = [];
+    if (imageFiles.length > 0) {
+      try {
+        const uploadPromises = imageFiles.map(file => uploadImage(file));
+        mediaUrls = await Promise.all(uploadPromises);
+      } catch (error) {
+        console.error("Failed to upload one or more images:", error);
+        alert("Error uploading images. Please try again.");
+        return;
+      }
+    }
+
+    const newPost: Omit<Post, 'id' | 'comments' | 'timestamp'> = {
+      userId: currentUser.id,
+      content,
+      mediaUrls: mediaUrls.length > 0 ? mediaUrls : undefined,
+    };
+
+    try {
+      await createPost(newPost);
+    } catch (error) {
+      console.error("Failed to create post:", error);
+      alert("Error creating post. Please try again.");
+    }
+  };
   
   const filteredUsers = useMemo(() => {
     if (!currentUser?.blocked) return users;
@@ -174,6 +206,7 @@ const App: React.FC = () => {
                         posts={filteredPosts}
                         stories={filteredStories}
                         loading={posts.length === 0}
+                        onOpenPostModal={() => setIsPostModalOpen(true)}
                       />;
           case 'profile':
               return <ProfilePage
@@ -242,7 +275,14 @@ const App: React.FC = () => {
           {renderContent()}
         </div>
       </main>
-      <BottomNav onPostClick={() => { /* Logic to open post modal */ }} currentUser={currentUser}/>
+      <BottomNav onPostClick={() => setIsPostModalOpen(true)} currentUser={currentUser}/>
+      {isPostModalOpen && (
+        <PostModal
+          currentUser={currentUser}
+          onClose={() => setIsPostModalOpen(false)}
+          onSubmit={handleCreatePost}
+        />
+      )}
     </div>
   );
 };

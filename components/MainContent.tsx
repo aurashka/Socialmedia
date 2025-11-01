@@ -3,10 +3,7 @@ import type { User, Post, Story } from '../types';
 import StoryCard from './StoryCard';
 import CreatePost from './CreatePost';
 import PostCard from './PostCard';
-import PostModal from './PostModal';
 import StoryViewer from './StoryViewer';
-import { uploadImage } from '../services/imageUpload';
-import { createPost } from '../services/firebase';
 
 interface MainContentProps {
   currentUser: User;
@@ -14,38 +11,11 @@ interface MainContentProps {
   posts: Post[];
   stories: Story[];
   loading: boolean;
+  onOpenPostModal: () => void;
 }
 
-const MainContent: React.FC<MainContentProps> = ({ currentUser, users, posts, stories, loading }) => {
-  const [isPostModalOpen, setIsPostModalOpen] = useState(false);
+const MainContent: React.FC<MainContentProps> = ({ currentUser, users, posts, stories, loading, onOpenPostModal }) => {
   const [viewingStoriesOfUser, setViewingStoriesOfUser] = useState<User | null>(null);
-
-  const handleCreatePost = async (content: string, imageFiles: File[]) => {
-    let mediaUrls: string[] = [];
-    if (imageFiles.length > 0) {
-      try {
-        const uploadPromises = imageFiles.map(file => uploadImage(file));
-        mediaUrls = await Promise.all(uploadPromises);
-      } catch (error) {
-        console.error("Failed to upload one or more images:", error);
-        alert("Error uploading images. Please try again.");
-        return;
-      }
-    }
-
-    const newPost: Omit<Post, 'id' | 'likes' | 'comments' | 'timestamp'> = {
-      userId: currentUser.id,
-      content,
-      mediaUrls: mediaUrls.length > 0 ? mediaUrls : undefined,
-    };
-
-    try {
-      await createPost(newPost);
-    } catch (error) {
-      console.error("Failed to create post:", error);
-      alert("Error creating post. Please try again.");
-    }
-  };
   
   const userStoriesMap = stories.reduce((acc, story) => {
     if (!acc[story.userId]) {
@@ -84,6 +54,9 @@ const MainContent: React.FC<MainContentProps> = ({ currentUser, users, posts, st
         </div>
       </div>
       
+      {/* Create Post */}
+      <CreatePost currentUser={currentUser} onOpen={onOpenPostModal} />
+
       {/* Feed */}
       <div className="space-y-4">
         {loading ? (
@@ -95,13 +68,6 @@ const MainContent: React.FC<MainContentProps> = ({ currentUser, users, posts, st
         )}
       </div>
 
-      {isPostModalOpen && (
-        <PostModal
-          currentUser={currentUser}
-          onClose={() => setIsPostModalOpen(false)}
-          onSubmit={handleCreatePost}
-        />
-      )}
       {viewingStoriesOfUser && (
         <StoryViewer
           user={viewingStoriesOfUser}

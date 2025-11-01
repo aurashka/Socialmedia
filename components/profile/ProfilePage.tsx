@@ -2,10 +2,8 @@ import React, { useState, useEffect, useMemo } from 'react';
 import type { User, Post, Story } from '../../types';
 import ProfileHeader from './ProfileHeader';
 import PostCard from '../PostCard';
-import PostModal from '../PostModal';
 import { onValue, ref } from 'firebase/database';
-import { db, createPost, unblockUser } from '../../services/firebase';
-import { uploadImage } from '../../services/imageUpload';
+import { db, unblockUser } from '../../services/firebase';
 import { GridIcon, MenuIcon } from '../Icons';
 import StoryViewer from '../StoryViewer';
 import PostViewer from './PostViewer';
@@ -21,7 +19,6 @@ interface ProfilePageProps {
 
 const ProfilePage: React.FC<ProfilePageProps> = ({ currentUser, profileUserId, users, posts, friendRequests, stories }) => {
   const targetUserId = profileUserId || currentUser.id;
-  const [isPostModalOpen, setIsPostModalOpen] = useState(false);
   const [isFriendRequestSent, setIsFriendRequestSent] = useState(false);
   const [activeTab, setActiveTab] = useState<'grid' | 'list'>('grid');
   const [viewingStories, setViewingStories] = useState(false);
@@ -77,33 +74,6 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ currentUser, profileUserId, u
   }, [stories, targetUserId]);
 
   const isFriendRequestReceived = friendRequests && friendRequests[profileUser.id];
-  
-  const handleCreatePost = async (content: string, imageFiles: File[]) => {
-    let mediaUrls: string[] = [];
-    if (imageFiles.length > 0) {
-      try {
-        const uploadPromises = imageFiles.map(file => uploadImage(file));
-        mediaUrls = await Promise.all(uploadPromises);
-      } catch (error) {
-        console.error("Failed to upload one or more images:", error);
-        alert("Error uploading images. Please try again.");
-        return;
-      }
-    }
-
-    const newPost: Omit<Post, 'id' | 'likes' | 'comments' | 'timestamp'> = {
-      userId: currentUser.id,
-      content,
-      mediaUrls: mediaUrls.length > 0 ? mediaUrls : undefined,
-    };
-
-    try {
-      await createPost(newPost);
-    } catch (error) {
-      console.error("Failed to create post:", error);
-      alert("Error creating post. Please try again.");
-    }
-  };
   
   const renderContent = () => {
     if (userPosts.length === 0) {
@@ -162,13 +132,6 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ currentUser, profileUserId, u
           {renderContent()}
       </div>
 
-      {isPostModalOpen && (
-        <PostModal
-          currentUser={currentUser}
-          onClose={() => setIsPostModalOpen(false)}
-          onSubmit={handleCreatePost}
-        />
-      )}
       {viewingStories && profileUserStories.length > 0 && (
           <StoryViewer 
             user={profileUser}
