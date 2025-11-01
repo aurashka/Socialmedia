@@ -203,6 +203,7 @@ const App: React.FC = () => {
                         users={users}
                         communities={communities}
                         channels={channels}
+                        posts={filteredPosts}
                      />
           default:
               return <div>Page not found</div>

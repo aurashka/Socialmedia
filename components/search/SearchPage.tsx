@@ -1,7 +1,8 @@
 import React, { useState, useMemo } from 'react';
-import type { User, Community, Channel } from '../../types';
+import type { User, Community, Channel, Post } from '../../types';
 import { SearchIcon } from '../Icons';
 import { UserResultCard, CommunityResultCard, ChannelResultCard } from './SearchResultCards';
+import PostCard from '../PostCard';
 
 interface SearchPageProps {
   query: string;
@@ -9,9 +10,10 @@ interface SearchPageProps {
   users: Record<string, User>;
   communities: Record<string, Community>;
   channels: Record<string, Channel>;
+  posts: Post[];
 }
 
-type FilterType = 'all' | 'people' | 'communities' | 'channels';
+type FilterType = 'all' | 'people' | 'posts' | 'communities' | 'channels';
 
 const getScore = (text: string | undefined, query: string): number => {
     if (!text) return 0;
@@ -23,13 +25,13 @@ const getScore = (text: string | undefined, query: string): number => {
 };
 
 
-const SearchPage: React.FC<SearchPageProps> = ({ query, currentUser, users, communities, channels }) => {
+const SearchPage: React.FC<SearchPageProps> = ({ query, currentUser, users, communities, channels, posts }) => {
     const [activeFilter, setActiveFilter] = useState<FilterType>('all');
     const [showVerifiedOnly, setShowVerifiedOnly] = useState(false);
 
     const searchResults = useMemo(() => {
         const lowerQuery = query.toLowerCase();
-        if (lowerQuery.length < 2) return { people: [], communities: [], channels: [] };
+        if (lowerQuery.length < 2) return { people: [], communities: [], channels: [], posts: [] };
 
         const filteredPeople = (Object.values(users) as User[])
             .filter(u => u && u.id !== currentUser.id && u.isPublic && (!showVerifiedOnly || u.isVerified))
@@ -52,16 +54,31 @@ const SearchPage: React.FC<SearchPageProps> = ({ query, currentUser, users, comm
             .map(channel => ({ ...channel, score: getScore(channel.name, lowerQuery) }))
             .filter(c => c.score > 0)
             .sort((a,b) => b.score - a.score);
+        
+        const filteredPosts = (posts as Post[])
+            .filter(post => {
+                const postUser = users[post.userId];
+                return post.userId === currentUser.id || (postUser && postUser.isPublic && post.isPublic !== false);
+            })
+            .map(post => {
+                const contentScore = getScore(post.content, lowerQuery);
+                const tagScore = getScore(post.tag, lowerQuery);
+                const score = contentScore * 2 + tagScore * 5; // Tags are more heavily weighted
+                return { ...post, score };
+            })
+            .filter(post => post.score > 0)
+            .sort((a,b) => b.score - a.score);
 
         return {
             people: filteredPeople,
             communities: filteredCommunities,
-            channels: filteredChannels
+            channels: filteredChannels,
+            posts: filteredPosts,
         };
-    }, [query, users, communities, channels, currentUser.id, showVerifiedOnly]);
+    }, [query, users, communities, channels, posts, currentUser.id, showVerifiedOnly]);
 
     const renderResults = () => {
-        const noResults = searchResults.people.length === 0 && searchResults.communities.length === 0 && searchResults.channels.length === 0;
+        const noResults = searchResults.people.length === 0 && searchResults.communities.length === 0 && searchResults.channels.length === 0 && searchResults.posts.length === 0;
         if (noResults) {
             return (
                 <div className="bg-surface rounded-lg p-8 text-center text-secondary mt-4">
@@ -78,6 +95,16 @@ const SearchPage: React.FC<SearchPageProps> = ({ query, currentUser, users, comm
                     <ResultSection title="People">
                         {searchResults.people.map(user => <UserResultCard key={user.id} user={user} />)}
                     </ResultSection>
+                )}
+                 {(activeFilter === 'all' || activeFilter === 'posts') && searchResults.posts.length > 0 && (
+                    <section>
+                        <h3 className="text-lg font-bold mb-3">Posts</h3>
+                        <div className="space-y-4">
+                            {searchResults.posts.map(post => (
+                                <PostCard key={post.id} post={post} user={users[post.userId]} currentUser={currentUser} />
+                            ))}
+                        </div>
+                    </section>
                 )}
                  {(activeFilter === 'all' || activeFilter === 'communities') && searchResults.communities.length > 0 && (
                     <ResultSection title="Communities">
@@ -100,6 +127,7 @@ const SearchPage: React.FC<SearchPageProps> = ({ query, currentUser, users, comm
             <ul className="space-y-1">
                 <FilterButton label="All" active={activeFilter === 'all'} onClick={() => setActiveFilter('all')} />
                 <FilterButton label="People" active={activeFilter === 'people'} onClick={() => setActiveFilter('people')} />
+                <FilterButton label="Posts" active={activeFilter === 'posts'} onClick={() => setActiveFilter('posts')} />
                 <FilterButton label="Communities" active={activeFilter === 'communities'} onClick={() => setActiveFilter('communities')} />
                 <FilterButton label="Channels" active={activeFilter === 'channels'} onClick={() => setActiveFilter('channels')} />
             </ul>

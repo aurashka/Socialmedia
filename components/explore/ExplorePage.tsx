@@ -55,19 +55,16 @@ const ExplorePage: React.FC<ExplorePageProps> = ({ currentUser, users, posts }) 
         return scoredPosts;
     }, [posts, users, currentUser.id]);
     
-    const filteredPosts = useMemo(() => {
-        if (!searchQuery.trim()) {
-            return recommendedPosts;
+    const handleSearchSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        const trimmedQuery = searchQuery.trim();
+        if (trimmedQuery) {
+            window.location.hash = `#/search/${encodeURIComponent(trimmedQuery)}`;
         }
-        const lowerCaseQuery = searchQuery.toLowerCase();
-        return recommendedPosts.filter(post => 
-            post.content.toLowerCase().includes(lowerCaseQuery) ||
-            (post.tag && post.tag.toLowerCase().includes(lowerCaseQuery))
-        );
-    }, [searchQuery, recommendedPosts]);
+    };
 
     const handlePostClick = (postToFind: Post) => {
-        const index = filteredPosts.findIndex(p => p.id === postToFind.id);
+        const index = recommendedPosts.findIndex(p => p.id === postToFind.id);
         if (index !== -1) {
             setSelectedPostIndex(index);
         }
@@ -91,24 +88,24 @@ const ExplorePage: React.FC<ExplorePageProps> = ({ currentUser, users, posts }) 
     return (
         <div className="h-screen w-screen bg-background flex flex-col">
             <header className="p-2 sm:p-4 bg-surface border-b border-divider z-10 flex-shrink-0">
-                <div className="relative max-w-xl mx-auto">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <SearchIcon className="h-5 w-5 text-secondary" />
-                </div>
-                <input
-                    type="text"
-                    placeholder="Search posts by content or #tag"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full bg-gray-100 rounded-md py-2 pl-10 pr-4 text-primary focus:outline-none focus:ring-2 focus:ring-primary"
-                />
-                </div>
+                <form onSubmit={handleSearchSubmit} className="relative max-w-xl mx-auto">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <SearchIcon className="h-5 w-5 text-secondary" />
+                    </div>
+                    <input
+                        type="search"
+                        placeholder="Search users, posts, #tags..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="w-full bg-gray-100 rounded-md py-2 pl-10 pr-4 text-primary focus:outline-none focus:ring-2 focus:ring-primary"
+                    />
+                </form>
             </header>
             
             <main className="flex-1 overflow-y-auto">
-            {filteredPosts.length > 0 ? (
+            {recommendedPosts.length > 0 ? (
                 <div className="grid grid-cols-3 gap-0.5 sm:gap-1 p-0.5 sm:p-1">
-                    {filteredPosts.map((post) => (
+                    {recommendedPosts.map((post) => (
                         <div 
                             key={post.id} 
                             className="aspect-square bg-gray-200 cursor-pointer group relative"
@@ -126,14 +123,14 @@ const ExplorePage: React.FC<ExplorePageProps> = ({ currentUser, users, posts }) 
                 </div>
             ) : (
                 <div className="flex items-center justify-center h-full text-secondary">
-                    <p>No posts found {searchQuery && `for "${searchQuery}"`}.</p>
+                    <p>No posts to explore right now.</p>
                 </div>
             )}
             </main>
             
             {selectedPostIndex !== null && (
                 <PostViewerModal
-                    posts={filteredPosts}
+                    posts={recommendedPosts}
                     users={users}
                     currentUser={currentUser}
                     initialIndex={selectedPostIndex}
