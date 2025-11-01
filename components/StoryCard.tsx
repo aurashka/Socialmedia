@@ -1,7 +1,8 @@
-
-import React from 'react';
+import React, { useRef, useState } from 'react';
 import type { User, Story } from '../types';
 import { PlusIcon } from './Icons';
+import { uploadImage } from '../services/imageUpload';
+import { createStory } from '../services/firebase';
 
 interface StoryCardProps {
   story?: Story;
@@ -11,9 +12,48 @@ interface StoryCardProps {
 }
 
 const StoryCard: React.FC<StoryCardProps> = ({ story, user, isAddStory, currentUser }) => {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isUploading, setIsUploading] = useState(false);
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0] && currentUser) {
+      const file = e.target.files[0];
+      setIsUploading(true);
+      try {
+        const imageUrl = await uploadImage(file);
+        await createStory({
+          userId: currentUser.id,
+          imageUrl,
+        });
+      } catch (error) {
+        console.error('Failed to create story:', error);
+        alert('Could not create story. Please try again.');
+      } finally {
+        setIsUploading(false);
+        if (fileInputRef.current) {
+          fileInputRef.current.value = "";
+        }
+      }
+    }
+  };
+
   if (isAddStory && currentUser) {
     return (
-      <div className="flex-shrink-0 w-28 h-48 rounded-lg shadow-md overflow-hidden relative cursor-pointer group">
+      <div
+        className="flex-shrink-0 w-28 h-48 rounded-lg shadow-md overflow-hidden relative cursor-pointer group"
+        onClick={() => !isUploading && fileInputRef.current?.click()}
+        aria-label="Create a new story"
+        role="button"
+        tabIndex={0}
+      >
+        <input
+          type="file"
+          ref={fileInputRef}
+          className="hidden"
+          accept="image/*"
+          onChange={handleFileChange}
+          disabled={isUploading}
+        />
         <img src={currentUser.avatarUrl} alt="Add Story" className="w-full h-full object-cover" />
         <div className="absolute inset-0 bg-black bg-opacity-20"></div>
         <div className="absolute bottom-0 left-0 right-0 h-1/3 bg-card flex flex-col items-center justify-end p-1">
@@ -22,6 +62,11 @@ const StoryCard: React.FC<StoryCardProps> = ({ story, user, isAddStory, currentU
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-full transform border-4 border-card rounded-full bg-primary text-white p-1">
           <PlusIcon className="w-6 h-6" />
         </div>
+        {isUploading && (
+          <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center">
+            <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+          </div>
+        )}
       </div>
     );
   }

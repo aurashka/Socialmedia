@@ -1,6 +1,6 @@
-
 import { initializeApp } from 'firebase/app';
-import { getDatabase, ref, get, set } from 'firebase/database';
+import { getDatabase, ref, get, set, push } from 'firebase/database';
+import type { Post, Story } from '../types';
 
 const firebaseConfig = {
   apiKey: "AIzaSyAPPZgVrZF9SEaS42xx8RcsnM2i8EpenUQ",
@@ -15,11 +15,32 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 export const db = getDatabase(app);
 
+export const createPost = async (postData: Omit<Post, 'id' | 'likes' | 'comments' | 'timestamp'>) => {
+    const postsRef = ref(db, 'posts');
+    const newPostRef = push(postsRef);
+    await set(newPostRef, {
+        ...postData,
+        id: newPostRef.key,
+        likes: 0,
+        comments: 0,
+        timestamp: Date.now(),
+    });
+};
+
+export const createStory = async (storyData: Omit<Story, 'id'>) => {
+    const storiesRef = ref(db, 'stories');
+    const newStoryRef = push(storiesRef);
+    await set(newStoryRef, {
+        ...storyData,
+        id: newStoryRef.key,
+    });
+};
+
 export const seedDatabase = async () => {
-  const postsRef = ref(db, 'posts/post1');
-  const snapshot = await get(postsRef);
+  const dbRef = ref(db);
+  const snapshot = await get(dbRef);
   if (!snapshot.exists()) {
-    console.log('Seeding database...');
+    console.log('Database appears empty. Seeding initial data...');
     const users = {
       user1: { id: 'user1', name: 'George Alex', avatarUrl: 'https://i.pravatar.cc/150?u=user1' },
       user2: { id: 'user2', name: 'Krishna Vinjam', avatarUrl: 'https://i.pravatar.cc/150?u=user2' },

@@ -1,10 +1,12 @@
-
 import React, { useState } from 'react';
 import type { User, Post, Story } from '../types';
 import StoryCard from './StoryCard';
 import CreatePost from './CreatePost';
 import PostCard from './PostCard';
 import { SunIcon, XIcon, FilterIcon } from './Icons';
+import PostModal from './PostModal';
+import { uploadImage } from '../services/imageUpload';
+import { createPost } from '../services/firebase';
 
 interface MainContentProps {
   currentUser: User;
@@ -16,6 +18,34 @@ interface MainContentProps {
 
 const MainContent: React.FC<MainContentProps> = ({ currentUser, users, posts, stories, loading }) => {
   const [showWelcome, setShowWelcome] = useState(true);
+  const [isPostModalOpen, setIsPostModalOpen] = useState(false);
+
+  const handleCreatePost = async (content: string, imageFile?: File) => {
+    let mediaUrl: string | undefined;
+    if (imageFile) {
+      try {
+        mediaUrl = await uploadImage(imageFile);
+      } catch (error) {
+        console.error("Failed to upload image:", error);
+        alert("Error uploading image. Please try again.");
+        return;
+      }
+    }
+
+    const newPost: Omit<Post, 'id' | 'likes' | 'comments' | 'timestamp'> = {
+      userId: currentUser.id,
+      content,
+      mediaUrl,
+      mediaType: mediaUrl ? 'image' : undefined,
+    };
+
+    try {
+      await createPost(newPost);
+    } catch (error) {
+      console.error("Failed to create post:", error);
+      alert("Error creating post. Please try again.");
+    }
+  };
   
   return (
     <div className="p-2 sm:p-4 pb-16 md:pb-4 space-y-4 max-w-2xl mx-auto">
@@ -31,7 +61,7 @@ const MainContent: React.FC<MainContentProps> = ({ currentUser, users, posts, st
       </div>
       
       {/* Create Post */}
-      <CreatePost currentUser={currentUser} />
+      <CreatePost currentUser={currentUser} onOpen={() => setIsPostModalOpen(true)} />
 
       {/* Welcome Card */}
       {showWelcome && (
@@ -72,6 +102,14 @@ const MainContent: React.FC<MainContentProps> = ({ currentUser, users, posts, st
             ))
         )}
       </div>
+
+      {isPostModalOpen && (
+        <PostModal
+          currentUser={currentUser}
+          onClose={() => setIsPostModalOpen(false)}
+          onSubmit={handleCreatePost}
+        />
+      )}
     </div>
   );
 };

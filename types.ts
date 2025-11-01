@@ -1,4 +1,3 @@
-
 export interface User {
   id: string;
   name: string;
@@ -10,7 +9,7 @@ export interface Post {
   userId: string;
   content: string;
   mediaUrl?: string;
-  mediaType?: 'image' | 'video';
+  mediaType?: 'image' | 'video'; // Keep video for seeded data, but user posts will be 'image'
   timestamp: number;
   likes: number;
   comments: number;

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import type { User, Post } from '../types';
 import { ChevronDownIcon, ThumbUpIcon, ChatAltIcon, ShareIcon } from './Icons';
@@ -41,7 +40,7 @@ const PostCard: React.FC<PostCardProps> = ({ post, user }) => {
         <div className="flex items-center space-x-3">
           <img src={user.avatarUrl} alt={user.name} className="w-10 h-10 rounded-full" />
           <div>
-            <p className="font-bold">{user.name} {post.userId === 'user2' && "added video"}</p>
+            <p className="font-bold">{user.name}</p>
             <div className="flex items-center space-x-2 text-xs text-text-secondary">
               <span>{timeAgo(post.timestamp)}</span>
               {post.tag && (
@@ -59,16 +58,16 @@ const PostCard: React.FC<PostCardProps> = ({ post, user }) => {
       </div>
 
       {/* Post Content */}
-      <p className="px-4 pb-2">{post.content}</p>
+      <p className="px-4 pb-2 whitespace-pre-wrap">{post.content}</p>
 
       {/* Post Media */}
       {post.mediaUrl && (
-        <div className="bg-black">
+        <div className="bg-gray-100">
           {post.mediaType === 'video' ? (
              <div className="relative aspect-video">
                  <img src={post.mediaUrl} alt="Post media" className="w-full h-full object-cover" />
                  <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-40">
-                    <button className="w-16 h-16 bg-white bg-opacity-50 rounded-full flex items-center justify-center text-white">
+                    <button className="w-16 h-16 bg-white bg-opacity-50 rounded-full flex items-center justify-center text-white hover:bg-opacity-75 transition-opacity">
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 ml-1" viewBox="0 0 20 20" fill="currentColor">
                           <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
                         </svg>
@@ -76,7 +75,7 @@ const PostCard: React.FC<PostCardProps> = ({ post, user }) => {
                  </div>
              </div>
           ) : (
-            <img src={post.mediaUrl} alt="Post media" className="w-full max-h-[500px] object-cover" />
+            <img src={post.mediaUrl} alt="Post media" className="w-full max-h-[500px] object-contain" />
           )}
         </div>
       )}

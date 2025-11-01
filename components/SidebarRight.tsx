@@ -17,7 +17,8 @@ const SidebarRight: React.FC<SidebarRightProps> = ({ users }) => {
           <a href="#" className="text-sm text-primary hover:underline">See All</a>
         </div>
         <ul>
-          {suggestedFriends.map(user => (
+          {/* Fix: Explicitly type `user` as `User` to correct type inference issues. */}
+          {suggestedFriends.map((user: User) => (
             <li key={user.id} className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-100 cursor-pointer">
               <img src={user.avatarUrl} alt={user.name} className="w-9 h-9 rounded-full" />
               <span className="font-semibold text-sm">{user.name}</span>
