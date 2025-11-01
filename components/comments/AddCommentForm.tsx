@@ -21,8 +21,7 @@ const AddCommentForm: React.FC<AddCommentFormProps> = ({ currentUser, postId, po
 
     setIsSubmitting(true);
     try {
-      await addComment({
-        postId,
+      await addComment(postId, {
         userId: currentUser.id,
         content: content.trim(),
         parentCommentId,

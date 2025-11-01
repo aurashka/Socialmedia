@@ -47,7 +47,7 @@ const Comment: React.FC<CommentProps> = ({ comment, post, currentUser, users, on
     }, []);
 
     const handleToggleLike = async () => {
-        await toggleCommentReaction(comment.id, currentUser.id, 'like');
+        await toggleCommentReaction(post.id, comment.id, currentUser.id, 'like');
         onCommentChange(); // Refresh comments to show updated like state
     };
     
@@ -56,14 +56,14 @@ const Comment: React.FC<CommentProps> = ({ comment, post, currentUser, users, on
             setIsEditing(false);
             return;
         }
-        await updateComment(comment.id, editedContent.trim());
+        await updateComment(post.id, comment.id, editedContent.trim());
         setIsEditing(false);
         onCommentChange();
     }
     
     const handleDeleteComment = async () => {
         if (window.confirm("Are you sure you want to delete this comment?")) {
-            await deleteComment(comment);
+            await deleteComment(post.id, comment);
             onCommentChange();
         }
     }
@@ -71,7 +71,7 @@ const Comment: React.FC<CommentProps> = ({ comment, post, currentUser, users, on
     const loadReplies = async () => {
         if (loadingReplies) return;
         setLoadingReplies(true);
-        const fetchedReplies = await fetchReplies(comment.id);
+        const fetchedReplies = await fetchReplies(post.id, comment.id);
         setReplies(fetchedReplies);
         setShowReplies(true);
         setLoadingReplies(false);

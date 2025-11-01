@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 
 interface AudioPlayerProps {
   src: string;
@@ -9,40 +9,67 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ src, isCompact = false }) => 
   const [isPlaying, setIsPlaying] = useState(false);
   const [duration, setDuration] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
+  const [speed, setSpeed] = useState(1.0);
   const audioRef = useRef<HTMLAudioElement>(null);
+  const progressBarRef = useRef<HTMLDivElement>(null);
+
+  const handleTimeUpdate = useCallback(() => {
+    if (audioRef.current) {
+        setCurrentTime(audioRef.current.currentTime);
+    }
+  }, []);
+
+  const handleLoadedMetadata = useCallback(() => {
+    if (audioRef.current) {
+        setDuration(audioRef.current.duration);
+    }
+  }, []);
 
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
 
-    const setAudioData = () => {
-      setDuration(audio.duration);
-      setCurrentTime(audio.currentTime);
-    };
-
-    const setAudioTime = () => setCurrentTime(audio.currentTime);
-
-    audio.addEventListener('loadeddata', setAudioData);
-    audio.addEventListener('timeupdate', setAudioTime);
+    audio.addEventListener('timeupdate', handleTimeUpdate);
+    audio.addEventListener('loadedmetadata', handleLoadedMetadata);
+    audio.addEventListener('ended', () => setIsPlaying(false));
 
     return () => {
-      audio.removeEventListener('loadeddata', setAudioData);
-      audio.removeEventListener('timeupdate', setAudioTime);
+      audio.removeEventListener('timeupdate', handleTimeUpdate);
+      audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
+      audio.removeEventListener('ended', () => setIsPlaying(false));
     };
-  }, []);
+  }, [handleTimeUpdate, handleLoadedMetadata]);
   
-  // Effect to play/pause audio element when isPlaying state changes
   useEffect(() => {
-    if (isPlaying) {
-      audioRef.current?.play();
-    } else {
-      audioRef.current?.pause();
+    if (audioRef.current) {
+        audioRef.current.playbackRate = speed;
     }
-  }, [isPlaying]);
+  }, [speed]);
 
   const togglePlayPause = (e: React.MouseEvent) => {
     e.stopPropagation();
+    if (isPlaying) {
+      audioRef.current?.pause();
+    } else {
+      audioRef.current?.play();
+    }
     setIsPlaying(!isPlaying);
+  };
+
+  const toggleSpeed = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setSpeed(s => s === 1 ? 1.5 : s === 1.5 ? 2 : 1);
+  };
+  
+  const handleSeek = (e: React.MouseEvent<HTMLDivElement>) => {
+    if(!audioRef.current || !progressBarRef.current) return;
+    const rect = progressBarRef.current.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const width = rect.width;
+    const newTime = (x / width) * duration;
+    if(isFinite(newTime)) {
+        audioRef.current.currentTime = newTime;
+    }
   };
   
   const formatTime = (time: number) => {
@@ -55,29 +82,26 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ src, isCompact = false }) => 
   const progress = duration > 0 && isFinite(duration) ? (currentTime / duration) * 100 : 0;
 
   return (
-    <div className={`flex items-center gap-2 ${isCompact ? 'w-full' : 'w-48'}`}>
-      <audio ref={audioRef} src={src} onEnded={() => setIsPlaying(false)} preload="metadata" />
-      <button onClick={togglePlayPause} className="p-1.5 rounded-full bg-accent text-white flex-shrink-0">
+    <div className={`flex items-center gap-2 ${isCompact ? 'w-full' : 'w-64'}`}>
+      <audio ref={audioRef} src={src} preload="metadata" />
+      <button onClick={togglePlayPause} className="p-2 rounded-full bg-accent text-white flex-shrink-0">
         {isPlaying ? (
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM7 8a1 1 0 012 0v4a1 1 0 11-2 0V8zm4 0a1 1 0 012 0v4a1 1 0 11-2 0V8z" clipRule="evenodd" />
-          </svg>
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="currentColor" viewBox="0 0 16 16"><path d="M5.5 5h-1A1.5 1.5 0 0 0 3 6.5v3A1.5 1.5 0 0 0 4.5 11h1A1.5 1.5 0 0 0 7 9.5v-3A1.5 1.5 0 0 0 5.5 5zm5 0h-1A1.5 1.5 0 0 0 8 6.5v3A1.5 1.5 0 0 0 9.5 11h1A1.5 1.5 0 0 0 12 9.5v-3A1.5 1.5 0 0 0 10.5 5z"/></svg>
         ) : (
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
-          </svg>
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="currentColor" viewBox="0 0 16 16"><path d="M6.79 5.093A.5.5 0 0 0 6 5.5v5a.5.5 0 0 0 .79.407l3.5-2.5a.5.5 0 0 0 0-.814l-3.5-2.5z"/></svg>
         )}
       </button>
-      <div className="flex-grow bg-gray-200 dark:bg-gray-600 rounded-full h-1.5 cursor-pointer" onClick={(e) => {
-          if(!audioRef.current) return;
-          const rect = e.currentTarget.getBoundingClientRect();
-          const x = e.clientX - rect.left;
-          const width = rect.width;
-          audioRef.current.currentTime = (x / width) * duration;
-      }}>
-        <div style={{ width: `${progress}%` }} className="bg-accent h-full rounded-full"></div>
+      <div className="flex-grow flex flex-col justify-center">
+          <div ref={progressBarRef} className="w-full h-1.5 bg-gray-200 dark:bg-gray-500 rounded-full relative group cursor-pointer" onMouseDown={handleSeek}>
+              <div style={{ width: `${progress}%` }} className="h-1.5 bg-accent rounded-full"></div>
+              <div style={{ left: `${progress}%` }} className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-3 h-3 bg-accent rounded-full transition-opacity opacity-0 group-hover:opacity-100"></div>
+          </div>
+          <div className="flex justify-between mt-1">
+            <span className="text-xs text-secondary dark:text-gray-400 tabular-nums">{formatTime(currentTime)}</span>
+            <span className="text-xs text-secondary dark:text-gray-400 tabular-nums">{formatTime(duration)}</span>
+          </div>
       </div>
-      <span className="text-xs text-secondary dark:text-gray-400 w-10 text-right">{formatTime(duration)}</span>
+       <button onClick={toggleSpeed} className="text-xs font-bold w-10 text-center text-accent">{speed === 1 ? '1x' : `${speed.toFixed(1)}x`}</button>
     </div>
   );
 };

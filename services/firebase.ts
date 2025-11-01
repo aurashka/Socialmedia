@@ -349,8 +349,8 @@ export const toggleStoryLike = async (storyId: string, userId: string) => {
 };
 
 // --- Comment Functions ---
-export const addComment = async (commentData: Omit<Comment, 'id' | 'timestamp'>, postOwnerId: string, allUsers: Record<string, User>) => {
-    const commentsRef = ref(db, 'comments');
+export const addComment = async (postId: string, commentData: Omit<Comment, 'id' | 'timestamp'>, postOwnerId: string, allUsers: Record<string, User>) => {
+    const commentsRef = ref(db, `posts/${postId}/comments`);
     const newCommentRef = push(commentsRef);
     
     const cleanCommentData = Object.entries(commentData).reduce((acc, [key, value]) => {
@@ -368,11 +368,11 @@ export const addComment = async (commentData: Omit<Comment, 'id' | 'timestamp'>,
     
     await set(newCommentRef, newComment);
     
-    const postCommentCountRef = ref(db, `posts/${commentData.postId}/commentCount`);
+    const postCommentCountRef = ref(db, `posts/${postId}/commentCount`);
     await runTransaction(postCommentCountRef, (currentCount) => (currentCount || 0) + 1);
 
     if (commentData.parentCommentId) {
-        const parentCommentReplyCountRef = ref(db, `comments/${commentData.parentCommentId}/replyCount`);
+        const parentCommentReplyCountRef = ref(db, `posts/${postId}/comments/${commentData.parentCommentId}/replyCount`);
         await runTransaction(parentCommentReplyCountRef, (currentCount) => (currentCount || 0) + 1);
         // TODO: Notify parent comment owner
     } else {
@@ -381,7 +381,7 @@ export const addComment = async (commentData: Omit<Comment, 'id' | 'timestamp'>,
             recipientId: postOwnerId,
             senderId: commentData.userId,
             type: 'comment',
-            postId: commentData.postId,
+            postId: postId,
             commentId: newComment.id
         });
     }
@@ -393,35 +393,34 @@ export const addComment = async (commentData: Omit<Comment, 'id' | 'timestamp'>,
             recipientId: userId,
             senderId: newComment.userId,
             type: 'mention',
-            postId: newComment.postId,
+            postId: postId,
             commentId: newComment.id
         });
     });
 };
 
-export const deleteComment = async (comment: Comment) => {
-    // 1. Remove the comment itself (and any replies, if desired - handled by rules for now)
-    await remove(ref(db, `comments/${comment.id}`));
+export const deleteComment = async (postId: string, comment: Comment) => {
+    // 1. Remove the comment itself
+    await remove(ref(db, `posts/${postId}/comments/${comment.id}`));
 
     // 2. Decrement post's comment count transactionally
-    const postCommentCountRef = ref(db, `posts/${comment.postId}/commentCount`);
+    const postCommentCountRef = ref(db, `posts/${postId}/commentCount`);
     await runTransaction(postCommentCountRef, (currentCount) => (currentCount || 1) - 1);
 
     // 3. If it's a reply, decrement parent's reply count transactionally
     if (comment.parentCommentId) {
-        const parentReplyCountRef = ref(db, `comments/${comment.parentCommentId}/replyCount`);
+        const parentReplyCountRef = ref(db, `posts/${postId}/comments/${comment.parentCommentId}/replyCount`);
         await runTransaction(parentReplyCountRef, (currentCount) => (currentCount || 1) - 1);
     }
-    // Note: Deleting a comment with replies will orphan them. A more robust solution involves a Cloud Function.
 };
 
-export const updateComment = async (commentId: string, newContent: string) => {
-    const commentRef = ref(db, `comments/${commentId}`);
+export const updateComment = async (postId: string, commentId: string, newContent: string) => {
+    const commentRef = ref(db, `posts/${postId}/comments/${commentId}`);
     return update(commentRef, { content: newContent });
 };
 
-export const toggleCommentReaction = async (commentId: string, userId: string, reactionType: string) => {
-    const reactionRef = ref(db, `comments/${commentId}/reactions/${reactionType}/${userId}`);
+export const toggleCommentReaction = async (postId: string, commentId: string, userId: string, reactionType: string) => {
+    const reactionRef = ref(db, `posts/${postId}/comments/${commentId}/reactions/${reactionType}/${userId}`);
     return runTransaction(reactionRef, (currentData) => {
         return currentData ? null : true;
     });
@@ -429,14 +428,9 @@ export const toggleCommentReaction = async (commentId: string, userId: string, r
 
 
 export const fetchComments = async (postId: string): Promise<Comment[]> => {
-    const commentsRef = ref(db, 'comments');
-    const commentsQuery = query(
-        commentsRef, 
-        orderByChild('postId'), 
-        equalTo(postId)
-    );
+    const commentsRef = ref(db, `posts/${postId}/comments`);
     
-    const snapshot = await get(commentsQuery);
+    const snapshot = await get(commentsRef);
     if (!snapshot.exists()) return [];
     
     let allComments = Object.values(snapshot.val()) as Comment[];
@@ -447,8 +441,8 @@ export const fetchComments = async (postId: string): Promise<Comment[]> => {
 };
 
 
-export const fetchReplies = async (commentId: string): Promise<Comment[]> => {
-    const repliesRef = ref(db, 'comments');
+export const fetchReplies = async (postId: string, commentId: string): Promise<Comment[]> => {
+    const repliesRef = ref(db, `posts/${postId}/comments`);
     const repliesQuery = query(repliesRef, orderByChild('parentCommentId'), equalTo(commentId));
     
     const snapshot = await get(repliesQuery);

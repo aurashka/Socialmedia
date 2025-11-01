@@ -1,10 +1,13 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import type { User, Post } from '../types';
+import type { User, Post, Comment as CommentType } from '../types';
 import { DotsHorizontalIcon, HeartIcon, HeartIconFilled, ChatIcon, ShareIcon, TrashIcon, ChevronLeftIcon, ChevronRightIcon, PencilIcon, BookmarkIcon, BookmarkIconFilled, GlobeIcon, UsersIcon, LockClosedIcon } from './Icons';
 import { parseContent } from '../utils/textUtils';
 import { updatePost, deletePost, toggleReaction, toggleBookmark } from '../services/firebase';
 import AddCommentForm from './comments/AddCommentForm';
 import PostCardShimmer from './shimmers/PostCardShimmer';
+import { db } from '../services/firebase';
+import { ref, query, orderByChild, limitToLast, onValue } from 'firebase/database';
+
 
 interface PostCardProps {
   post: Post;
@@ -22,10 +25,38 @@ const PostCard: React.FC<PostCardProps> = ({ post, user, currentUser, users, onO
   const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
   const [isLiked, setIsLiked] = useState(false);
   const [animateLike, setAnimateLike] = useState(false);
+  const [latestComment, setLatestComment] = useState<CommentType | null>(null);
   
   const menuRef = useRef<HTMLDivElement>(null);
   const isOwner = currentUser?.id === post.userId;
   const isBookmarked = !!currentUser.bookmarkedPosts?.[post.id];
+
+  const latestCommentUser = useMemo(() => {
+    if (latestComment) {
+        return users[latestComment.userId] || null;
+    }
+    return null;
+  }, [latestComment, users]);
+
+  useEffect(() => {
+      let unsubscribe = () => {};
+      if (post.commentCount > 0) {
+          const commentsRef = ref(db, `posts/${post.id}/comments`);
+          const q = query(commentsRef, orderByChild('timestamp'), limitToLast(1));
+          unsubscribe = onValue(q, (snapshot) => {
+              if (snapshot.exists()) {
+                  const commentsData = snapshot.val();
+                  const comment = Object.values(commentsData)[0] as CommentType;
+                  setLatestComment(comment);
+              } else {
+                  setLatestComment(null);
+              }
+          });
+      } else {
+          setLatestComment(null);
+      }
+      return () => unsubscribe();
+  }, [post.id, post.commentCount]);
 
   const reactionsSummary = useMemo(() => {
     if (!post.reactions || !post.reactions.like) {
@@ -269,6 +300,17 @@ const PostCard: React.FC<PostCardProps> = ({ post, user, currentUser, users, onO
           <button onClick={() => onOpenCommentSheet(post.id)} className="text-sm text-secondary dark:text-gray-400 cursor-pointer hover:underline">
             View all {post.commentCount} comments
           </button>
+        )}
+        {latestComment && latestCommentUser && post.commentCount > 1 && (
+            <div className="text-sm text-secondary dark:text-gray-400 pt-1 flex gap-2">
+                <a href={`#/profile/${latestCommentUser.id}`}>
+                    <img src={latestCommentUser.avatarUrl} alt={latestCommentUser.name} className="w-5 h-5 rounded-full"/>
+                </a>
+                <p className="truncate flex-1">
+                    <a href={`#/profile/${latestCommentUser.id}`} className="font-semibold text-primary dark:text-gray-200 hover:underline">{latestCommentUser.handle}</a>
+                    <span className="ml-1.5">{latestComment.content}</span>
+                </p>
+            </div>
         )}
       </div>
       
