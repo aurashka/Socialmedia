@@ -1,3 +1,4 @@
+
 import { initializeApp } from 'firebase/app';
 import { 
   getDatabase, 
@@ -13,7 +14,13 @@ import {
   runTransaction,
   limitToLast,
   endBefore,
-  orderByKey
+  orderByKey,
+  onValue,
+  serverTimestamp,
+  goOnline,
+  goOffline,
+  // FIX: Import onDisconnect to handle user presence.
+  onDisconnect,
 } from 'firebase/database';
 import { 
   getAuth, 
@@ -23,7 +30,7 @@ import {
   onAuthStateChanged,
   type User as FirebaseUser
 } from 'firebase/auth';
-import type { Post, Story, User, Comment, Notification } from '../types';
+import type { Post, Story, User, Comment, Notification, Message } from '../types';
 import { findMentions } from '../utils/textUtils';
 
 const firebaseConfig = {
@@ -36,7 +43,8 @@ const firebaseConfig = {
   appId: "1:95634892627:web:1500052cb60f3b7e4823a6",
 };
 
-const app = initializeApp(firebaseConfig);
+// FIX: Export 'app' so it can be used in other files (e.g., for initializing storage).
+export const app = initializeApp(firebaseConfig);
 export const db = getDatabase(app);
 export const auth = getAuth(app);
 
@@ -68,7 +76,36 @@ export const markNotificationsAsRead = async (userId: string, notificationIds: s
 // --- User & Auth Functions ---
 
 export const onAuthChange = (callback: (user: FirebaseUser | null) => void) => {
-  return onAuthStateChanged(auth, callback);
+  return onAuthStateChanged(auth, (user) => {
+    if (user) {
+        // User is signed in.
+        goOnline(db);
+        const userStatusDatabaseRef = ref(db, `/status/${user.uid}`);
+        const isOfflineForDatabase = {
+            state: 'offline',
+            last_changed: serverTimestamp(),
+        };
+        const isOnlineForDatabase = {
+            state: 'online',
+            last_changed: serverTimestamp(),
+        };
+
+        onValue(ref(db, '.info/connected'), (snapshot) => {
+            if (snapshot.val() === false) {
+                // Instead of returning, we'll just set the offline status
+                set(userStatusDatabaseRef, isOfflineForDatabase);
+                return;
+            }
+            onDisconnect(userStatusDatabaseRef).set(isOfflineForDatabase).then(() => {
+                set(userStatusDatabaseRef, isOnlineForDatabase);
+            });
+        });
+    } else {
+        // User is signed out.
+        goOffline(db);
+    }
+    callback(user);
+  });
 };
 
 export const getUserProfile = async (userId: string): Promise<User | null> => {
@@ -371,6 +408,60 @@ export const fetchReplies = async (commentId: string): Promise<Comment[]> => {
     
     const replies = Object.values(snapshot.val()) as Comment[];
     return replies.sort((a, b) => a.timestamp - b.timestamp);
+};
+
+// --- Messaging Functions ---
+
+export const getOrCreateConversation = async (currentUserId: string, otherUserId: string): Promise<string> => {
+    const conversationId = [currentUserId, otherUserId].sort().join('_');
+    const conversationRef = ref(db, `conversations/${conversationId}`);
+    const snapshot = await get(conversationRef);
+
+    if (snapshot.exists()) {
+        return conversationId;
+    } else {
+        await set(conversationRef, {
+            id: conversationId,
+            participants: {
+                [currentUserId]: true,
+                [otherUserId]: true,
+            },
+            lastMessage: {
+                text: 'Conversation started',
+                senderId: currentUserId,
+                timestamp: serverTimestamp()
+            },
+            lastRead: {
+                [currentUserId]: Date.now(),
+                [otherUserId]: 0
+            }
+        });
+        return conversationId;
+    }
+};
+
+export const sendMessage = async (conversationId: string, senderId: string, messageData: { text?: string; mediaUrl?: string; mediaType?: 'image' | 'audio' }) => {
+    const messagesRef = ref(db, `messages/${conversationId}`);
+    const newMessageRef = push(messagesRef);
+    
+    const message: Omit<Message, 'id'> = {
+        conversationId,
+        senderId,
+        timestamp: Date.now(),
+        ...messageData,
+    };
+    await set(newMessageRef, { ...message, id: newMessageRef.key });
+
+    const conversationRef = ref(db, `conversations/${conversationId}`);
+    await update(conversationRef, {
+        lastMessage: {
+            text: message.text,
+            mediaType: message.mediaType,
+            senderId: senderId,
+            timestamp: serverTimestamp(),
+        },
+        [`lastRead/${senderId}`]: Date.now()
+    });
 };
 
 

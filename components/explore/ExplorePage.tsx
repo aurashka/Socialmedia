@@ -54,7 +54,7 @@ const ExplorePage: React.FC<ExplorePageProps> = ({ currentUser, users, posts, fr
     return (
         <div className="bg-background dark:bg-black min-h-screen">
             <main className="max-w-5xl mx-auto py-4 px-2 space-y-6">
-                <div onClick={() => setIsSearchOpen(true)} className="flex items-center bg-gray-200 dark:bg-gray-800 rounded-md h-10 px-4 cursor-text">
+                <div onClick={() => setIsSearchOpen(true)} className="flex items-center bg-gray-200 dark:bg-[#424242] rounded-md h-10 px-4 cursor-text">
                     <SearchIcon className="h-5 w-5 text-secondary dark:text-gray-400" />
                     <span className="ml-3 text-secondary dark:text-gray-400">Search</span>
                 </div>
@@ -83,7 +83,7 @@ const ExplorePage: React.FC<ExplorePageProps> = ({ currentUser, users, posts, fr
                     {explorePosts.map((post) => (
                         <div 
                             key={post.id} 
-                            className="aspect-square bg-divider dark:bg-gray-800 cursor-pointer group relative"
+                            className="aspect-square bg-divider dark:bg-[#424242] cursor-pointer group relative"
                             onClick={() => setSelectedPost(post)}
                         >
                             {post.mediaUrls && post.mediaUrls.length > 0 && (

@@ -36,7 +36,7 @@ const Login: React.FC<LoginProps> = ({ onSwitchToRegister }) => {
             placeholder="Email address"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full px-3 py-2 border dark:border-gray-700 rounded-md bg-background dark:bg-gray-800 text-primary dark:text-gray-100 focus:outline-none focus:border-secondary dark:focus:border-accent text-sm"
+            className="w-full px-3 py-2 border dark:border-gray-700 rounded-md bg-background dark:bg-[#303030] text-primary dark:text-gray-100 focus:outline-none focus:border-secondary dark:focus:border-accent text-sm"
             required
           />
           <input
@@ -44,7 +44,7 @@ const Login: React.FC<LoginProps> = ({ onSwitchToRegister }) => {
             placeholder="Password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full px-3 py-2 border dark:border-gray-700 rounded-md bg-background dark:bg-gray-800 text-primary dark:text-gray-100 focus:outline-none focus:border-secondary dark:focus:border-accent text-sm"
+            className="w-full px-3 py-2 border dark:border-gray-700 rounded-md bg-background dark:bg-[#303030] text-primary dark:text-gray-100 focus:outline-none focus:border-secondary dark:focus:border-accent text-sm"
             required
           />
           <button

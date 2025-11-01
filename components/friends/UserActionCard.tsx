@@ -39,7 +39,7 @@ const UserActionCard: React.FC<UserActionCardProps> = ({ cardUser, currentUser, 
     
     if (isVertical) {
         return (
-            <div className="bg-surface dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden border border-divider dark:border-gray-700">
+            <div className="bg-surface dark:bg-[#424242] rounded-lg shadow-sm overflow-hidden border border-divider dark:border-gray-700">
                 <a href={`#/profile/${cardUser.id}`} onClick={(e) => e.stopPropagation()}>
                     <img src={cardUser.avatarUrl} alt={cardUser.name} className="w-full h-40 object-cover"/>
                 </a>
@@ -62,7 +62,7 @@ const UserActionCard: React.FC<UserActionCardProps> = ({ cardUser, currentUser, 
 
     // Horizontal card for requests/search results
     return (
-        <div className="bg-surface dark:bg-gray-800 rounded-lg p-3 flex items-center justify-between transition-shadow hover:bg-gray-50 dark:hover:bg-gray-700 w-full">
+        <div className="bg-surface dark:bg-[#424242] rounded-lg p-3 flex items-center justify-between transition-shadow hover:bg-gray-50 dark:hover:bg-[#303030] w-full">
             <a href={`#/profile/${cardUser.id}`} className="flex items-center space-x-3 flex-grow min-w-0">
                 <img src={cardUser.avatarUrl} alt={cardUser.name} className="w-12 h-12 rounded-full object-cover"/>
                 <div>

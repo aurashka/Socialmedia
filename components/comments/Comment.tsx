@@ -139,7 +139,7 @@ const Comment: React.FC<CommentProps> = ({ comment, post, currentUser, users, on
                             <DotsHorizontalIcon className="w-4 h-4 text-secondary"/>
                         </button>
                         {isMenuOpen && (
-                             <div className="absolute right-0 mt-2 w-32 bg-surface dark:bg-gray-800 rounded-md shadow-lg py-1 z-10 border border-divider dark:border-gray-700">
+                             <div className="absolute right-0 mt-2 w-32 bg-surface dark:bg-[#424242] rounded-md shadow-lg py-1 z-10 border border-divider dark:border-gray-700">
                                 {isOwner && (
                                     <button onClick={() => { setIsEditing(true); setIsMenuOpen(false); }} className="w-full text-left flex items-center space-x-2 px-3 py-1.5 text-sm hover:bg-gray-100 dark:hover:bg-gray-700">
                                         <PencilIcon className="w-4 h-4"/><span>Edit</span>

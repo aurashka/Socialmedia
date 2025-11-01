@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { onValue, ref, query, limitToLast, orderByChild } from 'firebase/database';
+import { onValue, ref, query, limitToLast, orderByChild, equalTo } from 'firebase/database';
 import { db, onAuthChange, createPost } from './services/firebase';
-import type { User, Post, Story, Community, Channel, Notification } from './types';
+import type { User, Post, Story, Community, Channel, Notification, Conversation } from './types';
 import type { User as FirebaseUser } from 'firebase/auth';
 import Header from './components/Header';
 import MainContent from './components/MainContent';
@@ -16,11 +16,12 @@ import { auth } from './services/firebase';
 import BottomNav from './components/BottomNav';
 import ExplorePage from './components/explore/ExplorePage';
 import PostModal from './components/PostModal';
-import { uploadImage } from './services/imageUpload';
+import { uploadMedia } from './services/mediaUpload';
 import AdminPage from './components/admin/AdminPage';
 import { ThemeProvider } from './contexts/ThemeContext';
 import SettingsPage from './components/settings/SettingsPage';
 import CommentSheet from './components/comments/CommentSheet';
+import MessagesPage from './components/messages/MessagesPage';
 
 type Route = 
   | { name: 'home' }
@@ -29,7 +30,8 @@ type Route =
   | { name: 'explore' }
   | { name: 'search'; query?: string }
   | { name: 'admin' }
-  | { name: 'settings' };
+  | { name: 'settings' }
+  | { name: 'messages'; id?: string };
 
 const parseHash = (): Route => {
     const hash = window.location.hash.substring(2);
@@ -48,6 +50,8 @@ const parseHash = (): Route => {
             return { name: 'admin' };
         case 'settings':
             return { name: 'settings' };
+        case 'messages':
+            return { name: 'messages', id: param };
         default:
             return { name: 'home' };
     }
@@ -63,6 +67,8 @@ const App: React.FC = () => {
   const [channels, setChannels] = useState<Record<string, Channel>>({});
   const [friendRequests, setFriendRequests] = useState<Record<string, any>>({});
   const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [onlineStatuses, setOnlineStatuses] = useState<Record<string, any>>({});
   const [loading, setLoading] = useState(true);
   const [initialPostLoad, setInitialPostLoad] = useState(true);
   const [route, setRoute] = useState<Route>({ name: 'home' });
@@ -70,22 +76,14 @@ const App: React.FC = () => {
   const [commentSheetPost, setCommentSheetPost] = useState<Post | null>(null);
 
   useEffect(() => {
-    const handleHashChange = (event?: HashChangeEvent) => {
-        if (event && event.oldURL.includes('#/') && !event.newURL.includes('#/')) {
-            const confirmed = window.confirm("Are you sure you want to exit ConnectSphere?");
-            if (!confirmed) {
-                // Prevent navigation by restoring the old hash
-                window.location.hash = new URL(event.oldURL).hash || '/';
-                return; 
-            }
-        }
+    const handleHashChange = () => {
         setRoute(parseHash());
     };
     
     setRoute(parseHash()); // Initial call
     
-    window.addEventListener('hashchange', handleHashChange as EventListener);
-    return () => window.removeEventListener('hashchange', handleHashChange as EventListener);
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
   }, []);
 
   useEffect(() => {
@@ -183,6 +181,23 @@ const App: React.FC = () => {
             setNotifications([]);
         }
     });
+
+    const conversationsRef = ref(db, 'conversations');
+    const userConvsQuery = query(conversationsRef, orderByChild(`participants/${currentUser.id}`), equalTo(true));
+    const convsUnsub = onValue(userConvsQuery, (snapshot) => {
+        if (snapshot.exists()) {
+            const convsData = snapshot.val();
+            const convsArray = Object.values(convsData) as Conversation[];
+            setConversations(convsArray.sort((a, b) => b.lastMessage.timestamp - a.lastMessage.timestamp));
+        } else {
+            setConversations([]);
+        }
+    });
+
+    const statusRef = ref(db, 'status');
+    const statusUnsub = onValue(statusRef, (snapshot) => {
+        setOnlineStatuses(snapshot.val() || {});
+    });
     
     return () => {
       usersUnsub();
@@ -192,6 +207,8 @@ const App: React.FC = () => {
       communitiesUnsub();
       channelsUnsub();
       notifsUnsub();
+      convsUnsub();
+      statusUnsub();
     }
   }, [currentUser?.id]);
 
@@ -201,7 +218,7 @@ const App: React.FC = () => {
     let mediaUrls: string[] = [];
     if (imageFiles.length > 0) {
       try {
-        const uploadPromises = imageFiles.map(file => uploadImage(file));
+        const uploadPromises = imageFiles.map(file => uploadMedia(file, 'image'));
         mediaUrls = await Promise.all(uploadPromises);
       } catch (error) {
         console.error("Failed to upload one or more images:", error);
@@ -309,6 +326,7 @@ const App: React.FC = () => {
                         currentUser={currentUser}
                         users={users}
                         friendRequests={friendRequests}
+                        onlineStatuses={onlineStatuses}
                      />
            case 'explore':
                 return <ExplorePage
@@ -330,6 +348,14 @@ const App: React.FC = () => {
                         posts={posts} // Pass all posts
                         onOpenCommentSheet={openCommentSheet}
                      />
+          case 'messages':
+                return <MessagesPage
+                          currentUser={currentUser}
+                          users={users}
+                          onlineStatuses={onlineStatuses}
+                          conversations={conversations}
+                          activeConversationId={route.id}
+                       />
           case 'admin':
               if (currentUser.role !== 'admin') {
                   return <div className="p-8 text-center text-primary dark:text-gray-100"><h1 className="text-2xl font-bold">Access Denied</h1><p>You do not have permission to view this page.</p></div>
@@ -355,10 +381,11 @@ const App: React.FC = () => {
   }
 
   const isExplorePage = route.name === 'explore';
+  const isMessagesPage = route.name === 'messages';
 
   return (
     <ThemeProvider>
-      <div className="bg-background dark:bg-black min-h-screen pb-20 md:pb-0 text-primary dark:text-gray-100">
+      <div className="bg-background dark:bg-[#303030] min-h-screen pb-20 md:pb-0 text-primary dark:text-gray-100">
         <Header 
           currentUser={currentUser} 
           friendRequestCount={Object.keys(friendRequests).length}
@@ -369,10 +396,10 @@ const App: React.FC = () => {
           channels={channels}
           notifications={notifications}
         />
-        <main className="pt-14">
+        <main className={`pt-14 ${isMessagesPage ? 'h-screen' : ''}`}>
           {renderContent()}
         </main>
-        <BottomNav onPostClick={() => setIsPostModalOpen(true)} currentUser={currentUser}/>
+        {!isMessagesPage && <BottomNav onPostClick={() => setIsPostModalOpen(true)} currentUser={currentUser}/>}
         {isPostModalOpen && (
           <PostModal
             currentUser={currentUser}

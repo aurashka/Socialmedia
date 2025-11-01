@@ -22,7 +22,7 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ currentUser
     }, [notifications, currentUser.id]);
 
     return (
-        <div className="absolute right-0 top-12 mt-2 w-80 sm:w-96 bg-surface dark:bg-gray-800 rounded-lg shadow-lg z-50 border border-divider dark:border-gray-700 flex flex-col max-h-[80vh]">
+        <div className="absolute right-0 top-12 mt-2 w-80 sm:w-96 bg-surface dark:bg-[#424242] rounded-lg shadow-lg z-50 border border-divider dark:border-gray-700 flex flex-col max-h-[80vh]">
             <div className="p-4 border-b border-divider dark:border-gray-700">
                 <h3 className="font-bold text-xl text-primary dark:text-gray-100">Notifications</h3>
             </div>

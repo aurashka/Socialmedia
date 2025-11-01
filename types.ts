@@ -15,6 +15,8 @@ export interface User {
   isVerified?: boolean;
   badgeUrl?: string;
   bookmarkedPosts?: Record<string, boolean>; // Record of bookmarked post IDs
+  onlineStatus?: 'online' | 'offline';
+  lastChanged?: number;
 }
 
 export interface Post {
@@ -53,7 +55,6 @@ export interface Notification {
   timestamp: number;
 }
 
-
 export interface Story {
   id: string;
   userId: string;
@@ -81,5 +82,28 @@ export interface Channel {
   creatorId: string;
   subscribers: Record<string, boolean>;
   isVerified?: boolean;
+  timestamp: number;
+}
+
+export interface Conversation {
+  id: string;
+  participants: Record<string, boolean>;
+  lastMessage: {
+    text?: string;
+    mediaType?: 'image' | 'audio';
+    senderId: string;
+    timestamp: number;
+  };
+  lastRead: Record<string, number>;
+  typing?: Record<string, boolean>;
+}
+
+export interface Message {
+  id: string;
+  conversationId: string;
+  senderId: string;
+  text?: string;
+  mediaUrl?: string;
+  mediaType?: 'image' | 'audio';
   timestamp: number;
 }

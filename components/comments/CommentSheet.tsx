@@ -18,9 +18,14 @@ const CommentSheet: React.FC<CommentSheetProps> = ({ post, currentUser, users, o
 
     const loadComments = useCallback(async () => {
         setLoading(true);
-        const fetchedComments = await fetchComments(post.id);
-        setComments(fetchedComments);
-        setLoading(false);
+        try {
+            const fetchedComments = await fetchComments(post.id);
+            setComments(fetchedComments);
+        } catch (error) {
+            console.error("Failed to fetch comments:", error);
+        } finally {
+            setLoading(false);
+        }
     }, [post.id]);
 
     useEffect(() => {
@@ -38,7 +43,7 @@ const CommentSheet: React.FC<CommentSheetProps> = ({ post, currentUser, users, o
                 .animate-fade-in { animation: fade-in 0.2s ease-out forwards; }
             `}</style>
             <div 
-                className="bg-surface dark:bg-gray-800 rounded-t-2xl md:rounded-lg shadow-xl w-full max-w-lg flex flex-col h-[85vh] md:h-[70vh] text-primary dark:text-gray-100 animate-slide-up md:animate-fade-in" 
+                className="bg-surface dark:bg-[#424242] rounded-t-2xl md:rounded-lg shadow-xl w-full max-w-lg flex flex-col h-[85vh] md:h-[70vh] text-primary dark:text-gray-100 animate-slide-up md:animate-fade-in" 
                 onClick={e => e.stopPropagation()}
             >
                 <div className="p-4 border-b border-divider dark:border-gray-700 flex justify-between items-center flex-shrink-0">
@@ -73,10 +78,12 @@ const CommentSheet: React.FC<CommentSheetProps> = ({ post, currentUser, users, o
                     )}
                 </div>
 
-                <div className="p-4 border-t border-divider dark:border-gray-700 flex-shrink-0 bg-surface dark:bg-gray-800">
+                <div className="p-4 border-t border-divider dark:border-gray-700 flex-shrink-0 bg-surface dark:bg-[#424242]">
                     <AddCommentForm 
                         postId={post.id} 
+                        postOwnerId={post.userId}
                         currentUser={currentUser} 
+                        allUsers={users}
                         onCommentAdded={loadComments} 
                     />
                 </div>

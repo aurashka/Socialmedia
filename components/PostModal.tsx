@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import type { User, Post } from '../types';
 import { XIcon, GlobeIcon, UsersIcon, LockClosedIcon, ChevronDownIcon } from './Icons';
+import { uploadMedia } from '../services/mediaUpload';
 
 interface PostModalProps {
   currentUser: User;
@@ -72,7 +73,7 @@ const PostModal: React.FC<PostModalProps> = ({ currentUser, onClose, onSubmit })
             @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
             .animate-fade-in { animation: fade-in 0.2s ease-out forwards; }
         `}</style>
-      <div className="bg-surface dark:bg-gray-800 rounded-t-2xl md:rounded-lg shadow-xl w-full max-w-lg flex flex-col max-h-full md:max-h-[90vh] transform transition-all text-primary dark:text-gray-100 absolute bottom-0 md:relative animate-slide-up md:animate-none" onClick={e => e.stopPropagation()}>
+      <div className="bg-surface dark:bg-[#424242] rounded-t-2xl md:rounded-lg shadow-xl w-full max-w-lg flex flex-col max-h-full md:max-h-[90vh] transform transition-all text-primary dark:text-gray-100 absolute bottom-0 md:relative animate-slide-up md:animate-none" onClick={e => e.stopPropagation()}>
         <div className="p-4 border-b border-divider dark:border-gray-700 flex justify-between items-center flex-shrink-0">
           <h2 className="text-xl font-bold">Create Post</h2>
           <button onClick={onClose} className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700" aria-label="Close">
@@ -92,7 +93,7 @@ const PostModal: React.FC<PostModalProps> = ({ currentUser, onClose, onSubmit })
                         <ChevronDownIcon className="w-4 h-4"/>
                     </button>
                     {isPrivacyMenuOpen && (
-                        <div className="absolute top-full mt-2 w-48 bg-surface dark:bg-gray-800 rounded-lg shadow-lg border border-divider dark:border-gray-700 z-10">
+                        <div className="absolute top-full mt-2 w-48 bg-surface dark:bg-[#424242] rounded-lg shadow-lg border border-divider dark:border-gray-700 z-10">
                             {privacyOptions.map(opt => (
                                 <button key={opt.value} type="button" onClick={() => { setPrivacy(opt.value); setIsPrivacyMenuOpen(false); }} className="w-full text-left flex items-center space-x-3 p-2 hover:bg-gray-100 dark:hover:bg-gray-700">
                                     <div className="p-2 bg-gray-200 dark:bg-gray-600 rounded-full"><opt.Icon className="w-4 h-4" /></div>

@@ -118,10 +118,12 @@ export const PlusSquareIcon: React.FC<IconProps> = ({ className, strokeWidth = 2
 );
 
 export const MessageIcon: React.FC<IconProps> = ({ className, strokeWidth = 2 }) => (
-    <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={strokeWidth} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-    </svg>
+  <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={strokeWidth} d="M20 12H4m16 0-4 4m4-4-4-4M4 12l4 4M4 12l4-4" />
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={strokeWidth} d="M3 8.688V5.313C3 4.588 3.588 4 4.313 4h15.374C20.412 4 21 4.588 21 5.313v13.374c0 .725-.588 1.313-1.313 1.313H4.313C3.588 20 3 19.412 3 18.688V15.312" />
+</svg>
 );
+
 
 export const GridIcon: React.FC<IconProps> = ({ className, strokeWidth = 2 }) => (
   <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -212,5 +214,11 @@ export const BookmarkIconFilled: React.FC<IconProps> = ({ className }) => (
 export const GlobeIcon: React.FC<IconProps> = ({ className, strokeWidth = 1.5 }) => (
     <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={strokeWidth} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2h1a2 2 0 002-2v-1a2 2 0 012-2h1.945M12 21a9 9 0 110-18 9 9 0 010 18z" />
+    </svg>
+);
+
+export const MicrophoneIcon: React.FC<IconProps> = ({ className }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
     </svg>
 );

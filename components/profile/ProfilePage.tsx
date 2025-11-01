@@ -42,7 +42,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ currentUser, profileUserId, u
         await unblockUser(currentUser.id, targetUserId);
     };
     return (
-        <div className="p-8 text-center bg-surface dark:bg-gray-800 rounded-lg shadow-sm max-w-2xl mx-auto mt-4">
+        <div className="p-8 text-center bg-surface dark:bg-[#424242] rounded-lg shadow-sm max-w-2xl mx-auto mt-4">
             <h2 className="text-xl font-bold text-primary dark:text-gray-100">User Blocked</h2>
             <p className="text-secondary dark:text-gray-400 mt-2">You can't see this profile because you've blocked this user.</p>
             <button 
@@ -93,7 +93,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ currentUser, profileUserId, u
     if (activeTab === 'posts') {
       if (userPosts.length === 0) {
         return (
-          <div className="bg-surface dark:bg-gray-900 rounded-lg p-8 text-center text-secondary dark:text-gray-400 mt-1">
+          <div className="bg-surface dark:bg-[#424242] rounded-lg p-8 text-center text-secondary dark:text-gray-400 mt-1">
             <p>{isCurrentUser ? "You haven't" : `${profileUser.name} hasn't`} posted anything yet.</p>
           </div>
         );
@@ -102,7 +102,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ currentUser, profileUserId, u
         <div className="grid grid-cols-3 gap-1">
           {userPosts.map(post => (
             post.mediaUrls && post.mediaUrls.length > 0 ? (
-              <div key={post.id} className="aspect-square bg-gray-200 dark:bg-gray-800 cursor-pointer" onClick={() => setSelectedPost(post)}>
+              <div key={post.id} className="aspect-square bg-gray-200 dark:bg-[#303030] cursor-pointer" onClick={() => setSelectedPost(post)}>
                 <img src={post.mediaUrls[0]} alt="post" className="w-full h-full object-cover" />
               </div>
             ) : null
@@ -114,7 +114,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ currentUser, profileUserId, u
     if (activeTab === 'stories') {
         if (profileUserStories.length === 0) {
             return (
-                <div className="bg-surface dark:bg-gray-900 rounded-lg p-8 text-center text-secondary dark:text-gray-400 mt-1">
+                <div className="bg-surface dark:bg-[#424242] rounded-lg p-8 text-center text-secondary dark:text-gray-400 mt-1">
                     <p>{isCurrentUser ? "You don't" : `${profileUser.name} doesn't`} have any stories.</p>
                 </div>
             )
@@ -122,7 +122,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ currentUser, profileUserId, u
         return (
             <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-1 p-1">
                 {profileUserStories.map((story, index) => (
-                    <div key={story.id} className="aspect-square bg-gray-200 dark:bg-gray-800 cursor-pointer group" onClick={() => setStoryViewerState({ open: true, initialIndex: index })}>
+                    <div key={story.id} className="aspect-square bg-gray-200 dark:bg-[#303030] cursor-pointer group" onClick={() => setStoryViewerState({ open: true, initialIndex: index })}>
                         <img src={story.imageUrl} alt="story thumbnail" className="w-full h-full object-cover group-hover:opacity-80 transition-opacity" />
                     </div>
                 ))}
@@ -133,7 +133,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ currentUser, profileUserId, u
     if (activeTab === 'bookmarked') {
       if (bookmarkedPosts.length === 0) {
         return (
-          <div className="bg-surface dark:bg-gray-900 rounded-lg p-8 text-center text-secondary dark:text-gray-400 mt-1">
+          <div className="bg-surface dark:bg-[#424242] rounded-lg p-8 text-center text-secondary dark:text-gray-400 mt-1">
             <p>You haven't saved any posts yet.</p>
             <p className="text-xs mt-1">Only you can see what you've saved.</p>
           </div>
@@ -143,7 +143,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ currentUser, profileUserId, u
         <div className="grid grid-cols-3 gap-1">
           {bookmarkedPosts.map(post => (
             post.mediaUrls && post.mediaUrls.length > 0 ? (
-              <div key={post.id} className="aspect-square bg-gray-200 dark:bg-gray-800 cursor-pointer" onClick={() => setSelectedPost(post)}>
+              <div key={post.id} className="aspect-square bg-gray-200 dark:bg-[#303030] cursor-pointer" onClick={() => setSelectedPost(post)}>
                 <img src={post.mediaUrls[0]} alt="post" className="w-full h-full object-cover" />
               </div>
             ) : null
@@ -168,7 +168,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ currentUser, profileUserId, u
         onViewStories={() => setStoryViewerState({ open: true, initialIndex: 0 })}
       />
       
-      <div className="border-t border-b border-divider dark:border-gray-700 flex justify-center bg-surface dark:bg-gray-900">
+      <div className="border-t border-b border-divider dark:border-gray-700 flex justify-center bg-surface dark:bg-[#424242]">
         <TabButton Icon={GridIcon} label="Posts" active={activeTab === 'posts'} onClick={() => setActiveTab('posts')} />
         <TabButton Icon={VideoCameraIcon} label="Stories" active={activeTab === 'stories'} onClick={() => setActiveTab('stories')} />
         {isCurrentUser && (

@@ -225,7 +225,7 @@ const SearchOverlay: React.FC<SearchOverlayProps> = ({ onClose, currentUser, use
 
     return (
         <div className="fixed inset-0 z-[60] bg-background" role="dialog" aria-modal="true">
-            <div className="h-full w-full bg-surface flex flex-col">
+            <div className="h-full w-full bg-surface dark:bg-[#424242] flex flex-col">
                 <div className="p-4 border-b border-divider flex-shrink-0">
                     <form onSubmit={handleSearchSubmit} className="flex items-center space-x-2">
                         <button type="button" onClick={onClose} className="p-2">
@@ -240,7 +240,7 @@ const SearchOverlay: React.FC<SearchOverlayProps> = ({ onClose, currentUser, use
                                 placeholder="Search ConnectSphere"
                                 value={query}
                                 onChange={e => setQuery(e.target.value)}
-                                className="w-full bg-background rounded-md py-2 pl-10 pr-4 text-primary focus:outline-none focus:ring-2 focus:ring-primary"
+                                className="w-full bg-background dark:bg-[#303030] rounded-md py-2 pl-10 pr-4 text-primary focus:outline-none focus:ring-2 focus:ring-primary"
                                 autoFocus
                             />
                         </div>
