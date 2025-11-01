@@ -20,6 +20,7 @@ import { uploadImage } from './services/imageUpload';
 import AdminPage from './components/admin/AdminPage';
 import { ThemeProvider } from './contexts/ThemeContext';
 import SettingsPage from './components/settings/SettingsPage';
+import CommentSheet from './components/comments/CommentSheet';
 
 type Route = 
   | { name: 'home' }
@@ -65,6 +66,7 @@ const App: React.FC = () => {
   const [initialPostLoad, setInitialPostLoad] = useState(true);
   const [route, setRoute] = useState<Route>({ name: 'home' });
   const [isPostModalOpen, setIsPostModalOpen] = useState(false);
+  const [commentSheetPost, setCommentSheetPost] = useState<Post | null>(null);
 
   useEffect(() => {
     const handleHashChange = (event?: HashChangeEvent) => {
@@ -126,7 +128,7 @@ const App: React.FC = () => {
   }, []);
   
   useEffect(() => {
-    if (!currentUser) {
+    if (!currentUser?.id) {
         setPosts([]); // Clear posts on logout
         return;
     };
@@ -178,7 +180,7 @@ const App: React.FC = () => {
       communitiesUnsub();
       channelsUnsub();
     }
-  }, [currentUser]);
+  }, [currentUser?.id]);
 
   const handleCreatePost = async (content: string, imageFiles: File[], privacy: Post['privacy'], areCommentsDisabled: boolean) => {
     if (!currentUser) return;
@@ -258,6 +260,13 @@ const App: React.FC = () => {
     return stories.filter(story => !currentUser.blocked![story.userId]);
   }, [stories, currentUser]);
 
+  const openCommentSheet = (postId: string) => {
+    const post = posts.find(p => p.id === postId);
+    if (post) {
+      setCommentSheetPost(post);
+    }
+  };
+
   const renderContent = () => {
       if (!currentUser) return null;
 
@@ -270,6 +279,7 @@ const App: React.FC = () => {
                         stories={filteredStories}
                         loading={initialPostLoad}
                         onOpenPostModal={() => setIsPostModalOpen(true)}
+                        onOpenCommentSheet={openCommentSheet}
                       />;
           case 'profile':
               return <ProfilePage
@@ -279,6 +289,7 @@ const App: React.FC = () => {
                         posts={posts} // Pass all posts to profile page for its own filtering
                         friendRequests={friendRequests}
                         stories={filteredStories}
+                        onOpenCommentSheet={openCommentSheet}
                      />
           case 'friends':
               return <FriendsPage
@@ -294,6 +305,7 @@ const App: React.FC = () => {
                          friendRequests={friendRequests}
                          communities={communities}
                          channels={channels}
+                         onOpenCommentSheet={openCommentSheet}
                        />
           case 'search':
               return <SearchPage
@@ -303,6 +315,7 @@ const App: React.FC = () => {
                         communities={communities}
                         channels={channels}
                         posts={posts} // Pass all posts
+                        onOpenCommentSheet={openCommentSheet}
                      />
           case 'admin':
               if (currentUser.role !== 'admin') {
@@ -350,6 +363,14 @@ const App: React.FC = () => {
             currentUser={currentUser}
             onClose={() => setIsPostModalOpen(false)}
             onSubmit={handleCreatePost}
+          />
+        )}
+        {commentSheetPost && currentUser && (
+          <CommentSheet
+            post={commentSheetPost}
+            currentUser={currentUser}
+            users={users}
+            onClose={() => setCommentSheetPost(null)}
           />
         )}
       </div>

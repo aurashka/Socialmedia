@@ -12,9 +12,10 @@ interface ExplorePageProps {
     friendRequests: Record<string, any>;
     communities: Record<string, Community>;
     channels: Record<string, Channel>;
+    onOpenCommentSheet: (postId: string) => void;
 }
 
-const ExplorePage: React.FC<ExplorePageProps> = ({ currentUser, users, posts, friendRequests, communities, channels }) => {
+const ExplorePage: React.FC<ExplorePageProps> = ({ currentUser, users, posts, friendRequests, communities, channels, onOpenCommentSheet }) => {
     const [selectedPost, setSelectedPost] = useState<Post | null>(null);
     const [isSearchOpen, setIsSearchOpen] = useState(false);
     const [sentRequests, setSentRequests] = useState<Record<string, boolean>>({});
@@ -106,6 +107,7 @@ const ExplorePage: React.FC<ExplorePageProps> = ({ currentUser, users, posts, fr
                     currentUser={currentUser}
                     users={users}
                     onClose={() => setSelectedPost(null)}
+                    onOpenCommentSheet={onOpenCommentSheet}
                 />
             )}
             {isSearchOpen && (

@@ -9,9 +9,10 @@ interface PostDetailModalProps {
     currentUser: User;
     users: Record<string, User>;
     onClose: () => void;
+    onOpenCommentSheet: (postId: string) => void;
 }
 
-const PostDetailModal: React.FC<PostDetailModalProps> = ({ post, user, currentUser, users, onClose }) => {
+const PostDetailModal: React.FC<PostDetailModalProps> = ({ post, user, currentUser, users, onClose, onOpenCommentSheet }) => {
     
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
@@ -47,7 +48,7 @@ const PostDetailModal: React.FC<PostDetailModalProps> = ({ post, user, currentUs
             </button>
             
             <div className="w-full max-w-lg max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-                <PostCard post={post} user={user} currentUser={currentUser} users={users} />
+                <PostCard post={post} user={user} currentUser={currentUser} users={users} onOpenCommentSheet={onOpenCommentSheet} />
             </div>
         </div>
     );

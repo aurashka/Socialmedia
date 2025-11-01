@@ -12,6 +12,7 @@ interface MainContentProps {
   stories: Story[];
   loading: boolean;
   onOpenPostModal: () => void;
+  onOpenCommentSheet: (postId: string) => void;
 }
 
 const MainContent: React.FC<MainContentProps> = ({ 
@@ -19,7 +20,8 @@ const MainContent: React.FC<MainContentProps> = ({
   users, 
   posts, 
   stories, 
-  loading, 
+  loading,
+  onOpenCommentSheet,
 }) => {
   const [viewingStoriesOfUser, setViewingStoriesOfUser] = useState<User | null>(null);
   
@@ -67,7 +69,7 @@ const MainContent: React.FC<MainContentProps> = ({
           </>
         ) : (
           posts.map(post => (
-            <PostCard key={post.id} post={post} user={users[post.userId]} currentUser={currentUser} users={users} />
+            <PostCard key={post.id} post={post} user={users[post.userId]} currentUser={currentUser} users={users} onOpenCommentSheet={onOpenCommentSheet} />
           ))
         )}
       </div>

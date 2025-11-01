@@ -15,9 +15,10 @@ interface ProfilePageProps {
   posts: Post[];
   friendRequests: Record<string, any>;
   stories: Story[];
+  onOpenCommentSheet: (postId: string) => void;
 }
 
-const ProfilePage: React.FC<ProfilePageProps> = ({ currentUser, profileUserId, users, posts, friendRequests, stories }) => {
+const ProfilePage: React.FC<ProfilePageProps> = ({ currentUser, profileUserId, users, posts, friendRequests, stories, onOpenCommentSheet }) => {
   const targetUserId = profileUserId || currentUser.id;
   const [isFriendRequestSent, setIsFriendRequestSent] = useState(false);
   const [activeTab, setActiveTab] = useState<'posts' | 'stories' | 'bookmarked'>('posts');
@@ -194,6 +195,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ currentUser, profileUserId, u
           currentUser={currentUser}
           users={users}
           onClose={() => setSelectedPost(null)}
+          onOpenCommentSheet={onOpenCommentSheet}
         />
       )}
     </div>

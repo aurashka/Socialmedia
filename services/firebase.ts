@@ -236,6 +236,35 @@ export const addComment = async (commentData: Omit<Comment, 'id' | 'timestamp'>)
     }
 };
 
+export const deleteComment = async (comment: Comment) => {
+    // 1. Remove the comment itself (and any replies, if desired - handled by rules for now)
+    await remove(ref(db, `comments/${comment.id}`));
+
+    // 2. Decrement post's comment count transactionally
+    const postCommentCountRef = ref(db, `posts/${comment.postId}/commentCount`);
+    await runTransaction(postCommentCountRef, (currentCount) => (currentCount || 1) - 1);
+
+    // 3. If it's a reply, decrement parent's reply count transactionally
+    if (comment.parentCommentId) {
+        const parentReplyCountRef = ref(db, `comments/${comment.parentCommentId}/replyCount`);
+        await runTransaction(parentReplyCountRef, (currentCount) => (currentCount || 1) - 1);
+    }
+    // Note: Deleting a comment with replies will orphan them. A more robust solution involves a Cloud Function.
+};
+
+export const updateComment = async (commentId: string, newContent: string) => {
+    const commentRef = ref(db, `comments/${commentId}`);
+    return update(commentRef, { content: newContent });
+};
+
+export const toggleCommentReaction = async (commentId: string, userId: string, reactionType: string) => {
+    const reactionRef = ref(db, `comments/${commentId}/reactions/${reactionType}/${userId}`);
+    return runTransaction(reactionRef, (currentData) => {
+        return currentData ? null : true;
+    });
+};
+
+
 export const fetchComments = async (postId: string): Promise<Comment[]> => {
     const commentsRef = ref(db, 'comments');
     const commentsQuery = query(

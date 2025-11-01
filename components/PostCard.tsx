@@ -3,7 +3,6 @@ import type { User, Post } from '../types';
 import { DotsHorizontalIcon, HeartIcon, HeartIconFilled, ChatIcon, MessageIcon, TrashIcon, ChevronLeftIcon, ChevronRightIcon, PencilIcon, BookmarkIcon, BookmarkIconFilled, GlobeIcon, UsersIcon, LockClosedIcon } from './Icons';
 import { parseContent } from '../utils/textUtils';
 import { updatePost, deletePost, toggleReaction, toggleBookmark } from '../services/firebase';
-import CommentSection from './comments/CommentSection';
 import AddCommentForm from './comments/AddCommentForm';
 import PostCardShimmer from './shimmers/PostCardShimmer';
 
@@ -12,15 +11,15 @@ interface PostCardProps {
   user?: User;
   currentUser: User;
   users: Record<string, User>;
+  onOpenCommentSheet: (postId: string) => void;
 }
 
-const PostCard: React.FC<PostCardProps> = ({ post, user, currentUser, users }) => {
+const PostCard: React.FC<PostCardProps> = ({ post, user, currentUser, users, onOpenCommentSheet }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editedContent, setEditedContent] = useState(post.content);
   const [isSaving, setIsSaving] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [showAllComments, setShowAllComments] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
   const [animateLike, setAnimateLike] = useState(false);
   
@@ -214,7 +213,7 @@ const PostCard: React.FC<PostCardProps> = ({ post, user, currentUser, users }) =
                 <HeartIconFilled className={`w-7 h-7 text-red-500 transition-transform ${animateLike ? 'animate-heart-pop' : ''} ${!isLiked && 'hidden'}`} />
                 <HeartIcon className={`w-7 h-7 ${isLiked && 'hidden'}`} />
             </button>
-            <button><ChatIcon className="w-7 h-7"/></button>
+            <button onClick={() => onOpenCommentSheet(post.id)}><ChatIcon className="w-7 h-7"/></button>
             <button><MessageIcon className="w-7 h-7"/></button>
           </div>
           <button onClick={handleToggleBookmark}>
@@ -239,12 +238,10 @@ const PostCard: React.FC<PostCardProps> = ({ post, user, currentUser, users }) =
             </p>
         )}
         {post.commentCount > 0 && !post.areCommentsDisabled && (
-          <button onClick={() => setShowAllComments(prev => !prev)} className="text-sm text-secondary dark:text-gray-400 cursor-pointer hover:underline">
-            {showAllComments ? 'Hide comments' : `View all ${post.commentCount} comments`}
+          <button onClick={() => onOpenCommentSheet(post.id)} className="text-sm text-secondary dark:text-gray-400 cursor-pointer hover:underline">
+            View all {post.commentCount} comments
           </button>
         )}
-
-        {showAllComments && !post.areCommentsDisabled && <CommentSection postId={post.id} currentUser={currentUser} users={users} />}
       </div>
       
       {post.areCommentsDisabled ? (
@@ -253,7 +250,7 @@ const PostCard: React.FC<PostCardProps> = ({ post, user, currentUser, users }) =
         </div>
       ) : (
        <div className="border-t border-divider dark:border-gray-700 px-3 py-2">
-            <AddCommentForm postId={post.id} currentUser={currentUser} users={users} />
+            <AddCommentForm postId={post.id} currentUser={currentUser} onCommentAdded={() => onOpenCommentSheet(post.id)} />
        </div>
       )}
        <style>{`

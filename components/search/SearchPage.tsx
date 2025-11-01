@@ -11,6 +11,7 @@ interface SearchPageProps {
   communities: Record<string, Community>;
   channels: Record<string, Channel>;
   posts: Post[];
+  onOpenCommentSheet: (postId: string) => void;
 }
 
 type FilterType = 'all' | 'people' | 'posts' | 'communities' | 'channels';
@@ -37,7 +38,7 @@ const getScore = (text: string | undefined, query: string): number => {
 };
 
 
-const SearchPage: React.FC<SearchPageProps> = ({ query, currentUser, users, communities, channels, posts }) => {
+const SearchPage: React.FC<SearchPageProps> = ({ query, currentUser, users, communities, channels, posts, onOpenCommentSheet }) => {
     const [activeFilter, setActiveFilter] = useState<FilterType>('all');
     const [showVerifiedOnly, setShowVerifiedOnly] = useState(false);
 
@@ -121,7 +122,7 @@ const SearchPage: React.FC<SearchPageProps> = ({ query, currentUser, users, comm
                         <h3 className="text-lg font-bold mb-3 text-primary dark:text-gray-100">Posts</h3>
                         <div className="space-y-4">
                             {searchResults.posts.map(post => (
-                                <PostCard key={post.id} post={post} user={users[post.userId]} currentUser={currentUser} users={users}/>
+                                <PostCard key={post.id} post={post} user={users[post.userId]} currentUser={currentUser} users={users} onOpenCommentSheet={onOpenCommentSheet} />
                             ))}
                         </div>
                     </section>

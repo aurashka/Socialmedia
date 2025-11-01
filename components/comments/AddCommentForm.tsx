@@ -6,7 +6,6 @@ interface AddCommentFormProps {
   currentUser: User;
   postId: string;
   parentCommentId?: string;
-  users: Record<string, User>;
   onCommentAdded?: () => void;
 }
 
@@ -47,13 +46,13 @@ const AddCommentForm: React.FC<AddCommentFormProps> = ({ currentUser, postId, pa
           value={content}
           onChange={(e) => setContent(e.target.value)}
           placeholder="Add a comment..."
-          className="w-full bg-transparent placeholder-secondary focus:outline-none text-sm"
+          className="w-full bg-transparent placeholder-secondary dark:placeholder-gray-400 focus:outline-none text-sm"
           disabled={isSubmitting}
         />
         <button
           type="submit"
           disabled={isSubmitting || !content.trim()}
-          className="absolute right-0 top-1/2 -translate-y-1/2 text-sm font-semibold text-accent disabled:text-secondary/50"
+          className="absolute right-0 top-1/2 -translate-y-1/2 text-sm font-semibold text-accent disabled:text-secondary/50 dark:disabled:text-gray-600"
         >
           {isSubmitting ? 'Posting...' : 'Post'}
         </button>
