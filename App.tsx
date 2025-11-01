@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { onValue, ref, query, limitToLast, orderByChild, equalTo } from 'firebase/database';
 import { db, onAuthChange, createPost } from './services/firebase';
 import type { User, Post, Story, Community, Channel, Notification, Conversation } from './types';
@@ -88,6 +88,8 @@ const App: React.FC = () => {
   const [route, setRoute] = useState<Route>({ name: 'home' });
   const [isPostModalOpen, setIsPostModalOpen] = useState(false);
   const [commentSheetPost, setCommentSheetPost] = useState<Post | null>(null);
+  const prevNotificationsRef = useRef<Notification[]>([]);
+
 
   useEffect(() => {
     const handleHashChange = () => {
@@ -99,6 +101,46 @@ const App: React.FC = () => {
     window.addEventListener('hashchange', handleHashChange);
     return () => window.removeEventListener('hashchange', handleHashChange);
   }, []);
+  
+  // Push Notifications Logic
+  useEffect(() => {
+    if ('Notification' in window && Notification.permission !== 'granted' && Notification.permission !== 'denied') {
+        Notification.requestPermission();
+    }
+  }, []);
+
+  useEffect(() => {
+      if (document.hidden && notifications.length > prevNotificationsRef.current.length && currentUser) {
+          const newNotifications = notifications.filter(n => 
+              !prevNotificationsRef.current.some(pn => pn.id === n.id) &&
+              !n.read &&
+              n.senderId !== currentUser.id
+          );
+          
+          const getNotificationText = (type: Notification['type']) => {
+              switch (type) {
+                  case 'like': return 'liked your post.';
+                  case 'comment': return 'commented on your post.';
+                  case 'mention': return 'mentioned you in a post.';
+                  case 'friend_request': return 'sent you a friend request.';
+                  case 'friend_accept': return 'accepted your friend request.';
+                  default: return 'interacted with you.';
+              }
+          };
+
+          newNotifications.forEach(n => {
+              const sender = users[n.senderId];
+              if (sender && Notification.permission === 'granted') {
+                  const body = `${sender.name} ${getNotificationText(n.type)}`;
+                  new Notification('ConnectSphere', {
+                      body,
+                      icon: sender.avatarUrl,
+                  });
+              }
+          });
+      }
+      prevNotificationsRef.current = notifications;
+  }, [notifications, currentUser, users]);
 
   useEffect(() => {
     let userProfileUnsubscribe: () => void = () => {};

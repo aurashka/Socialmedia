@@ -1,9 +1,10 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import type { User, Post, Comment as CommentType } from '../../types';
 import { fetchComments } from '../../services/firebase';
 import { XIcon } from '../Icons';
 import AddCommentForm from './AddCommentForm';
 import Comment from './Comment';
+import { parseContent } from '../../utils/textUtils';
 
 interface CommentSheetProps {
     post: Post;
@@ -15,6 +16,7 @@ interface CommentSheetProps {
 const CommentSheet: React.FC<CommentSheetProps> = ({ post, currentUser, users, onClose }) => {
     const [comments, setComments] = useState<CommentType[]>([]);
     const [loading, setLoading] = useState(true);
+    const postUser = users[post.userId];
 
     const loadComments = useCallback(async () => {
         setLoading(true);
@@ -32,7 +34,23 @@ const CommentSheet: React.FC<CommentSheetProps> = ({ post, currentUser, users, o
         loadComments();
     }, [loadComments]);
 
-    const topLevelComments = comments.filter(c => !c.parentCommentId);
+    const commentTree = useMemo(() => {
+        const commentMap: Record<string, CommentType & { replies: CommentType[] }> = {};
+        comments.forEach(comment => {
+            commentMap[comment.id] = { ...comment, replies: [] };
+        });
+
+        const tree: (CommentType & { replies: CommentType[] })[] = [];
+        comments.forEach(comment => {
+            if (comment.parentCommentId && commentMap[comment.parentCommentId]) {
+                commentMap[comment.parentCommentId].replies.push(commentMap[comment.id]);
+            } else {
+                tree.push(commentMap[comment.id]);
+            }
+        });
+        return tree;
+    }, [comments]);
+    
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 dark:bg-opacity-75 z-50 flex items-end md:items-center justify-center" aria-modal="true" role="dialog" onClick={onClose}>
@@ -47,21 +65,34 @@ const CommentSheet: React.FC<CommentSheetProps> = ({ post, currentUser, users, o
                 onClick={e => e.stopPropagation()}
             >
                 <div className="p-4 border-b border-divider dark:border-gray-700 flex justify-between items-center flex-shrink-0">
-                    <h2 className="text-xl font-bold">Comments ({post.commentCount})</h2>
+                    <h2 className="text-xl font-bold">Comments</h2>
                     <button onClick={onClose} className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700" aria-label="Close">
                         <XIcon className="w-6 h-6 text-secondary dark:text-gray-400" />
                     </button>
                 </div>
                 
                 <div className="flex-grow overflow-y-auto px-4">
+                    {postUser && (
+                         <div className="flex items-start space-x-3 text-sm py-3 my-2 border-b border-divider dark:border-gray-700">
+                            <a href={`#/profile/${postUser.id}`}>
+                                <img src={postUser.avatarUrl} alt={postUser.name} className="w-8 h-8 rounded-full mt-1" />
+                            </a>
+                            <div className="flex-1">
+                                <p>
+                                  <a href={`#/profile/${postUser.id}`} className="font-bold hover:underline mr-1.5">{postUser.name}</a>
+                                  {parseContent(post.content, users)}
+                                </p>
+                            </div>
+                        </div>
+                    )}
                     {loading ? (
                        <div className="pt-4 space-y-4">
                            <CommentShimmer />
                            <CommentShimmer />
                            <CommentShimmer />
                        </div>
-                    ) : topLevelComments.length > 0 ? (
-                        topLevelComments.map(comment => (
+                    ) : commentTree.length > 0 ? (
+                        commentTree.map(comment => (
                             <Comment 
                                 key={comment.id} 
                                 comment={comment} 
@@ -72,8 +103,9 @@ const CommentSheet: React.FC<CommentSheetProps> = ({ post, currentUser, users, o
                             />
                         ))
                     ) : (
-                        <div className="h-full flex items-center justify-center text-secondary dark:text-gray-400">
-                            <p>No comments yet. Be the first to comment!</p>
+                        <div className="h-full flex flex-col items-center justify-center text-secondary dark:text-gray-400 text-center py-10">
+                            <h3 className="font-bold text-lg text-primary dark:text-gray-200">No Comments Yet</h3>
+                            <p>Be the first to share what you think!</p>
                         </div>
                     )}
                 </div>

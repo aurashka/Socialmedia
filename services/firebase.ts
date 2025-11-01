@@ -469,8 +469,7 @@ export const getOrCreateConversation = async (currentUserId: string, otherUserId
     }
 };
 
-// FIX: Add 'video' to the mediaType to allow sending videos.
-export const sendMessage = async (conversationId: string, senderId: string, messageData: { text?: string; mediaUrl?: string; mediaType?: 'image' | 'audio' | 'video' }) => {
+export const sendMessage = async (conversationId: string, senderId: string, messageData: { text?: string; mediaUrl?: string; mediaType?: 'image' | 'audio' | 'video', replyTo?: Message['replyTo'] }) => {
     const messagesRef = ref(db, `messages/${conversationId}`);
     const newMessageRef = push(messagesRef);
     
@@ -491,6 +490,24 @@ export const sendMessage = async (conversationId: string, senderId: string, mess
             timestamp: serverTimestamp(),
         },
         [`lastRead/${senderId}`]: Date.now()
+    });
+};
+
+export const deleteMessage = async (conversationId: string, messageId: string) => {
+    const messageRef = ref(db, `messages/${conversationId}/${messageId}`);
+    return update(messageRef, {
+        text: 'This message was deleted.',
+        isDeleted: true,
+        mediaUrl: null,
+        mediaType: null,
+        replyTo: null,
+    });
+};
+
+export const toggleMessageReaction = async (conversationId: string, messageId: string, userId: string, reaction: string) => {
+    const reactionRef = ref(db, `messages/${conversationId}/${messageId}/reactions/${reaction}/${userId}`);
+    return runTransaction(reactionRef, (currentData) => {
+        return currentData ? null : true; // Toggle reaction on/off
     });
 };
 

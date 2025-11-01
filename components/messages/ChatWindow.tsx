@@ -5,6 +5,7 @@ import { db } from '../../services/firebase';
 import MessageInput from './MessageInput';
 import MessageBubble from './MessageBubble';
 import { ChevronLeftIcon } from '../Icons';
+import MessageActionSheet from './MessageActionSheet';
 
 interface ChatWindowProps {
     currentUser: User;
@@ -15,6 +16,8 @@ interface ChatWindowProps {
 
 const ChatWindow: React.FC<ChatWindowProps> = ({ currentUser, conversation, users, isOnline }) => {
     const [messages, setMessages] = useState<Message[]>([]);
+    const [actionSheetMessage, setActionSheetMessage] = useState<Message | null>(null);
+    const [replyingTo, setReplyingTo] = useState<Message | null>(null);
     const messagesEndRef = useRef<HTMLDivElement>(null);
     
     const otherParticipantId = Object.keys(conversation.participants).find(id => id !== currentUser.id);
@@ -22,7 +25,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ currentUser, conversation, user
 
     useEffect(() => {
         const messagesRef = ref(db, `messages/${conversation.id}`);
-        const messagesQuery = query(messagesRef, orderByChild('timestamp'), limitToLast(50));
+        const messagesQuery = query(messagesRef, orderByChild('timestamp'), limitToLast(100));
 
         const unsubscribe = onValue(messagesQuery, (snapshot) => {
             if (snapshot.exists()) {
@@ -38,9 +41,20 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ currentUser, conversation, user
     }, [conversation.id]);
     
     useEffect(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+        messagesEndRef.current?.scrollIntoView({ behavior: 'auto' });
     }, [messages]);
-
+    
+    const handleMessageClick = (message: Message) => {
+        if (!message.isDeleted) {
+            setActionSheetMessage(message);
+        }
+    }
+    
+    const handleReply = (message: Message) => {
+        setReplyingTo(message);
+        setActionSheetMessage(null);
+    }
+    
     if (!otherUser) {
         return <div className="flex-1 flex items-center justify-center text-secondary dark:text-gray-400">User not found</div>;
     }
@@ -64,8 +78,19 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ currentUser, conversation, user
                 {messages.map((msg, index) => {
                     const prevMsg = index > 0 ? messages[index - 1] : null;
                     const showAvatar = !prevMsg || prevMsg.senderId !== msg.senderId;
+                    const repliedToMessage = msg.replyTo ? messages.find(m => m.id === msg.replyTo!.messageId) : undefined;
+                    
                     return (
-                        <MessageBubble key={msg.id} message={msg} currentUser={currentUser} sender={users[msg.senderId]} showAvatar={showAvatar} />
+                        <MessageBubble 
+                            key={msg.id} 
+                            message={msg} 
+                            currentUser={currentUser} 
+                            sender={users[msg.senderId]} 
+                            showAvatar={showAvatar}
+                            onClick={() => handleMessageClick(msg)}
+                            repliedToMessage={repliedToMessage}
+                            repliedToUser={repliedToMessage ? users[repliedToMessage.senderId] : undefined}
+                        />
                     );
                 })}
                 <div ref={messagesEndRef} />
@@ -73,8 +98,22 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ currentUser, conversation, user
 
             {/* Input */}
             <div className="p-3 border-t border-divider dark:border-gray-700 flex-shrink-0">
-                <MessageInput currentUser={currentUser} conversation={conversation} />
+                <MessageInput 
+                    currentUser={currentUser} 
+                    conversation={conversation} 
+                    replyingTo={replyingTo}
+                    onCancelReply={() => setReplyingTo(null)}
+                />
             </div>
+            
+            {actionSheetMessage && (
+                <MessageActionSheet 
+                    message={actionSheetMessage}
+                    currentUser={currentUser}
+                    onClose={() => setActionSheetMessage(null)}
+                    onReply={handleReply}
+                />
+            )}
         </div>
     );
 };

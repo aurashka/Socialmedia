@@ -105,4 +105,12 @@ export interface Message {
   mediaUrl?: string;
   mediaType?: 'image' | 'audio' | 'video';
   timestamp: number;
+  reactions?: Record<string, Record<string, boolean>>; // e.g., { '👍': { userId1: true } }
+  replyTo?: {
+    messageId: string;
+    senderId: string;
+    text?: string;
+    mediaType?: 'image' | 'audio' | 'video';
+  };
+  isDeleted?: boolean;
 }
