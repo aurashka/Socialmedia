@@ -38,9 +38,11 @@ const PostCard: React.FC<PostCardProps> = ({ post, user }) => {
       {/* Post Header */}
       <div className="p-4 flex justify-between items-start">
         <div className="flex items-center space-x-3">
-          <img src={user.avatarUrl} alt={user.name} className="w-10 h-10 rounded-full" />
+          <a href={`#/profile/${user.id}`}>
+            <img src={user.avatarUrl} alt={user.name} className="w-10 h-10 rounded-full" />
+          </a>
           <div>
-            <p className="font-bold">{user.name}</p>
+            <a href={`#/profile/${user.id}`} className="font-bold hover:underline">{user.name}</a>
             <div className="flex items-center space-x-2 text-xs text-text-secondary">
               <span>{timeAgo(post.timestamp)}</span>
               {post.tag && (

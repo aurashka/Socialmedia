@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { onValue, ref } from 'firebase/database';
 import { db, seedDatabase, onAuthChange, getUserProfile } from './services/firebase';
@@ -12,6 +11,27 @@ import BottomNav from './components/BottomNav';
 import Auth from './components/auth/Auth';
 import CompleteProfile from './components/auth/CompleteProfile';
 import LoadingSpinner from './components/LoadingSpinner';
+import ProfilePage from './components/profile/ProfilePage';
+import SearchResultsPage from './components/search/SearchResultsPage';
+
+type Route = 
+  | { name: 'home' }
+  | { name: 'profile'; id?: string }
+  | { name: 'search'; query: string };
+
+const parseHash = (): Route => {
+    const hash = window.location.hash.substring(2); // remove #/
+    const [path, param] = hash.split('/');
+
+    switch (path) {
+        case 'profile':
+            return { name: 'profile', id: param };
+        case 'search':
+            return { name: 'search', query: decodeURIComponent(param) };
+        default:
+            return { name: 'home' };
+    }
+};
 
 const App: React.FC = () => {
   const [authUser, setAuthUser] = useState<FirebaseUser | null>(null);
@@ -20,6 +40,15 @@ const App: React.FC = () => {
   const [posts, setPosts] = useState<Post[]>([]);
   const [stories, setStories] = useState<Story[]>([]);
   const [loading, setLoading] = useState(true);
+  const [route, setRoute] = useState<Route>(parseHash());
+
+  useEffect(() => {
+    const handleHashChange = () => {
+        setRoute(parseHash());
+    };
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
 
   useEffect(() => {
     seedDatabase();
@@ -77,6 +106,36 @@ const App: React.FC = () => {
       storiesUnsub();
     }
   }, [currentUser]);
+  
+  const renderContent = () => {
+      if (!currentUser) return null;
+
+      switch(route.name) {
+          case 'home':
+              return <MainContent
+                        currentUser={currentUser}
+                        users={users}
+                        posts={posts}
+                        stories={stories}
+                        loading={posts.length === 0}
+                      />;
+          case 'profile':
+              return <ProfilePage
+                        currentUserId={currentUser.id}
+                        profileUserId={route.id}
+                        users={users}
+                        posts={posts}
+                     />
+          case 'search':
+              return <SearchResultsPage
+                        query={route.query}
+                        users={users}
+                     />
+          default:
+              return <div>Page not found</div>
+      }
+  }
+
 
   if (loading) {
     return <LoadingSpinner />;
@@ -96,13 +155,7 @@ const App: React.FC = () => {
       <main className="flex pt-14">
         <SidebarLeft currentUser={currentUser} />
         <div className="w-full lg:w-[calc(100%-560px)] md:w-[calc(100%-280px)] md:mx-auto lg:ml-72 lg:mr-72 xl:mr-96 transition-all duration-300">
-          <MainContent
-            currentUser={currentUser}
-            users={users}
-            posts={posts}
-            stories={stories}
-            loading={posts.length === 0} // Show loading if posts aren't there yet
-          />
+          {renderContent()}
         </div>
         <SidebarRight users={users} currentUser={currentUser}/>
       </main>

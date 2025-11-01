@@ -6,6 +6,9 @@ export interface User {
   email: string;
   phone?: string;
   role: 'user' | 'admin';
+  coverPhotoUrl?: string;
+  bio?: string;
+  isPublic?: boolean;
 }
 
 export interface Post {

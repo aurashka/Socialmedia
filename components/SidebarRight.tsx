@@ -8,7 +8,7 @@ interface SidebarRightProps {
 
 const SidebarRight: React.FC<SidebarRightProps> = ({ users, currentUser }) => {
   const suggestedFriends = Object.values(users)
-    .filter((u: User) => u.id !== currentUser.id && u.name)
+    .filter((u: User) => u.id !== currentUser.id && u.name && u.isPublic)
     .slice(0, 4);
 
   return (
@@ -20,9 +20,11 @@ const SidebarRight: React.FC<SidebarRightProps> = ({ users, currentUser }) => {
         </div>
         <ul>
           {suggestedFriends.map((user: User) => (
-            <li key={user.id} className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-100 cursor-pointer">
-              <img src={user.avatarUrl} alt={user.name} className="w-9 h-9 rounded-full" />
-              <span className="font-semibold text-sm">{user.name}</span>
+            <li key={user.id}>
+              <a href={`#/profile/${user.id}`} className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-100 cursor-pointer">
+                <img src={user.avatarUrl} alt={user.name} className="w-9 h-9 rounded-full" />
+                <span className="font-semibold text-sm">{user.name}</span>
+              </a>
             </li>
           ))}
         </ul>

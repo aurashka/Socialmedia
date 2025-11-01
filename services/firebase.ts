@@ -47,15 +47,25 @@ export const getUserProfile = async (userId: string): Promise<User | null> => {
 
 export const updateUserProfile = async (userId: string, data: Partial<User>): Promise<void> => {
     const userRef = ref(db, `users/${userId}`);
-    const existingProfile = await getUserProfile(userId) || {};
+    const snapshot = await get(userRef);
+    const existingProfile = snapshot.exists() ? snapshot.val() : {};
     return set(userRef, { ...existingProfile, ...data, id: userId });
 };
 
-export const isHandleUnique = async (handle: string): Promise<boolean> => {
+export const isHandleUnique = async (handle: string, currentUserId?: string): Promise<boolean> => {
     const usersRef = ref(db, 'users');
     const handleQuery = query(usersRef, orderByChild('handle'), equalTo(handle));
     const snapshot = await get(handleQuery);
-    return !snapshot.exists();
+    if (!snapshot.exists()) {
+        return true;
+    }
+    // If handle exists, check if it belongs to the current user
+    if (currentUserId) {
+        const users = snapshot.val();
+        const userId = Object.keys(users)[0];
+        return userId === currentUserId;
+    }
+    return false;
 };
 
 
@@ -97,10 +107,10 @@ export const seedDatabase = async () => {
     };
      // We also need dummy users for these posts to resolve correctly.
     const users = {
-      user2: { id: 'user2', name: 'Krishna Vinjam', avatarUrl: 'https://i.pravatar.cc/150?u=user2', role: 'user', email: 'krishna@demo.com', handle: 'krishna' },
-      user3: { id: 'user3', name: 'Habib Habib', avatarUrl: 'https://i.pravatar.cc/150?u=user3', role: 'user', email: 'habib@demo.com', handle: 'habib' },
-      user4: { id: 'user4', name: 'Ahmad Raza', avatarUrl: 'https://i.pravatar.cc/150?u=user4', role: 'user', email: 'ahmad@demo.com', handle: 'ahmad' },
-      user5: { id: 'user5', name: 'Jane Doe', avatarUrl: 'https://i.pravatar.cc/150?u=user5', role: 'user', email: 'jane@demo.com', handle: 'jane' },
+      user2: { id: 'user2', name: 'Krishna Vinjam', avatarUrl: 'https://i.pravatar.cc/150?u=user2', role: 'user', email: 'krishna@demo.com', handle: 'krishna', coverPhotoUrl: 'https://picsum.photos/seed/cover2/1000/300', bio: 'Frontend Developer | React Enthusiast', isPublic: true },
+      user3: { id: 'user3', name: 'Habib Habib', avatarUrl: 'https://i.pravatar.cc/150?u=user3', role: 'user', email: 'habib@demo.com', handle: 'habib', coverPhotoUrl: 'https://picsum.photos/seed/cover3/1000/300', bio: 'Loves hiking and photography.', isPublic: true },
+      user4: { id: 'user4', name: 'Ahmad Raza', avatarUrl: 'https://i.pravatar.cc/150?u=user4', role: 'user', email: 'ahmad@demo.com', handle: 'ahmad', coverPhotoUrl: 'https://picsum.photos/seed/cover4/1000/300', bio: 'UX/UI Designer creating beautiful and intuitive interfaces.', isPublic: true },
+      user5: { id: 'user5', name: 'Jane Doe', avatarUrl: 'https://i.pravatar.cc/150?u=user5', role: 'user', email: 'jane@demo.com', handle: 'jane', coverPhotoUrl: 'https://picsum.photos/seed/cover5/1000/300', bio: 'Coffee lover and world traveler.', isPublic: false }, // This user is private
     };
     await set(ref(db, 'users'), users);
     await set(postsRef, posts);

@@ -22,9 +22,9 @@ const CompleteProfile: React.FC<CompleteProfileProps> = ({ user }) => {
       return;
     }
     setHandleStatus('checking');
-    const isUnique = await isHandleUnique(h);
+    const isUnique = await isHandleUnique(h, user.id);
     setHandleStatus(isUnique ? 'available' : 'taken');
-  }, []);
+  }, [user.id]);
 
   useEffect(() => {
     checkHandle(debouncedHandle);
@@ -48,6 +48,9 @@ const CompleteProfile: React.FC<CompleteProfileProps> = ({ user }) => {
       await updateUserProfile(user.id, {
         name,
         handle,
+        isPublic: true, // New users are public by default
+        bio: 'Just joined ConnectSphere!',
+        coverPhotoUrl: `https://picsum.photos/seed/${user.id}/1000/300`,
       });
       // The state in App.tsx will update via the onValue listener,
       // which will cause a re-render and show the main app.

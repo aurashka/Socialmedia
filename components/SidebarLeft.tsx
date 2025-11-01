@@ -1,4 +1,3 @@
-
 import React from 'react';
 import type { User } from '../types';
 import { HomeIcon, UsersIcon, ChatIcon, BellIcon, MenuIcon } from './Icons'; // Assuming more icons will be here
@@ -12,8 +11,8 @@ const SidebarLeft: React.FC<SidebarLeftProps> = ({ currentUser }) => {
     <aside className="hidden md:block fixed top-14 left-0 w-72 h-[calc(100vh-56px)] bg-background p-4 overflow-y-auto">
       <nav>
         <ul>
-          <SidebarLink icon={<img src={currentUser.avatarUrl} className="w-8 h-8 rounded-full" />} text={currentUser.name} />
-          <SidebarLink icon={<HomeIcon className="w-8 h-8 text-primary" />} text="News Feed" active />
+          <SidebarLink href={`#/profile`} icon={<img src={currentUser.avatarUrl} className="w-8 h-8 rounded-full" />} text={currentUser.name} />
+          <SidebarLink href="/#" icon={<HomeIcon className="w-8 h-8 text-primary" />} text="News Feed" active />
           <SidebarLink icon={<UsersIcon className="w-8 h-8 text-blue-500" />} text="Mine" />
           <SidebarLink icon={<svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-green-500" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd" /></svg>} text="Saved" />
           <SidebarLink icon={<svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-yellow-500" viewBox="0 0 20 20" fill="currentColor"><path d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z" /><path d="M6 3a2 2 0 00-2 2v11a2 2 0 002 2h8a2 2 0 002-2V5a2 2 0 00-2-2H6z" /></svg>} text="Memories" />
@@ -39,13 +38,18 @@ interface SidebarLinkProps {
   icon: React.ReactNode;
   text: string;
   active?: boolean;
+  href?: string;
 }
 
-const SidebarLink: React.FC<SidebarLinkProps> = ({ icon, text, active }) => (
-  <li className={`flex items-center space-x-3 p-2 rounded-lg cursor-pointer ${active ? 'bg-gray-200' : 'hover:bg-gray-100'}`}>
-    {icon}
-    <span className="font-semibold text-text-primary">{text}</span>
-  </li>
-);
+const SidebarLink: React.FC<SidebarLinkProps> = ({ icon, text, active, href }) => {
+    const content = (
+        <li className={`flex items-center space-x-3 p-2 rounded-lg cursor-pointer ${active ? 'bg-gray-200' : 'hover:bg-gray-100'}`}>
+            {icon}
+            <span className="font-semibold text-text-primary">{text}</span>
+        </li>
+    );
+    return href ? <a href={href}>{content}</a> : content;
+};
+
 
 export default SidebarLeft;
