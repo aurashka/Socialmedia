@@ -1,11 +1,9 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-// FIX: Import 'query' and 'limitToLast' from 'firebase/database'
 import { onValue, ref, query, limitToLast } from 'firebase/database';
-import { db, onAuthChange, createPost, fetchPosts, POSTS_PER_PAGE } from './services/firebase';
+import { db, onAuthChange, createPost, fetchPosts } from './services/firebase';
 import type { User, Post, Story, Community, Channel } from './types';
 import type { User as FirebaseUser } from 'firebase/auth';
 import Header from './components/Header';
-import SidebarLeft from './components/SidebarLeft';
 import MainContent from './components/MainContent';
 import Auth from './components/auth/Auth';
 import CompleteProfile from './components/auth/CompleteProfile';
@@ -59,17 +57,13 @@ const App: React.FC = () => {
   const [channels, setChannels] = useState<Record<string, Channel>>({});
   const [friendRequests, setFriendRequests] = useState<Record<string, any>>({});
   const [loading, setLoading] = useState(true);
-  const [route, setRoute] = useState<Route>({ name: 'home' }); // Default to home
+  const [initialPostLoad, setInitialPostLoad] = useState(false);
+  const [route, setRoute] = useState<Route>({ name: 'home' });
   const [isPostModalOpen, setIsPostModalOpen] = useState(false);
-  const [isFetchingPosts, setIsFetchingPosts] = useState(false);
-  const [hasMorePosts, setHasMorePosts] = useState(true);
 
   useEffect(() => {
     const handleHashChange = () => setRoute(parseHash());
-
-    // Set the initial route from the hash after the component has mounted
     handleHashChange();
-    
     window.addEventListener('hashchange', handleHashChange);
     return () => window.removeEventListener('hashchange', handleHashChange);
   }, []);
@@ -115,13 +109,11 @@ const App: React.FC = () => {
   }, []);
   
   const loadInitialPosts = useCallback(async () => {
-    if (isFetchingPosts) return;
-    setIsFetchingPosts(true);
+    setInitialPostLoad(true);
     const initialPosts = await fetchPosts();
     setPosts(initialPosts);
-    setHasMorePosts(initialPosts.length === POSTS_PER_PAGE);
-    setIsFetchingPosts(false);
-  }, [isFetchingPosts]);
+    setInitialPostLoad(false);
+  }, []);
   
   useEffect(() => {
     if (!currentUser) return;
@@ -131,10 +123,8 @@ const App: React.FC = () => {
     const usersRef = ref(db, 'users/');
     const usersUnsub = onValue(usersRef, (snapshot) => setUsers(snapshot.val() || {}));
 
-    // Listener for real-time post updates (new posts, reactions, comments)
     const postsRef = ref(db, 'posts/');
     const postsUnsub = onValue(query(postsRef, limitToLast(1)), (snapshot) => {
-       // A simple listener to add new posts to the top of the feed in real-time
         if (snapshot.exists()) {
             const newPostsData = snapshot.val();
             const newPostsArray = Object.values(newPostsData) as Post[];
@@ -176,19 +166,6 @@ const App: React.FC = () => {
       channelsUnsub();
     }
   }, [currentUser, loadInitialPosts]);
-
-  const loadMorePosts = useCallback(async () => {
-    if (isFetchingPosts || !hasMorePosts || posts.length === 0) return;
-    
-    setIsFetchingPosts(true);
-    const lastPost = posts[posts.length - 1];
-    const newPosts = await fetchPosts(lastPost.timestamp);
-    
-    setPosts(prevPosts => [...prevPosts, ...newPosts]);
-    setHasMorePosts(newPosts.length === POSTS_PER_PAGE);
-    setIsFetchingPosts(false);
-  }, [isFetchingPosts, hasMorePosts, posts]);
-
 
   const handleCreatePost = async (content: string, imageFiles: File[]) => {
     if (!currentUser) return;
@@ -248,17 +225,14 @@ const App: React.FC = () => {
                         users={filteredUsers}
                         posts={filteredPosts}
                         stories={filteredStories}
-                        loading={posts.length === 0 && isFetchingPosts}
+                        loading={initialPostLoad}
                         onOpenPostModal={() => setIsPostModalOpen(true)}
-                        loadMorePosts={loadMorePosts}
-                        hasMorePosts={hasMorePosts}
-                        isFetchingPosts={isFetchingPosts}
                       />;
           case 'profile':
               return <ProfilePage
                         currentUser={currentUser}
                         profileUserId={route.id}
-                        users={users} // Pass all users to find profile, even if blocked
+                        users={users}
                         posts={filteredPosts}
                         friendRequests={friendRequests}
                         stories={filteredStories}
@@ -307,27 +281,19 @@ const App: React.FC = () => {
   }
 
   const isExplorePage = route.name === 'explore';
-  const isAdminPage = route.name === 'admin';
 
   return (
     <div className="bg-background min-h-screen text-primary pb-20 md:pb-0">
-      {!isExplorePage && (
-        <Header 
-          currentUser={currentUser} 
-          friendRequestCount={Object.keys(friendRequests).length}
-          users={users}
-          friendRequests={friendRequests}
-          communities={communities}
-          channels={channels}
-        />
-      )}
-      <main className={!isExplorePage ? "flex pt-14 max-w-7xl mx-auto" : ""}>
-        {!isExplorePage && !isAdminPage && <SidebarLeft currentUser={currentUser} />}
-        <div className={!isExplorePage && !isAdminPage ? "w-full md:ml-72 transition-all duration-300" : "w-full"}>
-           <div className={isAdminPage ? "pt-14" : ""}>
-             {renderContent()}
-           </div>
-        </div>
+      <Header 
+        currentUser={currentUser} 
+        friendRequestCount={Object.keys(friendRequests).length}
+        users={users}
+        friendRequests={friendRequests}
+        communities={communities}
+        channels={channels}
+      />
+      <main className="pt-14">
+        {renderContent()}
       </main>
       <BottomNav onPostClick={() => setIsPostModalOpen(true)} currentUser={currentUser}/>
       {isPostModalOpen && (

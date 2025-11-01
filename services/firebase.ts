@@ -130,19 +130,14 @@ export const setUserBadge = (userId: string, badgeUrl: string | null) => {
 
 
 // --- Post & Story Functions ---
-export const POSTS_PER_PAGE = 5;
-
-export const fetchPosts = async (lastPostTimestamp?: number): Promise<Post[]> => {
+export const fetchPosts = async (): Promise<Post[]> => {
     const postsRef = ref(db, 'posts');
-    const postsQuery = lastPostTimestamp
-        ? query(postsRef, orderByChild('timestamp'), endBefore(lastPostTimestamp), limitToLast(POSTS_PER_PAGE))
-        : query(postsRef, orderByChild('timestamp'), limitToLast(POSTS_PER_PAGE));
+    const postsQuery = query(postsRef, orderByChild('timestamp'), limitToLast(25));
     
     const snapshot = await get(postsQuery);
     if (snapshot.exists()) {
         const postsData = snapshot.val();
         const postsArray = Object.values(postsData) as Post[];
-        // Firebase returns them in ascending order when using limitToLast, so we reverse
         return postsArray.sort((a, b) => b.timestamp - a.timestamp);
     }
     return [];
@@ -153,7 +148,6 @@ export const createPost = async (postData: Omit<Post, 'id' | 'commentCount' | 't
     const postsRef = ref(db, 'posts');
     const newPostRef = push(postsRef);
 
-    // Firebase RTDB doesn't allow `undefined` values in `set`.
     const cleanPostData = Object.entries(postData).reduce((acc, [key, value]) => {
         if (value !== undefined) {
             (acc as any)[key] = value;
@@ -177,20 +171,17 @@ export const toggleReaction = async (postId: string, userId: string, reactionTyp
         const reactions = currentData || {};
         let userPreviousReaction: string | null = null;
         
-        // Find and remove any existing reaction from the user
         for (const type in reactions) {
             if (reactions[type] && reactions[type][userId]) {
                 userPreviousReaction = type;
                 delete reactions[type][userId];
-                // If a reaction type becomes empty after removing the user, delete the type key
                 if (Object.keys(reactions[type]).length === 0) {
                     delete reactions[type];
                 }
-                break; // A user can only have one reaction, so we can stop
+                break;
             }
         }
         
-        // If the toggled reaction is different from the previous one (or if there was none), add the new one
         if (userPreviousReaction !== reactionType) {
             if (!reactions[reactionType]) {
                 reactions[reactionType] = {};
@@ -229,8 +220,6 @@ export const createStory = async (storyData: Omit<Story, 'id' | 'timestamp'>) =>
 };
 
 // --- Comment Functions ---
-export const COMMENTS_PER_PAGE = 3;
-
 export const addComment = async (commentData: Omit<Comment, 'id' | 'timestamp'>) => {
     const commentsRef = ref(db, 'comments');
     const newCommentRef = push(commentsRef);
@@ -243,7 +232,6 @@ export const addComment = async (commentData: Omit<Comment, 'id' | 'timestamp'>)
     
     await set(newCommentRef, newComment);
     
-    // Use a transaction to increment the post's comment count
     const postCommentCountRef = ref(db, `posts/${commentData.postId}/commentCount`);
     await runTransaction(postCommentCountRef, (currentCount) => (currentCount || 0) + 1);
 
@@ -253,7 +241,7 @@ export const addComment = async (commentData: Omit<Comment, 'id' | 'timestamp'>)
     }
 };
 
-export const fetchComments = async (postId: string, lastCommentTimestamp?: number): Promise<Comment[]> => {
+export const fetchComments = async (postId: string): Promise<Comment[]> => {
     const commentsRef = ref(db, 'comments');
     const commentsQuery = query(
         commentsRef, 
@@ -265,18 +253,10 @@ export const fetchComments = async (postId: string, lastCommentTimestamp?: numbe
     if (!snapshot.exists()) return [];
     
     let allComments = Object.values(snapshot.val()) as Comment[];
-    // Filter for top-level comments only
-    allComments = allComments.filter(c => !c.parentCommentId);
     
-    // Sort by timestamp descending
-    allComments.sort((a, b) => b.timestamp - a.timestamp);
+    allComments.sort((a, b) => a.timestamp - b.timestamp);
     
-    let startIndex = 0;
-    if (lastCommentTimestamp) {
-        startIndex = allComments.findIndex(c => c.timestamp === lastCommentTimestamp) + 1;
-    }
-    
-    return allComments.slice(startIndex, startIndex + COMMENTS_PER_PAGE);
+    return allComments;
 };
 
 
@@ -288,7 +268,7 @@ export const fetchReplies = async (commentId: string): Promise<Comment[]> => {
     if (!snapshot.exists()) return [];
     
     const replies = Object.values(snapshot.val()) as Comment[];
-    return replies.sort((a, b) => a.timestamp - b.timestamp); // Show replies oldest to newest
+    return replies.sort((a, b) => a.timestamp - b.timestamp);
 };
 
 
@@ -297,6 +277,5 @@ export const seedDatabase = async () => {
   const snapshot = await get(usersRef);
   if (!snapshot.exists()) {
     console.log('Database is empty. Ready for new users.');
-    // No more seeding of users, posts, or stories.
   }
 };

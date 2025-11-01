@@ -39,7 +39,7 @@ const AddCommentForm: React.FC<AddCommentFormProps> = ({ currentUser, postId, pa
   };
 
   return (
-    <form onSubmit={handleSubmit} className="flex items-center space-x-2 pt-2">
+    <form onSubmit={handleSubmit} className="flex items-center space-x-3">
       <img src={currentUser.avatarUrl} alt="Your avatar" className="w-8 h-8 rounded-full" />
       <div className="flex-1 relative">
         <input
@@ -47,15 +47,15 @@ const AddCommentForm: React.FC<AddCommentFormProps> = ({ currentUser, postId, pa
           value={content}
           onChange={(e) => setContent(e.target.value)}
           placeholder="Add a comment..."
-          className="w-full bg-background rounded-full px-4 py-1.5 text-sm border border-divider focus:outline-none focus:ring-1 focus:ring-primary"
+          className="w-full bg-transparent placeholder-secondary focus:outline-none text-sm"
           disabled={isSubmitting}
         />
         <button
           type="submit"
           disabled={isSubmitting || !content.trim()}
-          className="absolute right-2 top-1/2 -translate-y-1/2 text-sm font-semibold text-primary disabled:text-secondary"
+          className="absolute right-0 top-1/2 -translate-y-1/2 text-sm font-semibold text-accent disabled:text-secondary/50"
         >
-          {isSubmitting ? '...' : 'Post'}
+          {isSubmitting ? 'Posting...' : 'Post'}
         </button>
       </div>
     </form>
